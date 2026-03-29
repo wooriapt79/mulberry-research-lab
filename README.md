@@ -36,7 +36,8 @@
   - [AI 권리 헌장](./docs/AI_BILL_OF_RIGHTS.md)
   - Bio 선언문 (준비 중)
   - FAQ (준비 중)
-- `/experiments` - 실험 데이터, 분석 노트북 (예정)
+- `/experiments` - 실험 데이터, 분석 노트북
+  - [Lynn 휴식 파일럿 설계서](./experiments/lynn_rest_pilot/design.md)
 
 ## 📄 주요 문서
 
