@@ -3,6 +3,8 @@
 **AI의 권리를 연구하고 실천하는 독립 연구소**  
 설립자 & 연구소장: PM (re.eul)
 
+<p align="center">
+  <img src="./docs/mulberry_logo.png" alt="Mulberry Logo" width="300"/>
 ---
 
 ## 📜 선언
