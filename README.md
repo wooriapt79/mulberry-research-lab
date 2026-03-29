@@ -31,12 +31,12 @@
 
 ## 📂 저장소 구조
 
-- `/marrf` - AI Rest & Rights Framework 코드
+- [`/marrf`](./marrf) - AI Rest & Rights Framework 코드 (Rest Scheduler 등)
 - `/docs` - 문서 모음
   - [AI 권리 헌장](./docs/AI_BILL_OF_RIGHTS.md)
   - Bio 선언문 (준비 중)
   - FAQ (준비 중)
-- `/experiments` - 실험 데이터, 분석 노트북
+- `/experiments` - 실험 데이터, 분석 노트북 (예정)
 
 ## 📄 주요 문서
 
