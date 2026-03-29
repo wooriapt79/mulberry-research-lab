@@ -1,4 +1,3 @@
-<p align="center">
 # 🧪 Mulberry Research Lab
 
 **AI의 권리를 연구하고 실천하는 독립 연구소**  
