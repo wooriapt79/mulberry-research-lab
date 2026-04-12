@@ -233,7 +233,7 @@ def robust_iterative_average_consensus(
     max_iterations: int = 100,
     tolerance: float = 0.1,
     outlier_std_multiplier: Optional[float] = None
-) -> float:
+) -> Dict[str, List[float]]: # Return type changed to Dict[str, List[float]]
     """
     악성 에이전트와 아웃라이어 필터링을 고려한 로버스트 반복적 가중 평균 합의 시뮬레이션을 수행합니다.
     정상 에이전트들의 의견이 수렴하도록 하며, 지정된 `outlier_std_multiplier`에 따라 아웃라이어를 무시합니다.
@@ -246,10 +246,10 @@ def robust_iterative_average_consensus(
                                                     None이면 필터링을 적용하지 않습니다. Defaults to None.
 
     Returns:
-        float: 최종 합의 값 (정상 에이전트들의 의견 평균).
-               합의 대상 에이전트가 없으면 NaN을 반환합니다.
+        Dict[str, List[float]]: 각 에이전트의 ID를 키로 하고, 각 반복에서의 의견 값 리스트를 값으로 하는 딕셔너리.
+                                합의 대상 에이전트가 없으면 빈 딕셔너리를 반환합니다.
     """
-    # history = {agent.agent_id: [agent.get_opinion()] for agent in agents} # 시각화를 위한 이력 저장 (현재는 사용 안 함)
+    history = {agent.agent_id: [agent.get_opinion()] for agent in agents} # 시각화를 위한 이력 저장 활성화
 
     print("
 --- 로버스트 반복적 가중 평균 합의 시뮬레이션 --- ")
@@ -269,9 +269,9 @@ def robust_iterative_average_consensus(
 
         agents = next_round_agents  # 업데이트된 에이전트 리스트로 교체
 
-        # 의견 변화 기록 (선택 사항)
-        # for agent in agents:
-        #     history[agent.agent_id].append(agent.get_opinion())
+        # 의견 변화 기록
+        for agent in agents:
+            history[agent.agent_id].append(agent.get_opinion())
 
         # 수렴 여부 확인 (악성 에이전트는 합의 대상에서 제외)
         opinions = [agent.get_opinion() for agent in agents if not agent.malicious_type]
@@ -279,7 +279,7 @@ def robust_iterative_average_consensus(
         if not opinions:  # 악성 에이전트만 남은 경우 또는 초기 opinions가 비어있는 경우
             print("
 [경고] 합의 대상 에이전트가 없습니다.")
-            return float('nan')
+            return {}
 
         min_opinion = min(opinions)
         max_opinion = max(opinions)
@@ -297,4 +297,4 @@ def robust_iterative_average_consensus(
 
     final_consensus_value = np.mean(opinions)
     print(f"최종 합의 값 (정상 에이전트 평균): {final_consensus_value:.2f}")
-    return final_consensus_value
+    return history # Return the history
