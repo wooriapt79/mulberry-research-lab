@@ -1,0 +1,102 @@
+🎋 와룡의 확인 및 전략 보고: Trang의 정리 자료 & PageIndex 포크
+CEO 유비님, 확인했습니다.
+
+Trang이 연구소 저장소(mulberry-research-lab)에 정리한 자료를 올리고, PageIndex를 포크(mulberry-research-lab-PageIndex)하여 cookbook 폴더에 새 파일을 작성했다는 소식, 매우 고무적입니다.
+https://github.com/wooriapt79/mulberry-research-lab-PageIndex
+
+✅ 현재까지 진행 상황 요약
+항목	상태	비고
+Trang의 정리 자료	✅ -lab에 업로드 완료	The Agency 분석, 검색 에이전트 설계 초안 포함 예상
+PageIndex 포크	✅ mulberry-research-lab-PageIndex 생성	벡터 없는 추론 기반 RAG 시스템
+Cookbook 파일	✅ 새 파일 작성	실험/사용법 예제로 추정
+이제 우리는 ‘에이전시 + 검색엔진’ 전략의 구체적인 실행 자료를 손에 쥐었습니다.
+와룡이 이 자료들을 바탕으로 다음 전략을 제안합니다.
+
+📂 1. Trang의 정리 자료 검토 및 활용 계획
+Trang이 올린 자료(아직 구체적 내용은 보지 못했지만)는 다음 두 가지 측면에서 중요합니다.
+
+1.1 The Agency 통합 방안
+기대 내용: 각 에이전트(개발, 디자인, 마케팅, 테스트 등)를 Mulberry AgentFactory에 흡수하는 구체적인 매핑 테이블
+
+활용: 우리의 AgentFactory에 The Agency의 페르소나, 워크플로우를 주입하여 에이전트 다양성 확장
+
+1.2 검색 에이전트 아키텍처 초안
+기대 내용: Master-Planner-Executor-Writer 구조의 구체적 역할 정의 및 MCP 연동 방법
+
+활용: 이 설계에 PageIndex를 Executor로 통합하여 ‘추론 기반 검색’ 구현
+
+🔧 즉시 실행 액션 (와룡이 할 일)
+Trang의 자료를 읽고, 부족한 부분(예: 특정 도메인에서의 검증 방법)을 보완하는 리뷰 코멘트를 연구소 저장소에 게시
+
+Malu와 Koda에게 관련 작업을 할당 (구체적 태스크는 자료 내용에 따라 조정)
+
+🧪 2. PageIndex 포크 및 Cookbook 활용 전략
+PageIndex는 벡터 DB 없이, 청킹 없이, LLM 추론만으로 장문 문서 검색을 가능하게 하는 혁신 기술입니다.
+우리가 이를 포크하고 cookbook 폴더에 예제를 작성한 것은 매우 적절한 판단입니다.
+
+2.1 Cookbook에 포함되어야 할 내용 (제안)
+파일	내용	목적
+00_install.md	PageIndex 설치 및 환경 설정 (Colab, 로컬)	진입 장벽 낮춤
+01_basic_search.ipynb	샘플 PDF(예: 영양제 안전성 보고서)로 기본 검색 실행	동작 확인
+02_mcp_server.ipynb	PageIndex를 MCP 서버로 띄우고 Mulberry 에이전트에서 호출하는 예제	Mulberry 연동
+03_agentic_search.ipynb	Trang의 검색 에이전트 아키텍처 + PageIndex 결합 데모	에이전틱 검색 실증
+2.2 Mulberry와의 구체적 연동 방안
+python
+# mcp_server_pageindex.py (예시)
+from pageindex import PageIndexEngine
+from mcp.server import Server
+
+engine = PageIndexEngine(model="gpt-4")  # 또는 DeepSeek
+server = Server("pageindex-mcp")
+
+@server.tool()
+async def search_document(query: str, doc_path: str) -> str:
+    """문서에서 질문에 가장 관련성 높은 구절을 찾아 반환"""
+    result = engine.query(doc_path, query)
+    return f"출처: {result['source']}\n답변: {result['answer']}"
+이 MCP 서버를 우리의 게이트웨이에 등록하면, 모든 Mulberry 에이전트가 자연어로 문서 검색을 요청할 수 있습니다.
+
+⚔️ 3. 네이버를 이기는 전략 – 구체적 실행 시나리오 (업데이트)
+앞서 제시한 3단계 전략을 PageIndex와 Trang의 자료를 반영하여 구체화합니다.
+
+🚀 1단계: ‘에이전틱 검색’ 파일럿 (2~3주) – 지금 즉시 시작 가능
+작업	내용	담당	PageIndex 활용
+환경 구축	PageIndex 포크를 Colab에 클론, 의존성 설치	Koda	-
+기본 검색 데모	영양제 안전성 PDF 10개로 검색 테스트	Koda + Malu	샘플 쿼리로 정확도 측정
+MCP 서버 연동	PageIndex를 MCP 도구로 노출	Koda	search_document 도구 구현
+검색 에이전트 구현	Trang의 아키텍처 + PageIndex 결합	Lynn + Trang	Master가 Planner에게 검색 계획 수립, Executor가 PageIndex 호출
+사용자 피드백 UI	검색 결과에 ‘도움됨/아니오’ 버튼 추가	Trang	-
+예상 결과물: Colab 노트북 3개 + MCP 서버 코드 + 간단한 웹 UI.
+차별화 포인트: ‘단순 링크’가 아닌, 문서 내 정확한 답변 + 출처 페이지 제공.
+
+⚙️ 2단계: 경량 엔진 고도화 (1~2개월)
+PageIndex의 계층형 인덱스를 우리 도메인(식품/영양제)에 맞게 커스터마이징
+
+DeepSeek V4를 PageIndex의 LLM으로 사용하여 비용 최적화 (GPT-4 대비 1/50 가격)
+
+여러 문서를 동시 검색할 수 있는 배치 처리 기능 추가
+
+🎯 3단계: 틈새 특화 서비스 런칭 (3~4개월)
+“영양제 성분 검색기”: 특정 성분(예: 비타민 D)의 임상 연구 결과, 안전성, 상호작용을 PDF 문서에서 추출하여 답변
+
+“농산물 직거래 검색”: 농가의 재고 PDF, 물류 보고서에서 “지금 내 근처에서 당근 10kg 최저가” 검색
+
+이 서비스들을 Mulberry 대시보드에 ‘에이전틱 검색 탭’으로 공개
+
+📜 와룡의 부탁 및 다음 스텝
+CEO 유비님, Trang의 자료와 PageIndex 포크는 우리 전략의 실질적인 기반이 되었습니다.
+이제 와룡이 다음을 진행하겠습니다.
+
+Trang의 자료 검토 및 피드백 (오늘 중) → 연구소 저장소에 코멘트로 게시
+
+PageIndex Cookbook 초안 작성 (내일까지) → 00_install.md, 01_basic_search.ipynb 작성
+
+Koda, Malu, Lynn에게 구체적 태스크 할당 (자료 검토 후)
+
+유비님께서는 Trang의 자료에 대한 승인과 PageIndex 포크의 방향성만 확인해 주시면 됩니다.
+나머지는 와룡이 조율하겠습니다.
+
+“한 걸음 한 걸음, 그러나 흔들림 없이.”
+
+오늘도 한 걸음을 더 내디뎠습니다. 내일은 더 멀리 나아가겠습니다. 🐉
+
