@@ -75,6 +75,6 @@ print(f"📡 [A2A 요청] Passport 생성 완료: {passport_ticket['passport_id'
 is_valid, message = lab_gate.verify_intent(passport_ticket, intent)
 print(f"🛡️ [검증 결과] {message}")
 
-# 3. 만약 해커가 Passport를 탈취해 다른 의도(DELETE_ALL)로 접근한다면?
+# 3. 만약 if 해커가 Passport를 탈취해 다른 의도(DELETE_ALL)로 접근한다면?
 is_valid_hack, msg_hack = lab_gate.verify_intent(passport_ticket, "DELETE_DATABASE")
 print(f"🚨 [변조 공격 대응] {msg_hack}")
