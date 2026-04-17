@@ -1,0 +1,69 @@
+version: "0.1.0"
+
+project:
+  name: "Mulberry Agent Team Formation System"
+  domain: "food_desert_mitigation"
+  objective: "theory-logic-code alignment"
+
+mode:
+  current: "dev"
+  dev:
+    auto_push: true
+    fallback_zip: true
+    require_pm_approval_for_env_change: true
+  prod:
+    auto_push: false
+    fallback_zip: true
+    require_pm_approval_for_env_change: true
+
+workspace:
+  required_dirs:
+    - docs/theory
+    - docs/operations
+    - docs/policy
+    - docs/contracts
+    - docs/meetings
+    - src
+    - tests
+  required_files:
+    - README.md
+    - .gitignore
+
+repo:
+  strategy: "main+work"
+  branches:
+    - main
+    - work
+  naming_rule: "mulberry-{domain}-{component}-{env}"
+
+stack:
+  backend_language: python
+  frontend_language: typescript
+  database_primary: postgresql
+  database_cache: redis
+  deployment_targets:
+    - railway
+    - huggingface_spaces
+
+change_watch:
+  triggers:
+    - repo_name_changed
+    - new_repo_created
+    - default_branch_changed
+    - language_stack_changed
+    - database_tool_changed
+  action: pause_and_ask_pm
+
+refinement_policy:
+  mandatory_iterations: 2
+  recommended_iterations: 3
+  gates:
+    - theory_consistency_check
+    - logic_validation_check
+    - test_pass_check
+    - refactor_quality_check
+
+pm_escalation:
+  enabled: true
+  channel: pm_console
+  question_template: "[PM 확인 필요] {event}: {detail}. 승인/보류/롤백 선택"
