@@ -1,0 +1,48 @@
+{
+  "name": "mulberry-agent-image-lab",
+  "version": "0.1.0-alpha",
+  "description": "이미지 기반 AI Agent 시스템 연구 프로젝트",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "executor": "node models/model-3-prompt-keywords/executor.js",
+    "example": "node examples/full-workflow.js"
+  },
+  "keywords": [
+    "mulberry",
+    "agent",
+    "image",
+    "steganography",
+    "ai",
+    "dalle",
+    "gpt4"
+  ],
+  "author": "CTO Koda",
+  "license": "MIT",
+  "dependencies": {
+    "pngjs": "^7.0.0",
+    "sharp": "^0.33.0",
+    "axios": "^1.6.0",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "eslint": "^8.55.0",
+    "prettier": "^3.1.1",
+    "@types/node": "^20.10.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mulberry/agent-image-lab.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mulberry/agent-image-lab/issues"
+  },
+  "homepage": "https://github.com/mulberry/agent-image-lab#readme"
+}

@@ -1,0 +1,37 @@
+# Mulberry Agent Image Lab - Python Dependencies
+# @author CTO Koda
+# @date 2026-04-19
+
+# Core
+openai>=1.0.0
+anthropic>=0.18.0
+requests>=2.31.0
+
+# Image Processing
+Pillow>=10.0.0
+opencv-python>=4.8.0
+numpy>=1.24.0
+
+# Steganography (Model 1)
+stegano>=0.11.0
+stepic>=0.5.0
+
+# Metadata (Model 2)
+piexif>=1.1.3
+exifread>=3.0.0
+
+# Utilities
+python-dotenv>=1.0.0
+pyyaml>=6.0
+
+# Testing
+pytest>=7.4.0
+pytest-cov>=4.1.0
+pytest-asyncio>=0.21.0
+
+# Development
+black>=23.0.0
+flake8>=6.0.0
+mypy>=1.5.0
+ipython>=8.14.0
+jupyter>=1.0.0
