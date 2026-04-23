@@ -1,0 +1,45 @@
+{
+  "version": "0.1",
+  "description": "Mulberry Brand Registry for image/logo/banner driven agent endpoints",
+  "brands": [
+    {
+      "brand_id": "mulberry",
+      "display_name": "Mulberry",
+      "allowed_intents": [
+        "support.request",
+        "groupbuy.start",
+        "deploy.setup",
+        "insurance.claim_help"
+      ],
+      "default_agent": "MONITOR",
+      "default_functions": [
+        "THINKEIN",
+        "ROUTIICG"
+      ],
+      "endpoint": "/v1/intent/execute",
+      "verification": {
+        "logo_match_required": true,
+        "text_confidence_min": 0.65
+      }
+    },
+    {
+      "brand_id": "hanaro_mart",
+      "display_name": "Hanaro Mart",
+      "allowed_intents": [
+        "groupbuy.start",
+        "order.request",
+        "delivery.status"
+      ],
+      "default_agent": "CRAWLER",
+      "default_functions": [
+        "PROZESSING",
+        "ROUTIICG"
+      ],
+      "endpoint": "/v1/intent/execute",
+      "verification": {
+        "logo_match_required": true,
+        "text_confidence_min": 0.7
+      }
+    }
+  ]
+}

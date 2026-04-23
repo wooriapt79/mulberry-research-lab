@@ -1,0 +1,91 @@
+{
+  "version": "0.1",
+  "description": "Mulberry Intent Dictionary mapping natural language to internal capabilities",
+  "intents": {
+    "support.request": {
+      "keywords": [
+        "도움",
+        "지원",
+        "help",
+        "support",
+        "assist"
+      ],
+      "agent": "MONITOR",
+      "functions": [
+        "SERVELL",
+        "POE"
+      ]
+    },
+    "groupbuy.start": {
+      "keywords": [
+        "공동구매",
+        "group buy",
+        "groupbuy",
+        "함께 구매",
+        "공구"
+      ],
+      "agent": "ANALYZER",
+      "functions": [
+        "THINKEIN",
+        "PROZESSING",
+        "ROUTIICG"
+      ]
+    },
+    "deploy.setup": {
+      "keywords": [
+        "배포",
+        "deploy",
+        "설치",
+        "setup",
+        "환경 준비"
+      ],
+      "agent": "CONFIG",
+      "functions": [
+        "GITHUB_AUTOSETUP",
+        "RAILWAY_DEPLOY",
+        "WORKBENCH_SETUP"
+      ]
+    },
+    "insurance.claim_help": {
+      "keywords": [
+        "보험",
+        "청구",
+        "claim",
+        "보상",
+        "insurance"
+      ],
+      "agent": "MONITOR",
+      "functions": [
+        "THINKEIN",
+        "SERVELL",
+        "POE"
+      ]
+    },
+    "order.request": {
+      "keywords": [
+        "주문",
+        "order",
+        "구매",
+        "buy"
+      ],
+      "agent": "CRAWLER",
+      "functions": [
+        "PROZESSING",
+        "ROUTIICG"
+      ]
+    },
+    "delivery.status": {
+      "keywords": [
+        "배송",
+        "delivery",
+        "도착",
+        "상태"
+      ],
+      "agent": "MONITOR",
+      "functions": [
+        "ASTROFEN",
+        "SERVELL"
+      ]
+    }
+  }
+}
