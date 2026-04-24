@@ -1,0 +1,27 @@
+# requirements.txt
+# Zombie Peace Protocol v1.0.0-research
+# Last Updated: 2026-04-24
+
+# Audio Processing (버전 고정으로 재현성 확보)
+librosa==0.10.1
+sounddevice==0.4.6
+numpy
+scipy
+
+# Async & Networking
+aiohttp==3.9.1
+python-socketio[client]==5.11.0
+httpx==0.25.2
+
+# Qwen3.6 Client
+pydantic==2.5.2
+pyyaml==6.0.1
+python-dotenv==1.0.0
+
+# Utility
+loguru==0.7.2
+tqdm==4.66.1
+
+# Testing
+pytest==7.4.3
+pytest-asyncio==0.23.2
