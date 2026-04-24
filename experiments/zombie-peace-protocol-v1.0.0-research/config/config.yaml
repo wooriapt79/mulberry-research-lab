@@ -1,0 +1,43 @@
+agents:
+  agent_alpha:
+    initial_spirit_score: 75
+  agent_beta:
+    initial_spirit_score: 60
+  agent_gamma:
+    initial_spirit_score: 90
+  agent_delta:
+    initial_spirit_score: 85
+
+musical_data:
+  tempo: 120
+  energy: 0.8
+  rhythm_pattern: "syncopated"
+
+llm:
+  model_path: "Qwen/Qwen1.5-0.5B-Chat"
+  prompt_template: "Given the lyrics: \"\"\"\n{lyrics}\n\"\"\". Extract any implied peace messages or anti-war sentiments, considering the context of 'The Cranberries - Zombie'. If no such message exists, state 'No explicit peace message found'.\nPeace Message:"
+  ethical_filter_keywords:
+    - "violence"
+    - "hate"
+
+protocol:
+  min_spirit_score: 70
+
+broadcast:
+  server_url: "http://localhost:5000"
+
+text_content:
+  lyrics: "Oh, my love, my love, my love, you're dead. War, what is it good for? Absolutely nothing. Peace, joy, harmony."
+
+audio:
+  analysis_params:
+    tempo_sensitivity: 1.0
+    energy_threshold: 1.0
+  trigger_params:
+    trigger_type: "tempo_sync"
+    sensitivity: 1.0
+    rhythm_pattern_mapping:
+      syncopated: 1.2
+      straight: 1.0
+      sparse: 0.8
+      polyrhythmic: 1.5
