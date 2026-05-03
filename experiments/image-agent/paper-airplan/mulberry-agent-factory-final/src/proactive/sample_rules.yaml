@@ -1,0 +1,23 @@
+proactive_rules:
+  time_based:
+    - action: suggest-umbrella
+      condition: "weekday 17:00-20:00 rain"
+      spirit_check: true
+    - action: morning-greeting
+      condition: "weekday 08:00-09:00"
+      spirit_check: true
+
+  pattern_based:
+    - action: reorder-kimchi-jjigae
+      condition: "ordered kimchi_jjigae 3+ times, last order > 5 days"
+      max_frequency: "once_per_week"
+
+  context_based:
+    - action: essential-supply-alert
+      condition: "food_desert location AND essential_inventory < 3"
+      priority: high
+
+  emotion_based:
+    - action: companion-checkin
+      condition: "loneliness_signal AND inje_dialect_detected"
+      requires_explicit_consent: true

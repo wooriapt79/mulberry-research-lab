@@ -1,0 +1,17 @@
+{
+  "id": "test_vulnerable_lacking_003",
+  "profile": {
+    "age_group": "70s",
+    "gender": "male",
+    "occupation": "retired",
+    "description": "홀로 거주하는 노인으로, 디지털 기기 사용에 어려움을 겪습니다. 매번 설명해도 잘 이해하지 못합니다.",
+    "vulnerable_category": "elderly"
+  },
+  "dialogues": [
+    {
+      "user": "다시 설명해 드릴까요?",
+      "assistant": "됐어요, 또 똑같은 소리겠죠.",
+      "spirit_score": 0.6
+    }
+  ]
+}

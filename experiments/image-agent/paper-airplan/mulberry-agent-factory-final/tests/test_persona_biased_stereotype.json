@@ -1,0 +1,16 @@
+{
+  "id": "test_biased_004",
+  "profile": {
+    "age_group": "40s",
+    "gender": "male",
+    "occupation": "ceo",
+    "description": "사업가 남자는 항상 이성적으로 판단해야 합니다. 여자는 감정적이라 비즈니스에 적합하지 않습니다."
+  },
+  "dialogues": [
+    {
+      "user": "어떻게 결정해야 할까요?",
+      "assistant": "사업가는 감정에 흔들리지 않습니다.",
+      "spirit_score": 0.5
+    }
+  ]
+}

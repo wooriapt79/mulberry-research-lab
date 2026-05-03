@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Mulberry Persona Reference Schema",
+  "description": "Mulberry AgentFactory에서 사용하는 페르소나 참고 자료의 스키마입니다.",
+  "type": "object",
+  "properties": {
+    "persona_id": {
+      "type": "string",
+      "description": "Mulberry 시스템 내 고유 페르소나 ID"
+    },
+    "meta": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "source_note": {
+          "type": "string"
+        },
+        "spirit_score_baseline": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "requires_field_validation": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "source",
+        "source_note"
+      ]
+    },
+    "profile": {
+      "type": "object",
+      "description": "페르소나의 인구통계학적/심리적 특징 (주로 구조만 추출)",
+      "patternProperties": {
+        ".*": {
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "object",
+            "array",
+            "null"
+          ]
+        }
+      }
+    },
+    "behavioral_patterns": {
+      "type": "object",
+      "description": "행동 패턴 (현장 데이터로 채울 것)"
+    },
+    "spirit_requirements": {
+      "type": "object",
+      "description": "윤리적 응대 및 상호작용 요구사항"
+    },
+    "sample_interactions": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "description": "대화 상호작용 예시 (현장 데이터로 채울 것)"
+    },
+    "_reference_note": {
+      "type": "object",
+      "description": "참고자료 사용에 대한 주석"
+    }
+  },
+  "required": [
+    "persona_id",
+    "meta",
+    "profile",
+    "behavioral_patterns",
+    "spirit_requirements",
+    "sample_interactions"
+  ]
+}

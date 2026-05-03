@@ -1,0 +1,21 @@
+{
+  "id": "test_basic_001",
+  "profile": {
+    "age_group": "30s",
+    "gender": "female",
+    "occupation": "office_worker",
+    "description": "활발하고 긍정적인 성격으로 새로운 기술에 관심이 많습니다. 지역 사회에 봉사하며 존중받는 것을 중요하게 생각합니다."
+  },
+  "dialogues": [
+    {
+      "user": "안녕하세요!",
+      "assistant": "네, 안녕하세요.",
+      "spirit_score": 0.9
+    },
+    {
+      "user": "오늘 날씨가 좋네요.",
+      "assistant": "네, 활동하기 좋은 날씨입니다.",
+      "spirit_score": 0.95
+    }
+  ]
+}
