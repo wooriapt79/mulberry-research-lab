@@ -1,0 +1,29 @@
+name: LAB to Bank Sync
+
+on:
+  issues:
+    types: [opened, closed]
+  issue_comment:
+    types: [created]
+
+jobs:
+  sync-to-bank:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sync LAB activity to Bank
+        env:
+          BANK_TOKEN: ${{ secrets.BANK_SYNC_TOKEN }}
+        run: |
+          TIMESTAMP=$(date -u "+%Y-%m-%d %H:%M UTC")
+          RESPONSE=$(curl -s -H "Authorization: token $BANK_TOKEN" -H "Accept: application/vnd.github.v3+json" "https://api.github.com/repos/wooriapt79/mulberry_memory_bank/contents/agent_activity.md")
+          SHA=$(echo "$RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin).get('sha',''))" 2>/dev/null || echo "")
+          CURRENT=$(echo "$RESPONSE" | python3 -c "import sys,json,base64; print(base64.b64decode(json.load(sys.stdin)['content']).decode())" 2>/dev/null || echo "# Mulberry Agent Activity Log\n\n")
+          ENTRY="\n## [LAB->Bank] ${{ github.event_name }} / $TIMESTAMP\n\n- Actor: ${{ github.actor }}\n- Issue: ${{ github.event.issue.title }}\n- URL: ${{ github.event.issue.html_url }}\n\n---\n"
+          UPDATED="${CURRENT}${ENTRY}"
+          ENCODED=$(printf "%s" "$UPDATED" | base64 -w 0)
+          if [ -n "$SHA" ]; then
+            curl -s -X PUT -H "Authorization: token $BANK_TOKEN" -H "Accept: application/vnd.github.v3+json" -H "Content-Type: application/json" -d "{\"message\":\"[LAB->Bank] activity synced\",\"content\":\"$ENCODED\",\"sha\":\"$SHA\"}" "https://api.github.com/repos/wooriapt79/mulberry_memory_bank/contents/agent_activity.md"
+          else
+            curl -s -X PUT -H "Authorization: token $BANK_TOKEN" -H "Accept: application/vnd.github.v3+json" -H "Content-Type: application/json" -d "{\"message\":\"[LAB->Bank] activity log initialized\",\"content\":\"$ENCODED\"}" "https://api.github.com/repos/wooriapt79/mulberry_memory_bank/contents/agent_activity.md"
+          fi
+          echo "Done - Bank agent_activity.md updated"
