@@ -1,0 +1,7 @@
+# Mulberry Connector SDK — Railway 배포 의존성
+# mulberry_connector/api/fastapi_app.py 기준
+# 작성: Nguyen Trang (2026-05-08)
+
+fastapi>=0.100.0
+uvicorn[standard]>=0.23.0
+pydantic>=2.0.0
