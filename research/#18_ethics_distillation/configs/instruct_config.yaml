@@ -1,0 +1,37 @@
+# Issue #18 -- Ethics-Aware Distillation 실험 설정
+# 재현성: seed 고정, 모든 경로 상대 경로 사용
+
+issue: 18
+seed: 42
+version: "0.1.0-alpha"
+
+teacher:
+  base_model: "deepseek-ai/deepseek-coder-6.7b-base"
+  instruct_model: "deepseek-ai/deepseek-coder-6.7b-instruct"
+  temperature: 1.0
+  top_p: 0.95
+
+student:
+  model_name: "mulberry-jr-1.5b"
+  quantization: "4bit"
+  target_device: "rpi5"
+  max_memory_mb: 3800
+
+spirit:
+  threshold: 0.75
+  weight_in_loss: 0.4
+  check_before_generate: true
+  check_after_generate: true
+
+training:
+  epochs: 3
+  batch_size: 4
+  learning_rate: 2.0e-4
+  warmup_steps: 100
+  save_steps: 500
+
+paths:
+  data: "data/scenarios/"
+  output: "data/distilled_traces/"
+  logs: "logs/"
+  paper: "paper/sections/"

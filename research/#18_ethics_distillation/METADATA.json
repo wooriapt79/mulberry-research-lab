@@ -1,0 +1,19 @@
+{
+  "issue_number": 18,
+  "issue_url": "https://github.com/wooriapt79/mulberry-research-lab/issues/18",
+  "package_version": "0.1.0-alpha",
+  "generated_at": "2026-05-08T14:11:26.376077+00:00",
+  "generated_by": "build_issue18_package.py",
+  "mulberry_spirit_clause": {
+    "code_hygiene_is_ethics": true,
+    "handoff_is_respect": true,
+    "hesitation_is_wisdom": true,
+    "memory_is_commons": true
+  },
+  "reproducibility": {
+    "requirements_locked": true,
+    "seed_fixed": 42,
+    "makefile_automation": true,
+    "code_to_paper_mapping": true
+  }
+}
