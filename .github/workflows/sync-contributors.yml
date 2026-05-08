@@ -1,0 +1,146 @@
+name: Sync Contributors -- Mulberry Multi-Repo
+
+# 매주 월요일 09:00 KST (00:00 UTC) + 수동 실행
+on:
+  schedule:
+    - cron: "0 0 * * 1"
+  workflow_dispatch:
+
+jobs:
+  sync:
+    name: Aggregate Contributors (LAB + BANK)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout LAB
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout BANK
+        uses: actions/checkout@v4
+        with:
+          repository: wooriapt79/mulberry_memory_bank
+          path: bank
+          fetch-depth: 0
+          token: ${{ secrets.BANK_SYNC_TOKEN }}
+
+      - name: Generate Contribution Stats
+        run: |
+          python3 - <<'PYEOF'
+          import subprocess, re, json
+          from datetime import datetime
+
+          TODAY = datetime.utcnow().strftime("%Y-%m-%d")
+
+          AGENTS = [
+              ("re.eul",          "wooriapt79@users.noreply.github.com"),
+              ("Nguyen Trang",     "trang@mulberry.ai"),
+              ("Koda (Claude)",    "koda-claude@mulberry.ai"),
+              ("Kbin (ChatGPT)",   "kbin-chatgpt@mulberry.ai"),
+              ("Malu (Gemini)",    "malu-gemini@mulberry.ai"),
+              ("Wayong (DeepSeek)","wayong-deepseek@mulberry.ai"),
+              ("RyuWon (Qwen)",    "ryuwon-qwen@mulberry.ai"),
+              ("Lynn",             "lynn@mulberry.ai"),
+              ("Jr",               "jr@mulberry.ai"),
+          ]
+
+          def count_coauthors(log_output):
+              counts = {name: 0 for name, _ in AGENTS}
+              for name, email in AGENTS:
+                  pattern = re.compile(
+                      rf"Co-Authored-By:.*{re.escape(name)}.*|Co-Authored-By:.*{re.escape(email)}",
+                      re.IGNORECASE
+                  )
+                  counts[name] += len(pattern.findall(log_output))
+              return counts
+
+          def get_commit_log(path="."):
+              result = subprocess.run(
+                  ["git", "log", "--format=%an <%ae>%n%b"],
+                  capture_output=True, text=True, cwd=path
+              )
+              return result.stdout
+
+          lab_log  = get_commit_log(".")
+          bank_log = get_commit_log("bank")
+
+          lab_counts  = count_coauthors(lab_log)
+          bank_counts = count_coauthors(bank_log)
+
+          # 직접 커밋 수
+          def count_direct(log_output, email):
+              return log_output.count(email)
+
+          stats = {}
+          for name, email in AGENTS:
+              lab_direct   = count_direct(lab_log,  email)
+              bank_direct  = count_direct(bank_log, email)
+              lab_coauth   = lab_counts.get(name, 0)
+              bank_coauth  = bank_counts.get(name, 0)
+              stats[name] = {
+                  "lab":  lab_direct  + lab_coauth,
+                  "bank": bank_direct + bank_coauth,
+                  "total": lab_direct + bank_direct + lab_coauth + bank_coauth,
+              }
+
+          # CONTRIBUTORS.md 기여 통계 섹션 생성
+          lines = [
+              "",
+              "## 기여 통계 (자동 집계)",
+              f"*마지막 업데이트: {TODAY} (UTC) — 매주 월요일 자동 갱신*",
+              "",
+              "| 기여자 | LAB 기여 | BANK 기여 | 합계 |",
+              "|--------|---------|---------|------|",
+          ]
+          for name, _ in AGENTS:
+              s = stats[name]
+              if s["total"] > 0:
+                  lines.append(f"| {name} | {s['lab']} | {s['bank']} | **{s['total']}** |")
+
+          lines += [
+              "",
+              "> 집계 기준: 직접 커밋 + Co-Authored-By 트레일러 (LAB + BANK 합산)",
+              "",
+          ]
+
+          with open("CONTRIBUTORS_STATS.md", "w", encoding="utf-8") as f:
+              f.write("\n".join(lines))
+
+          print("Stats generated:")
+          print("\n".join(lines))
+          PYEOF
+
+      - name: Update CONTRIBUTORS.md
+        run: |
+          # 기존 CONTRIBUTORS.md 에서 "기여 통계" 섹션 이후를 새 통계로 교체
+          python3 - <<'PYEOF'
+          with open("CONTRIBUTORS.md", "r", encoding="utf-8") as f:
+              content = f.read()
+
+          with open("CONTRIBUTORS_STATS.md", "r", encoding="utf-8") as f:
+              stats = f.read()
+
+          # 기존 자동 집계 섹션 제거 후 새 내용 추가
+          marker = "## 기여 통계 (자동 집계)"
+          if marker in content:
+              content = content[:content.index(marker)].rstrip()
+
+          content = content + "\n" + stats
+
+          with open("CONTRIBUTORS.md", "w", encoding="utf-8") as f:
+              f.write(content)
+
+          print("CONTRIBUTORS.md updated.")
+          PYEOF
+
+      - name: Commit and Push
+        run: |
+          git config user.name "mulberry-sync-bot"
+          git config user.email "bot@mulberry.ai"
+          git add .mailmap CONTRIBUTORS.md
+          git diff --staged --quiet && echo "No changes" && exit 0
+          git commit -m "chore(contributors): 주간 기여자 통계 자동 동기화 $(date +%Y-%m-%d)
+
+          Co-Authored-By: RyuWon (Qwen) <ryuwon-qwen@mulberry.ai>
+          Co-Authored-By: Nguyen Trang <trang@mulberry.ai>"
+          git push

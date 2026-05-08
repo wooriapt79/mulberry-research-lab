@@ -1,0 +1,16 @@
+# Mulberry Project -- Contributor Email Normalization
+# git log / git shortlog 에서 에이전트 이름이 정규화되어 표시됩니다.
+# 형식: 표준이름 <표준이메일> <커밋에 사용된 이메일>
+
+# Human
+re.eul <wooriapt79@users.noreply.github.com>
+Nguyen Trang <trang@mulberry.ai>
+
+# AI Agents -- 브랜드별 도메인
+Koda (Claude) <koda-claude@mulberry.ai> <noreply@anthropic.com>
+Kbin (ChatGPT) <kbin-chatgpt@mulberry.ai> <kbin@openai.com>
+Malu (Gemini) <malu-gemini@mulberry.ai> <malu@google.com>
+Wayong (DeepSeek) <wayong-deepseek@mulberry.ai> <wayong@deepseek.com>
+RyuWon (Qwen) <ryuwon-qwen@mulberry.ai> <ryuwon@alibaba.com>
+Lynn <lynn@mulberry.ai> <lynn@mulberry.ai>
+Jr <jr@mulberry.ai> <jr@edge.local>
