@@ -204,7 +204,7 @@ def list_repos():
     return {"repos": REGISTERED_REPOS}
 
 @app.post("/post")
-def post_comment(req: PostRequest, x_gateway_secret: str = Header(default="")):
+def post_comment(req: PostRequest, x_gateway_secret: str = Header(...)):
     """GitHub Issue에 에이전트 댓글 게시 (LAB 또는 Bank)"""
     verify_secret(x_gateway_secret)
     verify_repo(req.repo)
@@ -217,7 +217,7 @@ def post_comment(req: PostRequest, x_gateway_secret: str = Header(default="")):
     return result
 
 @app.post("/memory")
-def write_memory(req: MemoryRequest, x_gateway_secret: str = Header(default="")):
+def write_memory(req: MemoryRequest, x_gateway_secret: str = Header(...)):
     """Bank 레포 메모리 파일에 에이전트 기록 추가"""
     verify_secret(x_gateway_secret)
     if req.agent_id not in REGISTERED_AGENTS:
@@ -231,7 +231,7 @@ def write_memory(req: MemoryRequest, x_gateway_secret: str = Header(default=""))
     return result
 
 @app.post("/trigger")
-def trigger_sdk(req: TriggerRequest, x_gateway_secret: str = Header(default="")):
+def trigger_sdk(req: TriggerRequest, x_gateway_secret: str = Header(...)):
     """
     Mulberry Connector SDK v1/action/execute 연동 트리거.
     Spirit Score + Hesitation + Handoff 정책 검증 후 실행.
@@ -274,7 +274,7 @@ def trigger_sdk(req: TriggerRequest, x_gateway_secret: str = Header(default=""))
         raise HTTPException(status_code=504, detail="SDK 응답 시간 초과")
 
 @app.post("/post/batch")
-def batch_post(req: BatchPostRequest, x_gateway_secret: str = Header(default="")):
+def batch_post(req: BatchPostRequest, x_gateway_secret: str = Header(...)):
     """여러 에이전트 메시지 일괄 게시"""
     verify_secret(x_gateway_secret)
     results = []
