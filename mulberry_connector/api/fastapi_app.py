@@ -21,6 +21,8 @@ from adapters.github import GitHubAdapter
 from adapters.github_pr import GitHubPRAdapter, PR_SPIRIT_THRESHOLD
 from adapters.sns import SNSAdapter
 from core.tool_registry import ToolRegistry
+from core.constraint_router import ConstraintAwareRouter
+from mulberry_tools.schema import MulberryToolCall, MulberryToolResult
 
 app = FastAPI(
     title="Mulberry Connector API",
@@ -37,6 +39,7 @@ github = GitHubAdapter()
 github_pr = GitHubPRAdapter()
 sns = SNSAdapter()
 registry = ToolRegistry()
+router = ConstraintAwareRouter()
 
 
 class ActionRequest(BaseModel):
@@ -112,6 +115,28 @@ def agent_tool_card(agent_id: str):
     if agent_id.lower() not in VALID_AGENTS:
         raise HTTPException(status_code=404, detail=f"Unknown agent: {agent_id}")
     return registry.agent_card(agent_id)
+
+
+@app.post("/v1/tools/call", response_model=MulberryToolResult)
+def tool_call(
+    call: MulberryToolCall,
+    x_gateway_secret: str = Header(default=""),
+):
+    """
+    도구 직접 호출 — Constraint-Aware Router 경유.
+
+    흐름:
+      MulberryToolCall → 권한확인 → Spirit검증 → 파라미터검증
+      → 실행(or Fallback) → MulberryToolResult 반환
+
+    기존 /v1/action/execute 와의 차이:
+      execute = intent(의도) 기반 고수준 API
+      /v1/tools/call = tool_id 기반 직접 도구 호출
+    """
+    _verify_secret(x_gateway_secret)
+    if call.agent.lower() not in VALID_AGENTS:
+        raise HTTPException(status_code=400, detail=f"Unknown agent: {call.agent}")
+    return router.execute(call)
 
 
 @app.get("/v1/tools/{tool_id}/can-use/{agent_id}")
