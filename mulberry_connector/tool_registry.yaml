@@ -12,6 +12,13 @@
 #   borrowable_by: 빌려 쓸 수 있는 에이전트 목록 (* = 전원)
 #   endpoint: SDK 내부 라우팅 키
 #   implemented: 현재 SDK에서 실행 가능 여부
+#   capability_level: Kbin CTO 설계 — 도구 권한 등급
+#     L0: read-only       (읽기 전용, 부작용 없음)
+#     L1: draft           (초안 생성, 저장 전)
+#     L2: external_post   (외부 게시 — GitHub 댓글 등)
+#     L3: code_modify     (코드 변경 — PR, 파일 쓰기)
+#     L4: deploy_financial(배포 / 금융 — 최고 위험)
+#   trust_score: 라우팅 가중치 기준 (0.0~1.0, 높을수록 우선)
 # ============================================================
 
 tools:
@@ -26,7 +33,9 @@ tools:
     borrowable_by: "*"
     endpoint: "terminal.exec"
     implemented: true
-    risk_level: high          # Spirit Score 0.90 이상 필요
+    risk_level: high
+    capability_level: L3      # 코드 변경 수준 — Hesitation 필수
+    trust_score: 0.95
     examples:
       - "python run.py --dry-run"
       - "pip install -r requirements.txt"
@@ -40,6 +49,8 @@ tools:
     endpoint: "file.read"
     implemented: true
     risk_level: low
+    capability_level: L0      # 읽기 전용 — 부작용 없음
+    trust_score: 1.0
 
   - id: file.write
     name: "파일 쓰기"
@@ -48,7 +59,9 @@ tools:
     borrowable_by: ["ryuwon", "malu", "kbin", "trang"]
     endpoint: "file.write"
     implemented: true
-    risk_level: medium        # Spirit Score 0.80 이상 필요
+    risk_level: medium
+    capability_level: L3      # 코드 변경
+    trust_score: 0.85
 
   - id: github.comment
     name: "GitHub 이슈 댓글"
@@ -58,6 +71,8 @@ tools:
     endpoint: "github.comment"
     implemented: true
     risk_level: low
+    capability_level: L2      # 외부 게시
+    trust_score: 0.90
 
   - id: github.pr
     name: "GitHub PR 생성"
@@ -66,7 +81,9 @@ tools:
     borrowable_by: ["ryuwon", "malu", "kbin", "wayong"]
     endpoint: "github.pr"
     implemented: true
-    risk_level: high          # Spirit Score 0.85 이상 필요
+    risk_level: high
+    capability_level: L3      # 코드 변경 + 외부 게시 복합
+    trust_score: 0.88
 
   - id: code.exec
     name: "코드 실행 (Python)"
@@ -76,6 +93,8 @@ tools:
     endpoint: "code.exec"
     implemented: true
     risk_level: medium
+    capability_level: L2      # 외부 영향 가능
+    trust_score: 0.88
 
   # ──────────────────────────────────────────
   # KBIN (ChatGPT / OpenAI) 소유 도구

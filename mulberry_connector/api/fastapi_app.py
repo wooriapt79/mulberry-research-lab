@@ -22,6 +22,7 @@ from adapters.github_pr import GitHubPRAdapter, PR_SPIRIT_THRESHOLD
 from adapters.sns import SNSAdapter
 from core.tool_registry import ToolRegistry
 from core.constraint_router import ConstraintAwareRouter
+from core.dynamic_router import DynamicConstraintRouter, CAPABILITY_LEVELS
 from mulberry_tools.schema import MulberryToolCall, MulberryToolResult
 
 app = FastAPI(
@@ -40,6 +41,7 @@ github_pr = GitHubPRAdapter()
 sns = SNSAdapter()
 registry = ToolRegistry()
 router = ConstraintAwareRouter()
+dyn_router = DynamicConstraintRouter(registry)
 
 
 class ActionRequest(BaseModel):
@@ -137,6 +139,37 @@ def tool_call(
     if call.agent.lower() not in VALID_AGENTS:
         raise HTTPException(status_code=400, detail=f"Unknown agent: {call.agent}")
     return router.execute(call)
+
+
+@app.get("/v1/tools/{tool_id}/route/{agent_id}")
+def dynamic_route(tool_id: str, agent_id: str, context: str = ""):
+    """
+    Dynamic Constraint Scoring Router — 최적 실행 에이전트 선택.
+    route_score = (trust*weight) - latency - quota - ethical_risk + context_match
+    """
+    result = dyn_router.route(tool_id, agent_id, context)
+    return {
+        "tool_id": tool_id,
+        "requester": agent_id,
+        "selected_agent": result.selected_agent,
+        "capability_level": result.capability_level,
+        "capability_label": CAPABILITY_LEVELS.get(result.capability_level, {}).get("label", ""),
+        "human_review_required": result.human_review_required,
+        "hesitation_level": result.hesitation_level,
+        "reason": result.reason,
+        "top_scores": [
+            {"agent": s.agent, "score": s.score,
+             "trust": s.trust, "latency_penalty": s.latency_penalty,
+             "ethical_risk": s.ethical_risk}
+            for s in result.scores[:3]
+        ],
+    }
+
+
+@app.get("/v1/tools/{tool_id}/reputation")
+def tool_reputation(tool_id: str):
+    """Tool Reputation — Audit Log 기반 실행 이력 집계."""
+    return dyn_router.tool_reputation(tool_id)
 
 
 @app.get("/v1/tools/{tool_id}/can-use/{agent_id}")
