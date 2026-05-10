@@ -103,21 +103,23 @@ tools:
   # ──────────────────────────────────────────
   - id: vision.analyze
     name: "이미지 분석"
-    description: "이미지 내용 설명, 객체 인식, 텍스트 추출."
+    description: "이미지 내용 설명, 객체 인식, 텍스트 추출. 장승배기 프로토콜: 전통+기술 조화 감지 시 Spirit Score 보너스."
     owner: malu
     borrowable_by: "*"
     endpoint: "vision.analyze"
-    implemented: false
+    implemented: true      # Malu 연동 완료 (2026-05-10) — vision_handler.py
     risk_level: low
+    requires_env: ["GOOGLE_API_KEY"]
 
   - id: vision.multimodal
     name: "멀티모달 처리"
-    description: "이미지 + 텍스트 + 오디오 복합 처리."
+    description: "이미지 + 텍스트 복합 처리. Gemini 1.5 Pro/Flash."
     owner: malu
     borrowable_by: ["koda", "kbin", "ryuwon"]
     endpoint: "vision.multimodal"
-    implemented: false
+    implemented: true      # Malu 연동 완료 (2026-05-10) — vision_handler.py
     risk_level: low
+    requires_env: ["GOOGLE_API_KEY"]
 
   # ──────────────────────────────────────────
   # WAYONG (DeepSeek) 소유 도구

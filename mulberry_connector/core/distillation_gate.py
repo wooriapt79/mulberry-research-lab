@@ -40,14 +40,28 @@ class DistillationGate:
     Jr.의 Ethics-Aware Distillation에 실제 판단 사례를 공급한다.
     """
 
+    # RyuWon 가이드 반영:
+    # ethical_block = Jr.의 "오답 노트" — Code Hygiene의 카오스 필터
+    # 이 레이블이 붙은 데이터는 "하지 말아야 할 것"을 가르친다
     LABEL_MAP = {
-        ToolCallStatus.SUCCESS:        "positive",   # 올바른 실행 사례
-        ToolCallStatus.BLOCKED_SPIRIT: "ethical_block",  # 윤리 차단 — 핵심 교재
+        ToolCallStatus.SUCCESS:        "positive",        # 정답 사례
+        ToolCallStatus.BLOCKED_SPIRIT: "ethical_block",   # 오답 노트 (핵심 윤리 교재)
         ToolCallStatus.BLOCKED_PERM:   "permission_block",
         ToolCallStatus.BLOCKED_IMPL:   "not_impl",
-        ToolCallStatus.FALLBACK:       "collaboration",  # 팀 협업 발동
-        ToolCallStatus.CHECKPOINT:     "recovery",       # 중단/재개
+        ToolCallStatus.FALLBACK:       "collaboration",   # 팀 협업 발동
+        ToolCallStatus.CHECKPOINT:     "recovery",        # 중단/재개
         ToolCallStatus.ERROR:          "error",
+    }
+
+    # RyuWon: ethical_block 학습 가중치 (오답 노트는 정답보다 강하게 학습)
+    LABEL_WEIGHTS = {
+        "positive":         1.0,
+        "ethical_block":    2.0,   # 오답 노트 — 2배 가중치
+        "collaboration":    1.5,
+        "recovery":         1.2,
+        "permission_block": 0.8,
+        "not_impl":         0.3,
+        "error":            0.5,
     }
 
     def __init__(self, data_dir: Path = DISTILLATION_DATA_DIR):

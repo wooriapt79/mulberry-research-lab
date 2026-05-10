@@ -32,6 +32,12 @@ from mulberry_tools.schema import (
 )
 
 
+# ── Kbin 가이드 반영: 동적 라우팅 기반 구조 ──────────────────────
+# 현재: 하드코딩 우선순위 (v1)
+# 다음: 에이전트 컨디션(CPU/Mem/응답속도) 기반 가중치 라우팅 (v2 예정)
+# v2 설계: agent_condition_score[agent] = f(cpu, mem, latency, spirit_avg)
+#          → 가장 높은 score의 에이전트로 동적 라우팅
+
 # Fallback 우선순위: 요청 에이전트가 실행 불가일 때 대신할 에이전트 목록
 FALLBACK_PRIORITY: dict[str, list[str]] = {
     "terminal.exec":  ["koda"],
