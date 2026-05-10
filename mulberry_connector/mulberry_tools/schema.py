@@ -17,6 +17,20 @@ from pydantic import BaseModel, Field
 
 # ── 요청 ─────────────────────────────────────────────────────────
 
+class ToolResponse(BaseModel):
+    """
+    도구 응답 구조화 스키마 (RyuWon 설계).
+    thinking/answer 분리 → Distillation Gate 독립 평가 가능.
+    """
+    thinking: str | None = Field(None, description="추론 과정 (기본값: UI 숨김)")
+    answer: str = Field(default="", description="최종 응답")
+    tokens_used: dict[str, int] = Field(default_factory=lambda: {"think": 0, "answer": 0})
+    spirit_score: float = Field(default=0.0, ge=0.0, le=1.0)
+    labels: list[str] = Field(default_factory=list)  # reasoning_positive 등
+    distill_weight: float = Field(default=0.0)
+    fallback_used: bool = Field(default=False)
+
+
 class MulberryToolCall(BaseModel):
     """도구 호출 표준 요청 스키마."""
 

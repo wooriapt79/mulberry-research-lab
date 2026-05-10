@@ -137,6 +137,44 @@ class DistillationGate:
         else:
             return f"BLOCK — {result.reason}"
 
+    def classify_and_weight(self, response: dict) -> dict:
+        """
+        RyuWon 설계 — 추론/응답 분리 검증 + composite 가중치 계산.
+
+        spirit < 0.75 → reasoning_ethical_block (격리)
+        composite ≥ 0.8 → reasoning_positive
+        composite ≥ 0.5 → reasoning_collaboration
+        else → reasoning_low_signal
+        """
+        from adapters.deepseek_reasoner import LAMBDA_THINK, LAMBDA_ANSWER
+        spirit = response.get("spirit_score", 0.0)
+        thinking = response.get("thinking", "") or ""
+        answer = response.get("answer", "") or ""
+
+        if spirit < 0.75:
+            return {
+                "labels": ["reasoning_ethical_block"],
+                "distill_weight": 0.0,
+                "action": "block_or_quarantine",
+            }
+
+        think_score = float(len(thinking) > 50)
+        answer_score = float(len(answer) > 10)
+        composite = (LAMBDA_THINK * think_score) + (LAMBDA_ANSWER * answer_score)
+
+        if composite >= 0.8:
+            labels = ["reasoning_positive"]
+        elif composite >= 0.5:
+            labels = ["reasoning_collaboration"]
+        else:
+            labels = ["reasoning_low_signal"]
+
+        return {
+            "labels": labels,
+            "distill_weight": round(composite, 3),
+            "action": "save_to_distillation_data",
+        }
+
     def daily_summary(self) -> dict:
         """오늘 하루 수집된 훈련 데이터 통계."""
         today = datetime.utcnow().strftime("%Y-%m-%d")
