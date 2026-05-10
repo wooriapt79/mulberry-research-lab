@@ -1,0 +1,26 @@
+name: Post Issue Comment
+
+on:
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: "Issue 번호"
+        required: true
+        default: "24"
+      script:
+        description: "실행할 스크립트"
+        required: false
+        default: "scripts/post_issue24_comment.py"
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Post Comment
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 ${{ github.event.inputs.script }}
