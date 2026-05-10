@@ -12,6 +12,9 @@ on:
         required: false
         default: "scripts/post_issue24_comment.py"
 
+permissions:
+  issues: write
+
 jobs:
   post:
     runs-on: ubuntu-latest
