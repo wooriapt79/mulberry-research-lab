@@ -18,6 +18,7 @@ from pydantic import BaseModel
 from core import PolicyEngine, Decision
 from core.handoff import HandoffGate
 from adapters.github import GitHubAdapter
+from adapters.github_pr import GitHubPRAdapter, PR_SPIRIT_THRESHOLD
 from adapters.sns import SNSAdapter
 
 app = FastAPI(
@@ -32,16 +33,23 @@ VALID_AGENTS = {"koda", "kbin", "malu", "wayong", "ryuwon", "trang", "lynn", "jr
 policy = PolicyEngine()
 handoff = HandoffGate()
 github = GitHubAdapter()
+github_pr = GitHubPRAdapter()
 sns = SNSAdapter()
 
 
 class ActionRequest(BaseModel):
     agent: str
-    intent: str  # "github.comment" | "sns.slack" | ...
+    intent: str  # "github.comment" | "github.pr" | "sns.slack" | ...
     content: str
     repo: str = "wooriapt79/mulberry-research-lab"
     issue_number: int | None = None
     bypass_spirit: bool = False  # 비상 우회 (Spirit Score 무시)
+    # github.pr 전용 필드
+    pr_title: str | None = None
+    pr_file_path: str | None = None
+    pr_file_content: str | None = None
+    pr_commit_message: str | None = None
+    pr_draft: bool = True
 
 
 class ActionResponse(BaseModel):
@@ -105,7 +113,29 @@ def execute(
         return base_response
 
     # 3. 실행
-    if req.intent.startswith("github") and req.issue_number:
+    if req.intent == "github.pr":
+        # PR 생성 — Spirit Score 기준 더 높음 (0.85)
+        if result.spirit.score < PR_SPIRIT_THRESHOLD and not req.bypass_spirit:
+            base_response.status = "blocked"
+            base_response.reason = f"PR 생성은 Spirit Score {PR_SPIRIT_THRESHOLD} 이상 필요 (현재: {result.spirit.score:.2f})"
+            return base_response
+        if not all([req.pr_title, req.pr_file_path, req.pr_file_content]):
+            raise HTTPException(status_code=400, detail="github.pr 에는 pr_title, pr_file_path, pr_file_content 필수")
+        pr_result = github_pr.create_pr(
+            agent_id=req.agent,
+            title=req.pr_title,
+            body=req.content,
+            file_path=req.pr_file_path,
+            file_content=req.pr_file_content,
+            commit_message=req.pr_commit_message or f"feat: {req.pr_title}",
+            linked_issue=req.issue_number,
+            draft=req.pr_draft,
+        )
+        base_response.status = "success" if pr_result.success else "error"
+        base_response.url = pr_result.pr_url
+        if not pr_result.success:
+            base_response.reason = pr_result.error
+    elif req.intent.startswith("github") and req.issue_number:
         post_result = github.post_comment(
             issue_number=req.issue_number,
             content=req.content,

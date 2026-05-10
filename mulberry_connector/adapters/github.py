@@ -13,7 +13,12 @@ from dataclasses import dataclass
 
 
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
-DEFAULT_REPO  = os.environ.get("REPO", "wooriapt79/mulberry-research-lab")
+# REPO / MULBERRY_REPO_OWNER 둘 다 지원 (Trang Railway 설정 호환)
+DEFAULT_REPO = (
+    os.environ.get("REPO")
+    or os.environ.get("MULBERRY_REPO_OWNER", "wooriapt79")
+    + "/" + os.environ.get("MULBERRY_REPO_NAME", "mulberry-research-lab")
+)
 
 AGENT_SIGNATURES = {
     "koda":    "Koda (Claude / Anthropic)",
