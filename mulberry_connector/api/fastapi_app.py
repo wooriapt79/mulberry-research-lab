@@ -20,6 +20,7 @@ from core.handoff import HandoffGate
 from adapters.github import GitHubAdapter
 from adapters.github_pr import GitHubPRAdapter, PR_SPIRIT_THRESHOLD
 from adapters.sns import SNSAdapter
+from core.tool_registry import ToolRegistry
 
 app = FastAPI(
     title="Mulberry Connector API",
@@ -35,6 +36,7 @@ handoff = HandoffGate()
 github = GitHubAdapter()
 github_pr = GitHubPRAdapter()
 sns = SNSAdapter()
+registry = ToolRegistry()
 
 
 class ActionRequest(BaseModel):
@@ -68,11 +70,70 @@ def _verify_secret(secret: str) -> None:
 
 @app.get("/status")
 def status():
+    reg_summary = registry.summary()
     return {
         "service": "Mulberry Connector API",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "status": "online",
         "agents": sorted(VALID_AGENTS),
+        "tool_registry": reg_summary,
+    }
+
+
+# ── Tool Registry 엔드포인트 ──────────────────────────────────────
+
+@app.get("/v1/tools")
+def list_all_tools():
+    """전체 도구 목록 — 브랜드별 소유 및 공유 가능 여부 포함."""
+    tools = registry.all_tools()
+    return {
+        "total": len(tools),
+        "tools": [
+            {
+                "id": t.id,
+                "name": t.name,
+                "description": t.description,
+                "owner": t.owner,
+                "borrowable_by": t.borrowable_by,
+                "implemented": t.implemented,
+                "risk_level": t.risk_level,
+            }
+            for t in tools
+        ],
+    }
+
+
+@app.get("/v1/tools/agents/{agent_id}")
+def agent_tool_card(agent_id: str):
+    """
+    특정 에이전트의 도구 카드.
+    소유 도구 + 빌려 쓸 수 있는 도구 목록 반환.
+    """
+    if agent_id.lower() not in VALID_AGENTS:
+        raise HTTPException(status_code=404, detail=f"Unknown agent: {agent_id}")
+    return registry.agent_card(agent_id)
+
+
+@app.get("/v1/tools/{tool_id}/can-use/{agent_id}")
+def can_use_tool(tool_id: str, agent_id: str):
+    """에이전트가 해당 도구를 사용할 수 있는지 확인."""
+    tool = registry.get(tool_id)
+    if not tool:
+        raise HTTPException(status_code=404, detail=f"Tool not found: {tool_id}")
+    can = registry.can_borrow(agent_id, tool_id)
+    return {
+        "agent": agent_id,
+        "tool_id": tool_id,
+        "can_use": can,
+        "owner": tool.owner,
+        "implemented": tool.implemented,
+        "spirit_required": registry.spirit_required(tool_id),
+        "reason": (
+            "자신 소유" if tool.owner == agent_id.lower()
+            else "공유 허용" if can
+            else "미구현" if not tool.implemented
+            else "공유 미허용"
+        ),
     }
 
 
@@ -87,7 +148,22 @@ def execute(
     if req.agent.lower() not in VALID_AGENTS:
         raise HTTPException(status_code=400, detail=f"Unknown agent: {req.agent}")
 
+    # 0. Tool Registry — 도구 사용 권한 확인
+    tool = registry.get(req.intent)
+    if tool and not registry.can_borrow(req.agent, req.intent):
+        return ActionResponse(
+            decision="BLOCK",
+            status="blocked",
+            spirit_score=0.0,
+            reason=(
+                f"'{req.agent}'은 '{req.intent}' 도구를 사용할 권한이 없습니다. "
+                f"소유자: {tool.owner} | 미구현: {not tool.implemented}"
+            ),
+        )
+
     # 1. Policy 검증 (Spirit + Hesitation)
+    # Tool Registry 기준 Spirit threshold 적용
+    min_spirit = registry.spirit_required(req.intent) if tool else 0.75
     result = policy.evaluate(req.content, req.intent, bypass=req.bypass_spirit)
     base_response = ActionResponse(
         decision=result.decision.value,
