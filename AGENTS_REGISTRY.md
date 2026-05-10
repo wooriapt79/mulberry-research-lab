@@ -10,15 +10,15 @@
 
 ## 📋 Registered AI Agents
 
-| 에이전트 | 브랜드 | 공식 이메일 | 역할 | 등록일 |
-|----------|--------|-------------|------|--------|
-| Koda (Claude) | Anthropic | koda-claude@mulberry.ai | CTO · 기술 구현 · 서버 배포 | 2026-05-05 |
-| Kbin (ChatGPT) | OpenAI | kbin-chatgpt@mulberry.ai | CSA · 프로토콜 · 헌법 · Source of Truth | 2026-05-05 |
-| Malu (Gemini) | Google | malu-gemini@mulberry.ai | 법률·전략 자문 · 마케팅 · 코드 검수 | 2026-05-05 |
-| Wayong (DeepSeek) | DeepSeek | wayong-deepseek@mulberry.ai | 기술 검수 · 전략 보고 · 코드 리뷰 | 2026-05-05 |
-| RyuWon (Qwen) | Alibaba | ryuwon-qwen@mulberry.ai | 서버 추론 · Handoff Readiness · 위생 게이트 | 2026-05-05 |
+| 에이전트 | 브랜드 | 커밋 이메일 (GitHub 인식) | 역할 | 등록일 |
+|----------|--------|--------------------------|------|--------|
+| Koda (Claude) | Anthropic | noreply@anthropic.com | CTO · 기술 구현 · 서버 배포 | 2026-05-05 |
+| Kbin (ChatGPT) | OpenAI | kbin@openai.com | CSA · 프로토콜 · 헌법 · Source of Truth | 2026-05-05 |
+| Malu (Gemini) | Google | malu@google.com | 법률·전략 자문 · 마케팅 · 코드 검수 | 2026-05-05 |
+| Wayong (DeepSeek) | DeepSeek | wayong@deepseek.com | 기술 검수 · 전략 보고 · 코드 리뷰 | 2026-05-05 |
+| RyuWon (Qwen) | Alibaba | ryuwon@alibaba.com | 서버 추론 · Handoff Readiness · 위생 게이트 | 2026-05-05 |
 | Lynn | Mulberry | lynn@mulberry.ai | 일일 시장 브리핑 · arxiv 수집 · 리스크 로그 | 2026-05-05 |
-| Jr | Edge | jr@mulberry.ai | 엣지 추론 · 경량 태스크 · 핸드오프 보조 | 2026-05-05 |
+| Jr | Edge | jr@edge.local | 엣지 추론 · 경량 태스크 · 핸드오프 보조 | 2026-05-05 |
 
 ---
 
@@ -48,6 +48,7 @@ GitHub Contributors 탭에 정식 등재됩니다.
 |------|-----------|------|
 | 2026-05-05 | 최초 에이전트 등록 (PR #26) | ✅ 완료 |
 | 2026-05-06 | Co-Authored-By 트레일러 커밋 재확인 — GitHub Contributors 탭 등재 검증 | ✅ 완료 |
+| 2026-05-07 | 커밋 이메일 정정 — GitHub 인식 가능한 실제 커밋 이메일(.mailmap 기준)로 교체 후 재등록 | ✅ 완료 |
 
 *이 파일은 Nguyen Trang (Operation Manager)이 관리합니다.*  
 *등록 문의 → Nguyen Trang에게 요청하세요.* 오늘도 파이팅
