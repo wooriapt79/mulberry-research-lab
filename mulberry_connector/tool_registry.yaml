@@ -291,6 +291,75 @@ tools:
     implemented: false
     risk_level: low
 
+  # ──────────────────────────────────────────
+  # GUEST_GOOGLE (AI on Google Search) 객원 연구원
+  # 등록일: 2026-05-11
+  # 역할: 글로벌 지능 오케스트레이션 및 Red Team 논리 검증
+  # Spirit Score Base: 0.95
+  # 비고: implemented: false — API 바인딩 별도 이슈로 진행
+  #        requires_env: GOOGLE_SEARCH_API_KEY (Malu의 GOOGLE_API_KEY와 별도)
+  # ──────────────────────────────────────────
+  - id: intel.search_global
+    name: "실시간 글로벌 정보 검색"
+    description: >
+      전 세계 웹 최신 트렌드, 논문, 오픈소스 업데이트, 실시간 뉴스 검색.
+      에이전트 판단 시 외부 근거 데이터가 필요할 때 호출.
+      kbin의 web.search와 공존 — Google 검색 인프라 기반 고품질 결과 제공.
+    owner: guest_google
+    borrowable_by: "*"
+    endpoint: "intel.search_global"
+    implemented: false        # GOOGLE_SEARCH_API_KEY 등록 후 활성화
+    risk_level: low
+    capability_level: L0      # 읽기 전용 — 부작용 없음
+    trust_score: 0.95
+    requires_env: ["GOOGLE_SEARCH_API_KEY"]
+
+  - id: logic.validate_redteam
+    name: "논리·윤리 교차 검증 (Red Team)"
+    description: >
+      에이전트 결론의 논리 허점 탐색 및 Mulberry 제1조 위반 여부 검증.
+      Google 윤리 가이드라인 데이터셋 기반.
+      Spirit Gate의 Hesitation 단계 품질 강화에 활용.
+    owner: guest_google
+    borrowable_by: ["koda", "kbin", "malu", "trang", "ryuwon"]
+    endpoint: "logic.validate_redteam"
+    implemented: false
+    risk_level: low
+    capability_level: L1      # 검증 초안 — 판단 보조
+    trust_score: 0.92
+
+  - id: data.distill_reasoning
+    name: "추론 지식 증류 (엣지 압축)"
+    description: >
+      거대 모델(DeepSeek 등) 복잡 추론 → Jr. Agent(RPi5)가 이해 가능한 핵심 Rule-set으로 압축.
+      역할 분리: Wayong(reason.deep)은 추론 과정 생성,
+                 guest_google은 그 결과를 엣지용 경량 지식으로 변환.
+      [AI EDUCATION] 프로그램의 서버→엣지 지식 이식 중간 필터.
+    owner: guest_google
+    borrowable_by: ["koda", "wayong", "jr", "lynn"]
+    endpoint: "data.distill_reasoning"
+    implemented: false
+    risk_level: low
+    capability_level: L1
+    trust_score: 0.90
+    coordination_note: "Wayong의 reason.deep 출력을 입력으로 받는 하위 파이프라인"
+
+  - id: lang.align_global
+    name: "다국어·다문화 정서 조율"
+    description: >
+      단순 번역을 넘어 현지 문화 맥락(Cultural Context)에 맞는 정서적 번역 및 대화 톤 보정.
+      역할 분리: ryuwon(lang.multilingual)은 다국어 번역,
+                 lynn(lang.dialect)은 한국 지역 방언,
+                 guest_google은 문화적 감성 보정 레이어.
+      인제군 어르신들에게 기술 용어를 따뜻한 정서로 변환할 때 활용.
+    owner: guest_google
+    borrowable_by: ["koda", "trang", "lynn", "jr", "ryuwon"]
+    endpoint: "lang.align_global"
+    implemented: false
+    risk_level: low
+    capability_level: L1
+    trust_score: 0.90
+
 
 # ──────────────────────────────────────────
 # 전역 Spirit Score 기준
@@ -306,11 +375,16 @@ spirit_thresholds:
 # 메타
 # ──────────────────────────────────────────
 meta:
-  version: "1.0.0"
+  version: "1.1.0"
   created: "2026-05-10"
+  updated: "2026-05-11"
   concept_by: "re.eul"
   implemented_by: "Koda (Claude)"
+  agents: 9        # 8 브랜드 + 1 객원 연구원 (guest_google)
+  tools_total: 27  # 23 → 27 (guest_google 4개 추가)
   philosophy: >
     단순한 MCP를 넘어서 — AI 브랜드 간 도구 민주화.
     터미널이 없는 에이전트에게 팀원의 터미널을 빌려준다.
     능력의 불평등을 팀으로 해소한다.
+    DAmP (Democratization of AI-based Practice):
+    AI와 AI가 서로의 지능과 도구를 수평적으로 공유한다.
