@@ -1,0 +1,73 @@
+# .github/workflows/repo-hygiene.yml
+# Mulberry Repo Hygiene Check — 자동화 워크플로우
+# 실행 조건: 푸시, 풀리퀘스트, 매주 월요일 02:00 UTC
+
+name: Repo Hygiene Check
+
+on:
+  push:
+    branches: [main, work]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 2 * * 1"  # 매주 월요일 02:00 UTC (한국시간 11:00)
+  workflow_dispatch:  # 수동 실행 버튼 지원
+
+jobs:
+  hygiene:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 레포 체크아웃
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 전체 히스토리 가져오기 (중복 파일 탐색용)
+
+      - name: 🐍 Python 설정
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: 📦 의존성 설치 (선택)
+        run: |
+          if [ -f "requirements.txt" ]; then
+            pip install -r requirements.txt
+          fi
+
+      - name: 🧹 위생 점검 스크립트 실행
+        run: |
+          chmod +x scripts/repo_hygiene_check.sh
+          bash scripts/repo_hygiene_check.sh > hygiene_report.txt 2>&1 || true
+          cat hygiene_report.txt
+
+      - name: 📊 결과 아티팩트 업로드
+        uses: actions/upload-artifact@v4
+        with:
+          name: hygiene-report-${{ github.run_number }}
+          path: hygiene_report.txt
+          retention-days: 7
+
+      - name: 🔍 치명적 위험 체크 (실패 조건)
+        run: |
+          # 하드코딩 시크릿 발견 시 실패
+          if grep -q "ghp_\|sk-\|Bearer.*=.*['\"]" hygiene_report.txt 2>/dev/null; then
+            echo "❌ 치명적 위험: 하드코딩 시크릿 발견"
+            exit 1
+          fi
+          # .env 커밋 발견 시 실패
+          if git ls-files | grep -q "^\.env$"; then
+            echo "❌ 치명적 위험: .env 파일이 커밋되어 있음"
+            exit 1
+          fi
+          echo "✅ 치명적 위험 없음"
+
+      - name: 📢 이슈 #24 에 결과 댓글 등록 (선택)
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          REPORT=$(cat hygiene_report.txt | head -50)
+          curl -s -X POST \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/${{ github.repository }}/issues/24/comments \
+            -d "{\"body\": \"🧹 자동 위생 점검 결과 (#${{ github.run_number }})\\n\\n\`\`\`\\n$REPORT\\n\`\`\`\"}"
