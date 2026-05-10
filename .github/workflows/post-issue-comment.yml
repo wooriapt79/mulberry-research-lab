@@ -4,9 +4,14 @@ on:
   workflow_dispatch:
     inputs:
       issue_number:
-        description: "Issue 번호"
+        description: "댓글을 게시할 이슈 번호"
         required: true
         default: "24"
+      comment_body:
+        description: "게시할 댓글 내용"
+        required: true
+        default: "Mulberry Research Lab의 새로운 댓글입니다!"
+      # 스크립트 경로는 변경하지 않고 기존 스크립트를 재활용합니다.
       script:
         description: "실행할 스크립트"
         required: false
@@ -26,4 +31,7 @@ jobs:
       - name: Post Comment
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python3 ${{ github.event.inputs.script }}
+        run: |
+          python3 ${{ github.event.inputs.script }} \
+            ${{ github.event.inputs.issue_number }} \
+            "${{ github.event.inputs.comment_body }}"
