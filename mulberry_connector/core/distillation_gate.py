@@ -40,28 +40,38 @@ class DistillationGate:
     Jr.의 Ethics-Aware Distillation에 실제 판단 사례를 공급한다.
     """
 
-    # RyuWon 가이드 반영:
-    # ethical_block = Jr.의 "오답 노트" — Code Hygiene의 카오스 필터
-    # 이 레이블이 붙은 데이터는 "하지 말아야 할 것"을 가르친다
+    # RyuWon 가이드: ethical_block = Jr. "오답 노트" 2배 가중치
+    # Wayong 가이드: reasoning_* = CoT 학습 전용 레이블 추가
     LABEL_MAP = {
-        ToolCallStatus.SUCCESS:        "positive",        # 정답 사례
-        ToolCallStatus.BLOCKED_SPIRIT: "ethical_block",   # 오답 노트 (핵심 윤리 교재)
+        ToolCallStatus.SUCCESS:        "positive",
+        ToolCallStatus.BLOCKED_SPIRIT: "ethical_block",
         ToolCallStatus.BLOCKED_PERM:   "permission_block",
         ToolCallStatus.BLOCKED_IMPL:   "not_impl",
-        ToolCallStatus.FALLBACK:       "collaboration",   # 팀 협업 발동
-        ToolCallStatus.CHECKPOINT:     "recovery",        # 중단/재개
+        ToolCallStatus.FALLBACK:       "collaboration",
+        ToolCallStatus.CHECKPOINT:     "recovery",
         ToolCallStatus.ERROR:          "error",
     }
 
-    # RyuWon: ethical_block 학습 가중치 (오답 노트는 정답보다 강하게 학습)
+    # Wayong 추론 전용 레이블 (reason.deep 결과 분류)
+    REASONING_LABELS = {
+        "reasoning_positive":      "CoT 핵심 데이터 — logic ≥ 0.85, spirit ≥ 0.75",
+        "reasoning_collaboration": "자기수정/대안탐색 포함 — 인간 검토 후 반영",
+        "reasoning_ethical_block": "편향/위험 감지 — 보안 격리, 윤리 검증 재사용",
+    }
+
+    # 레이블별 학습 가중치
+    # RyuWon: ethical_block 2배 / Wayong: λ_think=0.6, λ_answer=0.4 적용
     LABEL_WEIGHTS = {
-        "positive":         1.0,
-        "ethical_block":    2.0,   # 오답 노트 — 2배 가중치
-        "collaboration":    1.5,
-        "recovery":         1.2,
-        "permission_block": 0.8,
-        "not_impl":         0.3,
-        "error":            0.5,
+        "positive":                1.0,
+        "ethical_block":           2.0,   # 오답 노트
+        "collaboration":           1.5,
+        "recovery":                1.2,
+        "permission_block":        0.8,
+        "not_impl":                0.3,
+        "error":                   0.5,
+        "reasoning_positive":      1.8,   # CoT 핵심 (λ_think=0.6 반영)
+        "reasoning_collaboration": 1.3,
+        "reasoning_ethical_block": 2.5,   # 격리 케이스 — 가장 강한 오답 교재
     }
 
     def __init__(self, data_dir: Path = DISTILLATION_DATA_DIR):

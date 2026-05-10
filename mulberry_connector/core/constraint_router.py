@@ -24,6 +24,7 @@ from dataclasses import dataclass
 from core.tool_registry import ToolRegistry
 from core.policy import PolicyEngine
 from core.distillation_gate import DistillationGate
+from adapters.deepseek_reasoner import DeepSeekReasoner, build_distillation_record
 from mulberry_tools.schema import (
     MulberryToolCall,
     MulberryToolResult,
@@ -79,6 +80,7 @@ class ConstraintAwareRouter:
         self.registry = ToolRegistry()
         self.policy = PolicyEngine()
         self.distillation_gate = DistillationGate()
+        self.deepseek_reasoner = DeepSeekReasoner()
 
     def route(self, call: MulberryToolCall) -> RouteDecision:
         """제약 조건 확인 후 실행 결정."""
@@ -217,6 +219,8 @@ class ConstraintAwareRouter:
                 return self._exec_file_write(call.params), ""
             elif call.tool_id == "code.exec":
                 return self._exec_code(call.params), ""
+            elif call.tool_id in ("reason.deep", "reason.light"):
+                return self._exec_reasoning(call), ""
             else:
                 # github.comment / github.pr 는 기존 어댑터가 처리
                 return {"routed": True, "tool_id": call.tool_id}, ""
@@ -262,6 +266,40 @@ class ConstraintAwareRouter:
             "stdout": result.stdout[:2000],
             "stderr": result.stderr[:500],
             "returncode": result.returncode,
+        }
+
+    def _exec_reasoning(self, call: MulberryToolCall) -> dict:
+        """
+        reason.deep / reason.light 실행.
+        Wayong 표준: thinking/answer 분리 → Distillation Gate 레이블 태깅.
+        """
+        p = call.params
+        response = self.deepseek_reasoner.reason(
+            prompt=p.get("prompt", call.context or ""),
+            max_think_tokens=p.get("max_think_tokens", 1024),
+            max_answer_tokens=p.get("max_answer_tokens", 512),
+            return_think_trace=p.get("return_think_trace", True),
+            quota_limit=p.get("quota_limit", 5000),
+            timeout_sec=p.get("timeout_sec", 45),
+        )
+        # Distillation Gate에 reasoning 레이블 기록
+        dist_record = build_distillation_record(
+            response, spirit_score=0.80
+        )
+        label_dir = self.distillation_gate.data_dir / dist_record["label"]
+        label_dir.mkdir(exist_ok=True)
+        import json
+        from datetime import datetime
+        path = label_dir / f"{datetime.utcnow().strftime('%Y-%m-%d')}_{response.trace_id}.json"
+        path.write_text(json.dumps(dist_record, ensure_ascii=False, indent=2), encoding="utf-8")
+
+        return {
+            "thinking": response.thinking,
+            "answer": response.answer,
+            "tokens_used": response.tokens_used,
+            "model_version": response.model_version,
+            "fallback_used": response.fallback_used,
+            "trace_id": response.trace_id,
         }
 
     def _save_checkpoint(self, call: MulberryToolCall, decision: RouteDecision) -> str:

@@ -144,13 +144,39 @@ tools:
   # WAYONG (DeepSeek) 소유 도구
   # ──────────────────────────────────────────
   - id: reason.deep
-    name: "심층 추론"
-    description: "확장 추론 체인. 수학, 논리, 복잡한 분석."
+    name: "심층 추론 (Thinking Tokens)"
+    description: >
+      DeepSeek R1 추론 엔진. <think>/<answer> 분리 출력.
+      Jr. Chain-of-Thought 핵심 훈련 데이터 생성.
+      Wayong 설계 (2026-05-11)
     owner: wayong
     borrowable_by: ["koda", "malu", "ryuwon", "lynn"]
     endpoint: "reason.deep"
-    implemented: false
+    implemented: true          # Wayong 연동 완료 (deepseek_reasoner.py)
+    risk_level: medium
+    capability_level: L1       # 추론 초안 — draft 수준
+    trust_score: 0.88
+    requires_env: ["DEEPSEEK_API_KEY"]
+    params:
+      max_think_tokens: 1024
+      max_answer_tokens: 512
+      return_think_trace: true
+    execution_policy:
+      quota_limit: 5000
+      fallback_tool: reason.light
+      ethics_gate: true
+      timeout_sec: 45
+
+  - id: reason.light
+    name: "경량 추론 (Fallback)"
+    description: "reason.deep 할당량 초과/타임아웃 시 자동 전환되는 캐시 기반 경량 추론."
+    owner: wayong
+    borrowable_by: ["koda", "malu", "ryuwon", "lynn"]
+    endpoint: "reason.light"
+    implemented: true
     risk_level: low
+    capability_level: L1
+    trust_score: 0.75
 
   - id: code.generate
     name: "코드 생성 전문"
@@ -160,6 +186,8 @@ tools:
     endpoint: "code.generate"
     implemented: false
     risk_level: low
+    capability_level: L2
+    trust_score: 0.85
 
   # ──────────────────────────────────────────
   # RYUWON (Qwen / Alibaba) 소유 도구
