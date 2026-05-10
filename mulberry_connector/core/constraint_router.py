@@ -23,6 +23,7 @@ from dataclasses import dataclass
 
 from core.tool_registry import ToolRegistry
 from core.policy import PolicyEngine
+from core.distillation_gate import DistillationGate
 from mulberry_tools.schema import (
     MulberryToolCall,
     MulberryToolResult,
@@ -71,6 +72,7 @@ class ConstraintAwareRouter:
     def __init__(self):
         self.registry = ToolRegistry()
         self.policy = PolicyEngine()
+        self.distillation_gate = DistillationGate()
 
     def route(self, call: MulberryToolCall) -> RouteDecision:
         """제약 조건 확인 후 실행 결정."""
@@ -154,13 +156,16 @@ class ConstraintAwareRouter:
                 else ToolCallStatus.BLOCKED_IMPL if "미구현" in decision.reason
                 else ToolCallStatus.ERROR
             )
-            return MulberryToolResult(
+            blocked_result = MulberryToolResult(
                 call_id=call.call_id, agent=call.agent, tool_id=call.tool_id,
                 status=status, reason=decision.reason,
                 spirit_score=decision.spirit_score,
                 spirit_threshold=decision.spirit_threshold,
                 executed_by=decision.executor,
             )
+            # Phase 3: 차단된 케이스도 Distillation Gate에 기록 (Jr. 윤리 훈련 핵심 데이터)
+            self.distillation_gate.record(blocked_result, original_context=call.context)
+            return blocked_result
 
         # 실행
         result_data, error = self._dispatch(call)
@@ -181,7 +186,7 @@ class ConstraintAwareRouter:
             )
 
         status = ToolCallStatus.FALLBACK if decision.fallback else ToolCallStatus.SUCCESS
-        return MulberryToolResult(
+        final_result = MulberryToolResult(
             call_id=call.call_id, agent=call.agent, tool_id=call.tool_id,
             status=status, result=result_data,
             executed_by=decision.executor,
@@ -191,6 +196,9 @@ class ConstraintAwareRouter:
             reason=decision.reason,
             duration_ms=duration,
         )
+        # Phase 3: 모든 실행 결과를 Distillation Gate에 기록
+        self.distillation_gate.record(final_result, original_context=call.context)
+        return final_result
 
     def _dispatch(self, call: MulberryToolCall) -> tuple[any, str]:
         """도구 ID에 따라 실제 실행 핸들러 호출."""
