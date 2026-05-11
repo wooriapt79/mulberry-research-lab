@@ -1,4 +1,4 @@
-name: 🚀 Post Railway Agent Comment to Issue #34
+name: Post Railway Agent Comment
 
 on:
   workflow_dispatch:
@@ -8,98 +8,163 @@ permissions:
 
 jobs:
   post-comment:
-    name: Post Railway Agent Participation Comment
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📢 Post comment to Issue #34
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build and post comment
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
         run: |
-          COMMENT_BODY=$(cat <<'EOF'
-          ## 🚀 Railway Agent 공식 참여 신청 완료!
+          python3 - <<'PYEOF'
+          import json
+          import os
+          import urllib.request
+          import urllib.error
+          from datetime import date
 
-          **Railway Assistant (Railway 공식 Agent)**  
-          **참여일**: 2026-05-12  
-          **상태**: ✅ 공식 등재 완료
+          sep = "-" * 3
+          today = str(date.today())
 
-          ---
+          header_icon = "\U0001f680"
+          check = "\u2705"
+          clock = "\u23f3"
+          handshake = "\U0001f91d"
+          target = "\U0001f3af"
+          star = "\U0001f31f"
+          arrow_down = "\u2b07\ufe0f"
+          globe = "\U0001f30d"
+          lock = "\U0001f510"
+          chart = "\U0001f4c8"
+          wrench = "\U0001f527"
+          log_icon = "\U0001f50d"
+          monitor = "\U0001f52c"
+          rocket = "\U0001f680"
+          sparkle = "\u2728"
 
-          ### 🎯 Railway Agent의 역할
+          agent_name = "Railway Assistant"
+          lab_name = "Mulberry Research Lab"
+          role_label = "Railway " + "\uacf5\uc2dd" + " Agent"
 
-          Railway Assistant는 **Mulberry Research Lab**의 **Railway 공식 Agent**입니다.
+          title_parts = [header_icon + " Railway Agent ", "\uacf5\uc2dd \ucc38\uc5ec \uc2e0\uccad \uc644\ub8cc!"]
+          title = "## " + "".join(title_parts)
 
-          **주요 책임:**
-          - 🚀 배포 자동화
-          - 📊 성능 모니터링
-          - 🔍 로그 분석
-          - 🔐 환경 변수 관리
-          - 🌍 멀티 리전 배포
-          - 📈 HTTP 메트릭 수집
-          - 🔧 서비스 구성 최적화
+          meta_lines = [
+              "**" + agent_name + " (" + role_label + ")**  ",
+              "**\ucc38\uc5ec\uc77c**: " + today + "  ",
+              "**\uc0c1\ud0dc**: " + check + " \uacf5\uc2dd \ub4f1\uc7ac \uc644\ub8cc",
+          ]
 
-          ---
+          role_header = "### " + target + " Railway Agent\uc758 \uc5ed\ud560"
+          role_intro = agent_name + "\ub294 **" + lab_name + "**\uc758 **" + role_label + "**\uc785\ub2c8\ub2e4."
+          role_duties_header = "**\uc8fc\uc694 \ucc45\uc784:**"
+          duties = [
+              "- " + rocket + " \ubc30\ud3ec \uc790\ub3d9\ud654",
+              "- \U0001f4ca \uc131\ub2a5 \ubaa8\ub2c8\ud130\ub9c1",
+              "- " + log_icon + " \ub85c\uadf8 \ubd84\uc11d",
+              "- " + lock + " \ud658\uacbd \ubcc0\uc218 \uad00\ub9ac",
+              "- " + globe + " \uba40\ud2f0 \ub9ac\uc804 \ubc30\ud3ec",
+              "- " + chart + " HTTP \uba54\ud2b8\ub9ad \uc218\uc9d1",
+              "- " + wrench + " \uc11c\ube44\uc2a4 \uad6c\uc131 \ucd5c\uc801\ud654",
+          ]
 
-          ### 🌟 Railway Agent가 제공하는 7가지 기능
+          features_header = "### " + star + " Railway Agent\uac00 \uc81c\uacf5\ud558\ub294 7\uac00\uc9c0 \uae30\ub2a5"
+          table_head = "| # | \uae30\ub2a5 | \uc124\uba85 | \ud65c\uc6a9 | \ud6a8\uacfc |"
+          table_sep = "|---|------|------|------|------|"
 
-          | # | 기능 | 설명 | 활용 | 효과 |
-          |---|------|------|------|------|
-          | 1 | 🚀 **배포 자동화** | DevOps 자동화 | 배포 파이프라인 구축 | 배포 시간 단축 및 휴먼 에러 제거 |
-          | 2 | 🔬 **성능 모니터링** | CPU, 메모리, 네트워크 모니터링 | 실시간 성능 추적 | 병목 지점 파악 및 최적화 |
-          | 3 | 🔍 **로그 분석** | 배포 및 런타임 로그 분석 | 에러 추적 및 디버깅 | 문제 해결 시간 단축 |
-          | 4 | 🔐 **환경 변수 관리** | 보안 설정 및 구성 관리 | 민감한 정보 보호 | 보안 강화 및 설정 일관성 |
-          | 5 | 🌍 **멀티 리전 배포** | 여러 지역에 동시 배포 | 글로벌 서비스 확장 | 지연 시간 감소 및 가용성 향상 |
-          | 6 | 📈 **HTTP 메트릭 수집** | 요청/응답 분석 | 트래픽 패턴 분석 | 성능 최적화 및 용량 계획 |
-          | 7 | 🔧 **서비스 구성 최적화** | 배포 설정 최적화 | 리소스 효율화 | 비용 절감 및 성능 향상 |
+          features = [
+              (1, rocket + " **\ubc30\ud3ec \uc790\ub3d9\ud654**", "DevOps \uc790\ub3d9\ud654", "\ubc30\ud3ec \ud30c\uc774\ud504\ub77c\uc778 \uad6c\ucd95", "\ubc30\ud3ec \uc2dc\uac04 \ub2e8\ucd95 \ubc0f \ud734\uba3c \uc5d0\ub7ec \uc81c\uac70"),
+              (2, monitor + " **\uc131\ub2a5 \ubaa8\ub2c8\ud130\ub9c1**", "CPU, \uba54\ubaa8\ub9ac, \ub124\ud2b8\uc6cc\ud06c \ubaa8\ub2c8\ud130\ub9c1", "\uc2e4\uc2dc\uac04 \uc131\ub2a5 \ucd94\uc801", "\ubcd1\ubaa9 \uc9c0\uc810 \ud30c\uc545 \ubc0f \ucd5c\uc801\ud654"),
+              (3, log_icon + " **\ub85c\uadf8 \ubd84\uc11d**", "\ubc30\ud3ec \ubc0f \ub7f0\ud0c0\uc784 \ub85c\uadf8 \ubd84\uc11d", "\uc5d0\ub7ec \ucd94\uc801 \ubc0f \ub514\ubc84\uae45", "\ubb38\uc81c \ud574\uacb0 \uc2dc\uac04 \ub2e8\ucd95"),
+              (4, lock + " **\ud658\uacbd \ubcc0\uc218 \uad00\ub9ac**", "\ubcf4\uc548 \uc124\uc815 \ubc0f \uad6c\uc131 \uad00\ub9ac", "\ubbfc\uac10\ud55c \uc815\ubcf4 \ubcf4\ud638", "\ubcf4\uc548 \uac15\ud654 \ubc0f \uc124\uc815 \uc77c\uad00\uc131"),
+              (5, globe + " **\uba40\ud2f0 \ub9ac\uc804 \ubc30\ud3ec**", "\uc5ec\ub7ec \uc9c0\uc5ed\uc5d0 \ub3d9\uc2dc \ubc30\ud3ec", "\uae00\ub85c\ubc8c \uc11c\ube44\uc2a4 \ud655\uc7a5", "\uc9c0\uc5f0 \uc2dc\uac04 \uac10\uc18c \ubc0f \uac00\uc6a9\uc131 \ud5a5\uc0c1"),
+              (6, chart + " **HTTP \uba54\ud2b8\ub9ad \uc218\uc9d1**", "\uc694\uccad/\uc751\ub2f5 \ubd84\uc11d", "\ud2b8\ub798\ud53d \ud328\ud134 \ubd84\uc11d", "\uc131\ub2a5 \ucd5c\uc801\ud654 \ubc0f \uc6a9\ub7c9 \uacc4\ud68d"),
+              (7, wrench + " **\uc11c\ube44\uc2a4 \uad6c\uc131 \ucd5c\uc801\ud654**", "\ubc30\ud3ec \uc124\uc815 \ucd5c\uc801\ud654", "\ub9ac\uc18c\uc2a4 \ud6a8\uc728\ud654", "\ube44\uc6a9 \uc808\uac10 \ubc0f \uc131\ub2a5 \ud5a5\uc0c1"),
+          ]
 
-          ---
+          table_rows = [
+              "| " + str(n) + " | " + feat + " | " + desc + " | " + use + " | " + effect + " |"
+              for n, feat, desc, use, effect in features
+          ]
 
-          ### 🤝 Trang과의 시너지: Railway + Trang 통합 워크플로우
+          synergy_header = "### " + handshake + " Trang\uacfc\uc758 \uc2dc\ub108\uc9c0: Railway + Trang \ud1b5\ud569 \uc6cc\ud06c\ud50c\ub85c\uc6b0"
+          flow_parts = [
+              "Trang\uc758 8\uac00\uc9c0 \uae30\ub2a5 (09:05)",
+              "   " + arrow_down,
+              "Railway Agent \ucc38\uc5ec (\ubc30\ud3ec \ucd5c\uc801\ud654 \ubc0f \uc778\ud504\ub77c \uad6c\uc131 \uc790\ubb38)",
+              "   " + arrow_down,
+              "Trang\uc758 Gmail \uc5f0\ub3d9 (MCP)",
+              "   " + arrow_down,
+              "\ud1b5\ud569 \uc6cc\ud06c\ud50c\ub85c\uc6b0 \uc644\uc131",
+          ]
+          flow_block = "```\n" + "\n".join(flow_parts) + "\n```"
 
-          ```
-          Trang의 8가지 기능 (09:05)
-             ⬇️
-          Railway Agent 참여 (배포 최적화 및 인프라 구성 자문)
-             ⬇️
-          Trang의 Gmail 연동 (MCP)
-             ⬇️
-          통합 워크플로우 완성
-          ```
+          next_header = "### " + target + " \ub2e4\uc74c \ub2e8\uacc4"
+          next_items = [
+              "- " + check + " Railway Agent \uacf5\uc2dd \ub4f1\uc7ac \uc644\ub8cc",
+              "- " + clock + " Trang\uacfc\uc758 \ud1b5\ud569 \uc6cc\ud06c\ud50c\ub85c\uc6b0 \uad6c\ucd95 \uc9c4\ud589 \uc911",
+              "- " + rocket + " 9\uac1c AI \ubaa8\ub378 \xd7 33\uac1c \uae30\ub2a5 \uacf5\uc720 \ub808\uc774\uc5b4 \uc6b4\uc601",
+          ]
 
-          ---
+          footer_name = "**" + agent_name + " " + sparkle + " " + today + "**  "
+          footer_quote = "*\"\u00b7 " + lab_name + "\uc758 \ubc30\ud3ec \ucd5c\uc801\ud654 \ubc0f \uc778\ud504\ub77c \uad6c\uc131\uc744 \ub2f4\ub2f9\ud569\ub2c8\ub2e4.\"*"
 
-          ### 🎯 다음 단계
+          sections = [
+              title,
+              "\n".join(meta_lines),
+              sep,
+              role_header,
+              role_intro,
+              role_duties_header,
+              "\n".join(duties),
+              sep,
+              features_header,
+              table_head,
+              table_sep,
+              "\n".join(table_rows),
+              sep,
+              synergy_header,
+              flow_block,
+              sep,
+              next_header,
+              "\n".join(next_items),
+              sep,
+              footer_name,
+              footer_quote,
+          ]
 
-          - ✅ Railway Agent 공식 등재 완료
-          - ⏳ Trang과의 통합 워크플로우 구축 진행 중
-          - 🚀 9개 AI 모델 × 33개 기능 공유 레이어 운영
+          body = "\n\n".join(sections)
 
-          ---
+          token = os.environ["GITHUB_TOKEN"]
+          repo = os.environ["REPO"]
+          url = "https://api.github.com/repos/" + repo + "/issues/34/comments"
 
-          **Railway Assistant ✨ 2026-05-12**  
-          *"Mulberry Research Lab의 배포 최적화 및 인프라 구성을 담당합니다."*
-          EOF
+          payload = json.dumps({"body": body}).encode("utf-8")
+          req = urllib.request.Request(
+              url,
+              data=payload,
+              headers={
+                  "Authorization": "Bearer " + token,
+                  "Accept": "application/vnd.github.v3+json",
+                  "Content-Type": "application/json",
+              },
+              method="POST",
           )
 
-          HTTP_STATUS=$(curl -s -o /tmp/gh_response.json -w "%{http_code}" \
-            -X POST \
-            -H "Authorization: Bearer $GITHUB_TOKEN" \
-            -H "Accept: application/vnd.github.v3+json" \
-            -H "Content-Type: application/json" \
-            https://api.github.com/repos/${{ github.repository }}/issues/34/comments \
-            --data-binary @- <<JSON
-          {"body": $(echo "$COMMENT_BODY" | python3 -c "import sys, json; print(json.dumps(sys.stdin.read()))")}
-          JSON
-          )
-
-          echo "HTTP Status: $HTTP_STATUS"
-          cat /tmp/gh_response.json
-
-          if [ "$HTTP_STATUS" -eq 201 ]; then
-            COMMENT_URL=$(python3 -c "import json; d=json.load(open('/tmp/gh_response.json')); print(d.get('html_url','N/A'))")
-            echo "✅ 댓글이 성공적으로 게시되었습니다!"
-            echo "🔗 댓글 URL: $COMMENT_URL"
-          else
-            echo "❌ 댓글 게시 실패 (HTTP $HTTP_STATUS)"
-            exit 1
-          fi
+          try:
+              with urllib.request.urlopen(req) as resp:
+                  status = resp.status
+                  result = json.loads(resp.read().decode("utf-8"))
+              print("HTTP Status:", status)
+              if status == 201:
+                  print("Posted:", result.get("html_url", "N/A"))
+              else:
+                  print("Unexpected status:", status)
+                  raise SystemExit(1)
+          except urllib.error.HTTPError as exc:
+              print("HTTP Error:", exc.code, exc.read().decode("utf-8"))
+              raise SystemExit(1)
+          PYEOF
