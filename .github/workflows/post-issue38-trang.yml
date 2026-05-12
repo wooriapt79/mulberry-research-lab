@@ -1,0 +1,22 @@
+name: Post Issue #38 — Trang PM 수정 완료 댓글
+
+on:
+  push:
+    paths:
+      - '.github/issue38-trigger'
+
+permissions:
+  issues: write
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Trang PM 댓글 게시 — Issue #38
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python scripts/post_issue38_trang.py
