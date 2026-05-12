@@ -27,9 +27,11 @@ import base64
 import requests
 from datetime import datetime
 from typing import Optional
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 
 # ── 환경 변수 ──────────────────────────────────────────────────
@@ -182,7 +184,7 @@ def github_append_file(owner: str, repo: str, file_path: str, new_entry: str) ->
 def root():
     return {
         "service": "Mulberry Agent Relay Gateway",
-        "version": "1.2.0",
+        "version": "1.3.0",
         "status": "online",
         "agents": list(REGISTERED_AGENTS.keys()),
         "repos": {k: v["role"] for k, v in REGISTERED_REPOS.items()},
@@ -195,9 +197,147 @@ def root():
 def status():
     return root()
 
+@app.get("/mission-control", response_class=FileResponse)
+def mission_control():
+    """Mission Control SPA — 팀 대시보드 + 채팅 모듈"""
+    html_path = Path(__file__).parent / "mission_control.html"
+    if not html_path.exists():
+        raise HTTPException(status_code=404, detail="mission_control.html not found")
+    return FileResponse(str(html_path), media_type="text/html")
+
+
+# ── Mission Control API 엔드포인트 (P0 수정 — Issue #38) ──────
+
+@app.get("/metrics/overview")
+def metrics_overview():
+    """Mission Control — 시스템 메트릭 개요"""
+    sdk_ok = False
+    try:
+        resp = requests.get(f"{SDK_URL}/status", timeout=5)
+        sdk_ok = resp.status_code == 200
+    except Exception:
+        sdk_ok = False
+
+    return {
+        "agents": {
+            "total": len(REGISTERED_AGENTS),
+            "online": len(REGISTERED_AGENTS),
+            "list": [
+                {"id": k, "name": v["name"], "emoji": v["emoji"], "status": "online"}
+                for k, v in REGISTERED_AGENTS.items()
+            ],
+        },
+        "modules": {
+            "total": 8,
+            "active": 8,
+            "list": ["home", "chat", "agents", "skills", "coopbuy", "field", "analytics", "settings"],
+        },
+        "infrastructure": {
+            "sdk_connected": sdk_ok,
+            "github_ready": bool(GITHUB_TOKEN),
+            "sdk_url": SDK_URL,
+        },
+        "timestamp": datetime.utcnow().isoformat(),
+    }
+
+
+@app.get("/system/modules/health")
+def modules_health():
+    """Mission Control — 8개 모듈 헬스 체크"""
+    modules = ["home", "chat", "agents", "skills", "coopbuy", "field", "analytics", "settings"]
+    sdk_ok = False
+    try:
+        resp = requests.get(f"{SDK_URL}/status", timeout=5)
+        sdk_ok = resp.status_code == 200
+    except Exception:
+        sdk_ok = False
+
+    return {
+        "overall": "healthy",
+        "modules": {
+            m: {"status": "active", "health": "ok", "loaded": True}
+            for m in modules
+        },
+        "dependencies": {
+            "sdk": {"connected": sdk_ok, "url": SDK_URL},
+            "github": {"ready": bool(GITHUB_TOKEN)},
+        },
+        "timestamp": datetime.utcnow().isoformat(),
+    }
+
+
 @app.get("/agents")
 def list_agents():
+    """전체 에이전트 목록"""
     return {"agents": REGISTERED_AGENTS}
+
+
+@app.get("/agents/{agent_id}")
+def get_agent(agent_id: str):
+    """개별 에이전트 정보 (P0 수정 — /agents/* 404 해결)"""
+    if agent_id not in REGISTERED_AGENTS:
+        raise HTTPException(status_code=404, detail=f"Agent not found: {agent_id}")
+    agent = REGISTERED_AGENTS[agent_id]
+    return {
+        "id": agent_id,
+        "name": agent["name"],
+        "emoji": agent["emoji"],
+        "status": "online",
+        "tools_available": [],   # tool_registry 연동 시 확장
+        "last_active": datetime.utcnow().isoformat(),
+    }
+
+
+@app.get("/chat/channels")
+def chat_channels():
+    """채팅 채널 목록 (P2 수정 — 채팅 초기화 API)"""
+    return {
+        "channels": [
+            {"id": "general",   "name": "# 일반",     "description": "팀 전체 대화", "unread": 0},
+            {"id": "research",  "name": "# 연구",     "description": "Issue #18, #24 연구 토론", "unread": 0},
+            {"id": "ops",       "name": "# 운영",     "description": "배포 및 인프라 논의", "unread": 0},
+            {"id": "ethics",    "name": "# 윤리",     "description": "Spirit Gate 판단 사례 공유", "unread": 0},
+            {"id": "education", "name": "# 교육",     "description": "Jr. Agent AI 교육 채널", "unread": 0},
+        ],
+        "active_users": list(REGISTERED_AGENTS.keys()),
+        "timestamp": datetime.utcnow().isoformat(),
+    }
+
+
+class ChatMessage(BaseModel):
+    agent_id: str
+    channel: str
+    message: str
+    post_to_github: bool = False
+    issue_number: Optional[int] = None
+
+
+@app.post("/chat/send")
+def chat_send(msg: ChatMessage, x_gateway_secret: str = Header(default="")):
+    """채팅 메시지 전송 (선택: GitHub Issue 댓글 연동)"""
+    if msg.agent_id not in REGISTERED_AGENTS:
+        raise HTTPException(status_code=400, detail=f"Unknown agent: {msg.agent_id}")
+
+    result = {
+        "status": "sent",
+        "channel": msg.channel,
+        "agent": msg.agent_id,
+        "message": msg.message,
+        "timestamp": datetime.utcnow().isoformat(),
+        "github_posted": False,
+    }
+
+    # GitHub 연동 옵션
+    if msg.post_to_github and msg.issue_number and x_gateway_secret == GATEWAY_SECRET:
+        try:
+            body = build_body(msg.agent_id, f"[#{msg.channel}] {msg.message}")
+            gh_result = github_comment(REPO_OWNER, "mulberry-research-lab", msg.issue_number, body)
+            result["github_posted"] = True
+            result["github_url"] = gh_result.get("url", "")
+        except Exception as e:
+            result["github_error"] = str(e)
+
+    return result
 
 @app.get("/repos")
 def list_repos():

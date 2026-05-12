@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mulberry Mission Control</title>
+  <style>
+    /* ── P3 수정: 이모지 폰트 Windows 깨짐 방지 ── */
+    * {
+      box-sizing: border-box;
+      font-family:
+        "Pretendard", "Noto Sans KR", "Segoe UI",
+        "Segoe UI Emoji",        /* Windows Chrome 이모지 fix */
+        "Apple Color Emoji",     /* macOS / iOS */
+        "Noto Color Emoji",      /* Linux / Android */
+        "Twemoji Mozilla",       /* Firefox */
+        sans-serif;
+    }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --accent: #7c6ef0;
+      --accent2: #4fc3f7;
+      --text: #e8eaf6;
+      --muted: #8892a4;
+      --border: #2d3148;
+      --online: #4caf50;
+      --warn: #ff9800;
+      --danger: #f44336;
+    }
+
+    body { margin: 0; background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
+
+    /* ── 사이드바 ── */
+    #sidebar {
+      width: 220px; min-width: 220px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      padding: 16px 0;
+    }
+
+    .sidebar-logo {
+      padding: 0 16px 16px;
+      font-size: 18px; font-weight: 700; color: var(--accent);
+      border-bottom: 1px solid var(--border); margin-bottom: 8px;
+    }
+    .sidebar-logo span { font-size: 12px; color: var(--muted); display: block; font-weight: 400; }
+
+    /* P1 수정: 8개 모듈 모두 표시 */
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 16px; cursor: pointer;
+      color: var(--muted); font-size: 14px;
+      border-radius: 6px; margin: 1px 8px;
+      transition: background 0.15s, color 0.15s;
+      text-decoration: none;
+    }
+    .nav-item:hover  { background: var(--surface2); color: var(--text); }
+    .nav-item.active { background: var(--accent); color: #fff; }
+    .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+
+    .nav-section { padding: 8px 16px 4px; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+
+    .sidebar-footer {
+      margin-top: auto; padding: 12px 16px;
+      border-top: 1px solid var(--border);
+      font-size: 12px; color: var(--muted);
+    }
+    .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--online); margin-right: 6px; }
+
+    /* ── 메인 콘텐츠 ── */
+    #main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+    .topbar {
+      height: 52px; padding: 0 20px;
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .topbar-title { font-size: 16px; font-weight: 600; }
+    .topbar-meta  { font-size: 12px; color: var(--muted); }
+
+    #content { flex: 1; overflow-y: auto; padding: 20px; }
+
+    /* ── 모듈 패널 ── */
+    .module { display: none; }
+    .module.active { display: block; }
+
+    /* ── 카드 ── */
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 16px; margin-bottom: 16px;
+    }
+    .card-title { font-size: 13px; color: var(--muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    @media (max-width: 900px) { .grid-4 { grid-template-columns: repeat(2, 1fr); } }
+
+    .metric-val { font-size: 28px; font-weight: 700; color: var(--accent); }
+    .metric-label { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+    /* ── 에이전트 칩 ── */
+    .agent-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--surface2); border-radius: 20px;
+      padding: 6px 12px; font-size: 13px; margin: 4px;
+    }
+    .chip-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--online); }
+
+    /* ── 알림 배너 ── */
+    .banner {
+      padding: 10px 14px; border-radius: 8px; margin-bottom: 14px;
+      font-size: 13px; display: flex; align-items: center; gap: 10px;
+    }
+    .banner.ok     { background: #1b3a2a; border: 1px solid #2e7d52; color: #a5d6b7; }
+    .banner.warn   { background: #3a2a10; border: 1px solid #7d5e2e; color: #d6c0a5; }
+    .banner.error  { background: #3a1010; border: 1px solid #7d2e2e; color: #d6a5a5; }
+
+    /* ── P2 수정: 채팅 레이아웃 — display:none 제거, 항상 표시 ── */
+    #chat-layout {
+      display: flex; gap: 0; height: calc(100vh - 52px - 40px);
+      background: var(--surface); border-radius: 10px; overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    #channel-list {
+      width: 200px; min-width: 200px;
+      border-right: 1px solid var(--border);
+      padding: 12px 0; overflow-y: auto;
+    }
+    .channel-title { padding: 4px 12px 8px; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+    .channel-item {
+      padding: 7px 14px; cursor: pointer; font-size: 13px;
+      color: var(--muted); border-radius: 4px; margin: 1px 6px;
+    }
+    .channel-item:hover  { background: var(--surface2); color: var(--text); }
+    .channel-item.active { background: var(--surface2); color: var(--text); font-weight: 600; }
+
+    #chat-main { flex: 1; display: flex; flex-direction: column; }
+
+    #chat-header {
+      padding: 12px 16px; border-bottom: 1px solid var(--border);
+      font-size: 14px; font-weight: 600;
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    /* P2 수정: 메시지 영역 항상 표시 */
+    #message-list {
+      flex: 1; overflow-y: auto; padding: 16px;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+
+    .message {
+      display: flex; gap: 10px; align-items: flex-start;
+    }
+    .msg-avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--accent); display: flex; align-items: center;
+      justify-content: center; font-size: 14px; flex-shrink: 0;
+    }
+    .msg-body { flex: 1; }
+    .msg-meta { font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+    .msg-meta strong { color: var(--text); margin-right: 8px; }
+    .msg-text { font-size: 13px; line-height: 1.5; }
+
+    .system-msg {
+      text-align: center; font-size: 12px; color: var(--muted);
+      padding: 4px; border-bottom: 1px solid var(--border); margin: 4px 0;
+    }
+
+    /* P2 수정: 입력 폼 항상 표시 */
+    #chat-input-area {
+      padding: 12px 16px; border-top: 1px solid var(--border);
+      display: flex; gap: 10px; align-items: flex-end;
+    }
+
+    #chat-input {
+      flex: 1; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 14px; color: var(--text);
+      font-size: 14px; resize: none; min-height: 40px; max-height: 120px;
+      font-family: inherit;
+      outline: none;
+    }
+    #chat-input:focus { border-color: var(--accent); }
+    #chat-input::placeholder { color: var(--muted); }
+
+    #send-btn {
+      background: var(--accent); color: #fff; border: none;
+      border-radius: 8px; padding: 10px 16px; cursor: pointer;
+      font-size: 14px; font-family: inherit; white-space: nowrap;
+    }
+    #send-btn:hover { opacity: 0.85; }
+    #send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .agent-select {
+      background: var(--surface2); border: 1px solid var(--border);
+      color: var(--text); border-radius: 6px; padding: 8px 10px;
+      font-size: 13px; font-family: inherit; cursor: pointer;
+    }
+
+    /* ── 스킬/쿱바이/현장/분석 등 기타 모듈 ── */
+    .placeholder-module {
+      text-align: center; padding: 60px 20px; color: var(--muted);
+    }
+    .placeholder-module .big-emoji { font-size: 48px; margin-bottom: 16px; }
+    .placeholder-module h2 { color: var(--text); margin-bottom: 8px; }
+
+    /* ── 설정 ── */
+    .setting-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 0; border-bottom: 1px solid var(--border);
+    }
+    .setting-row:last-child { border-bottom: none; }
+    .setting-label { font-size: 14px; }
+    .setting-desc  { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .toggle {
+      width: 40px; height: 22px; background: var(--surface2); border-radius: 11px;
+      cursor: pointer; position: relative; border: 1px solid var(--border);
+    }
+    .toggle.on { background: var(--accent); }
+    .toggle::after {
+      content: ""; position: absolute; width: 16px; height: 16px;
+      background: #fff; border-radius: 50%; top: 2px; left: 2px;
+      transition: left 0.2s;
+    }
+    .toggle.on::after { left: 20px; }
+
+    /* ── 스크롤바 ── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<!-- ────────────────── SIDEBAR (P1 수정: 8개 모두 표시) ────────────────── -->
+<nav id="sidebar">
+  <div class="sidebar-logo">
+    🌿 Mulberry Lab
+    <span>Mission Control v1.0</span>
+  </div>
+
+  <div class="nav-section">메인</div>
+  <a class="nav-item active" data-module="home"      href="#home">      <span class="nav-icon">🏠</span> 홈</a>
+  <a class="nav-item"        data-module="chat"      href="#chat">      <span class="nav-icon">💬</span> 팀 채팅</a>
+  <a class="nav-item"        data-module="agents"    href="#agents">    <span class="nav-icon">🤖</span> 에이전트</a>
+
+  <div class="nav-section">서비스</div>
+  <a class="nav-item"        data-module="skills"    href="#skills">    <span class="nav-icon">🛠️</span> 스킬 레지스트리</a>
+  <a class="nav-item"        data-module="coopbuy"   href="#coopbuy">   <span class="nav-icon">🛒</span> 공동구매</a>
+  <a class="nav-item"        data-module="field"     href="#field">     <span class="nav-icon">📍</span> 현장 운영</a>
+
+  <div class="nav-section">분석</div>
+  <a class="nav-item"        data-module="analytics" href="#analytics"> <span class="nav-icon">📊</span> 분석</a>
+  <a class="nav-item"        data-module="settings"  href="#settings">  <span class="nav-icon">⚙️</span> 설정</a>
+
+  <div class="sidebar-footer">
+    <span class="status-dot"></span>
+    <span id="footer-status">연결 중...</span>
+  </div>
+</nav>
+
+<!-- ────────────────── MAIN ────────────────── -->
+<div id="main">
+  <div class="topbar">
+    <div class="topbar-title" id="page-title">🏠 홈</div>
+    <div class="topbar-meta" id="page-meta">Mulberry Research Lab — 2026</div>
+  </div>
+
+  <div id="content">
+
+    <!-- ── HOME ── -->
+    <div class="module active" id="mod-home">
+      <div id="api-banner"></div>
+
+      <div class="grid-4" id="metric-cards">
+        <div class="card">
+          <div class="card-title">에이전트</div>
+          <div class="metric-val" id="m-agents">—</div>
+          <div class="metric-label">온라인</div>
+        </div>
+        <div class="card">
+          <div class="card-title">모듈</div>
+          <div class="metric-val" id="m-modules">8</div>
+          <div class="metric-label">활성 모듈</div>
+        </div>
+        <div class="card">
+          <div class="card-title">SDK</div>
+          <div class="metric-val" id="m-sdk">—</div>
+          <div class="metric-label">연결 상태</div>
+        </div>
+        <div class="card">
+          <div class="card-title">GitHub</div>
+          <div class="metric-val" id="m-gh">—</div>
+          <div class="metric-label">토큰 상태</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">팀 에이전트</div>
+        <div id="agent-chips">로딩 중...</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">모듈 헬스</div>
+        <div id="health-grid" class="grid-4">로딩 중...</div>
+      </div>
+    </div>
+
+    <!-- ── CHAT (P2 수정: 항상 표시) ── -->
+    <div class="module" id="mod-chat">
+      <div id="chat-layout">
+        <div id="channel-list">
+          <div class="channel-title">채널</div>
+          <div id="channel-items">로딩 중...</div>
+          <div class="channel-title" style="margin-top:12px">온라인</div>
+          <div id="online-agents">—</div>
+        </div>
+        <div id="chat-main">
+          <div id="chat-header">
+            <span id="current-channel-name">💬 일반</span>
+            <span style="font-size:12px;color:var(--muted);margin-left:auto">팀 전체 대화</span>
+          </div>
+          <div id="message-list">
+            <div class="system-msg">Mission Control 채팅에 오신 것을 환영합니다 🌿</div>
+          </div>
+          <div id="chat-input-area">
+            <select class="agent-select" id="agent-select">
+              <option value="koda">Koda</option>
+              <option value="kbin">Kbin</option>
+              <option value="malu">Malu</option>
+              <option value="wayong">Wayong</option>
+              <option value="ryuwon">RyuWon</option>
+              <option value="trang">Trang</option>
+              <option value="lynn">Lynn</option>
+              <option value="jr">Jr.</option>
+            </select>
+            <textarea
+              id="chat-input"
+              placeholder="메시지 입력... (Enter: 전송, Shift+Enter: 줄바꿈)"
+              rows="1"
+            ></textarea>
+            <button id="send-btn">전송 ➤</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── AGENTS ── -->
+    <div class="module" id="mod-agents">
+      <div class="card">
+        <div class="card-title">등록된 에이전트 (9명)</div>
+        <div id="agents-detail-grid" class="grid-2">로딩 중...</div>
+      </div>
+    </div>
+
+    <!-- ── SKILLS ── -->
+    <div class="module" id="mod-skills">
+      <div class="placeholder-module">
+        <div class="big-emoji">🛠️</div>
+        <h2>스킬 레지스트리</h2>
+        <p>tool_registry.yaml 기반 도구 공유 현황<br>v1.1.0 — 에이전트 9명 / 도구 27개</p>
+        <a href="/v1/tools" target="_blank" style="color:var(--accent)">→ SDK /v1/tools API 보기</a>
+      </div>
+    </div>
+
+    <!-- ── COOPBUY ── -->
+    <div class="module" id="mod-coopbuy">
+      <div class="placeholder-module">
+        <div class="big-emoji">🛒</div>
+        <h2>공동구매 모듈</h2>
+        <p>인제군 지역 공동구매 에이전트 시스템<br>GuardianAlgorithm 연동 예정</p>
+      </div>
+    </div>
+
+    <!-- ── FIELD ── -->
+    <div class="module" id="mod-field">
+      <div class="placeholder-module">
+        <div class="big-emoji">📍</div>
+        <h2>현장 운영</h2>
+        <p>인제군 어르신 현장 케어 에이전트<br>Jr. (RPi5) 엣지 연동 준비 중</p>
+      </div>
+    </div>
+
+    <!-- ── ANALYTICS ── -->
+    <div class="module" id="mod-analytics">
+      <div class="placeholder-module">
+        <div class="big-emoji">📊</div>
+        <h2>분석 대시보드</h2>
+        <p>Spirit Score 추이 / Distillation 데이터 현황<br>execution_audit.jsonl 시각화 예정</p>
+        <a href="/v1/tools/terminal.exec/reputation" target="_blank" style="color:var(--accent)">→ Tool Reputation API</a>
+      </div>
+    </div>
+
+    <!-- ── SETTINGS ── -->
+    <div class="module" id="mod-settings">
+      <div class="card">
+        <div class="card-title">시스템 설정</div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">GitHub 연동</div>
+            <div class="setting-desc" id="gh-token-status">토큰 상태 확인 중...</div>
+          </div>
+          <div class="toggle on" id="toggle-gh"></div>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">SDK 연결</div>
+            <div class="setting-desc" id="sdk-url-display">—</div>
+          </div>
+          <div class="toggle" id="toggle-sdk"></div>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">채팅 알림</div>
+            <div class="setting-desc">새 메시지 브라우저 알림</div>
+          </div>
+          <div class="toggle" id="toggle-notif" onclick="this.classList.toggle('on')"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">버전 정보</div>
+        <div style="font-size:13px;color:var(--muted);line-height:2">
+          Mission Control: v1.0.0<br>
+          Agent Gateway: v1.3.0<br>
+          Tool Registry: v1.1.0 (에이전트 9 / 도구 27)<br>
+          빌드: 2026-05-12
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+// ── 설정 ──
+const BASE = "";   // 동일 오리진 (agent_gateway 기준)
+const MODULES = {
+  home:      { title: "🏠 홈",           meta: "시스템 개요" },
+  chat:      { title: "💬 팀 채팅",      meta: "에이전트 실시간 대화" },
+  agents:    { title: "🤖 에이전트",     meta: "등록된 9명의 팀원" },
+  skills:    { title: "🛠️ 스킬 레지스트리", meta: "도구 공유 현황" },
+  coopbuy:   { title: "🛒 공동구매",     meta: "지역 공동구매 에이전트" },
+  field:     { title: "📍 현장 운영",    meta: "Jr. 엣지 에이전트 현장" },
+  analytics: { title: "📊 분석",         meta: "Spirit Score & 실행 이력" },
+  settings:  { title: "⚙️ 설정",         meta: "시스템 환경 설정" },
+};
+
+let currentChannel = "general";
+const messages = [];
+let metrics = null;
+
+// ── 유틸 ──
+async function api(path) {
+  try {
+    const r = await fetch(BASE + path);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return await r.json();
+  } catch (e) {
+    return null;
+  }
+}
+
+function el(id) { return document.getElementById(id); }
+
+// ── 라우터 (hash 기반) ──
+function navigate(name) {
+  document.querySelectorAll(".module").forEach(m => m.classList.remove("active"));
+  document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+
+  const mod = document.getElementById("mod-" + name);
+  if (mod) mod.classList.add("active");
+
+  const nav = document.querySelector(`.nav-item[data-module="${name}"]`);
+  if (nav) nav.classList.add("active");
+
+  const info = MODULES[name] || {};
+  el("page-title").textContent = info.title || name;
+  el("page-meta").textContent = info.meta || "";
+
+  if (name === "chat") loadChannels();
+  if (name === "agents") loadAgentsDetail();
+}
+
+document.querySelectorAll(".nav-item").forEach(item => {
+  item.addEventListener("click", e => {
+    e.preventDefault();
+    navigate(item.dataset.module);
+  });
+});
+
+window.addEventListener("hashchange", () => {
+  const h = location.hash.replace("#", "") || "home";
+  navigate(h);
+});
+
+// ── 홈 로드 ──
+async function loadHome() {
+  const [overview, health] = await Promise.all([
+    api("/metrics/overview"),
+    api("/system/modules/health"),
+  ]);
+
+  const banner = el("api-banner");
+
+  if (!overview) {
+    banner.innerHTML = `<div class="banner error">⚠️ Backend API 응답 없음 — /metrics/overview 404. 백엔드 배포를 확인하세요.</div>`;
+    el("footer-status").textContent = "API 오류";
+  } else {
+    banner.innerHTML = `<div class="banner ok">✅ 시스템 정상 — ${overview.agents.total}명 온라인 | SDK ${overview.infrastructure.sdk_connected ? "연결됨" : "미연결"}</div>`;
+    el("footer-status").textContent = "정상 운영 중";
+    metrics = overview;
+
+    el("m-agents").textContent = overview.agents.total;
+    el("m-sdk").textContent = overview.infrastructure.sdk_connected ? "✅" : "❌";
+    el("m-gh").textContent  = overview.infrastructure.github_ready  ? "✅" : "❌";
+
+    el("agent-chips").innerHTML = overview.agents.list.map(a =>
+      `<div class="agent-chip"><span class="chip-dot"></span>${a.emoji} ${a.name}</div>`
+    ).join("");
+
+    // Settings 업데이트
+    el("gh-token-status").textContent = overview.infrastructure.github_ready ? "GITHUB_TOKEN 등록됨" : "GITHUB_TOKEN 미설정";
+    el("sdk-url-display").textContent = overview.infrastructure.sdk_url;
+    if (overview.infrastructure.sdk_connected) el("toggle-sdk").classList.add("on");
+  }
+
+  if (health) {
+    el("health-grid").innerHTML = Object.entries(health.modules).map(([name, info]) =>
+      `<div class="card" style="margin:0">
+        <div style="font-size:20px;margin-bottom:6px">${moduleEmoji(name)}</div>
+        <div style="font-size:13px;font-weight:600">${name}</div>
+        <div style="font-size:11px;color:${info.health==='ok'?'var(--online)':'var(--danger)'};margin-top:4px">● ${info.health}</div>
+      </div>`
+    ).join("");
+  } else {
+    el("health-grid").innerHTML = `<div style="color:var(--muted);font-size:13px">모듈 상태 조회 실패</div>`;
+  }
+}
+
+function moduleEmoji(name) {
+  const map = { home:"🏠", chat:"💬", agents:"🤖", skills:"🛠️", coopbuy:"🛒", field:"📍", analytics:"📊", settings:"⚙️" };
+  return map[name] || "🔲";
+}
+
+// ── 채팅 ──
+async function loadChannels() {
+  const data = await api("/chat/channels");
+  const container = el("channel-items");
+
+  if (!data) {
+    container.innerHTML = `<div style="padding:8px 14px;font-size:12px;color:var(--danger)">채널 로드 실패</div>`;
+    return;
+  }
+
+  container.innerHTML = data.channels.map(ch =>
+    `<div class="channel-item ${ch.id === currentChannel ? 'active' : ''}"
+          data-ch="${ch.id}" data-desc="${ch.description}" data-name="${ch.name}">
+      ${ch.name}${ch.unread ? ` <span style="background:var(--danger);border-radius:10px;padding:1px 6px;font-size:11px">${ch.unread}</span>` : ""}
+    </div>`
+  ).join("");
+
+  document.querySelectorAll(".channel-item").forEach(item => {
+    item.addEventListener("click", () => {
+      currentChannel = item.dataset.ch;
+      el("current-channel-name").textContent = "💬 " + item.dataset.name.replace("#", "").trim();
+      document.querySelectorAll(".channel-item").forEach(i => i.classList.remove("active"));
+      item.classList.add("active");
+      el("message-list").innerHTML = `<div class="system-msg">${item.dataset.desc}</div>`;
+    });
+  });
+
+  el("online-agents").innerHTML = (data.active_users || []).map(u =>
+    `<div style="padding:4px 14px;font-size:12px;color:var(--muted)"><span style="color:var(--online)">●</span> ${u}</div>`
+  ).join("");
+}
+
+// 채팅 전송
+el("send-btn").addEventListener("click", sendMessage);
+el("chat-input").addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+});
+
+async function sendMessage() {
+  const input   = el("chat-input");
+  const agentId = el("agent-select").value;
+  const text    = input.value.trim();
+  if (!text) return;
+
+  input.value = "";
+  el("send-btn").disabled = true;
+
+  // 즉시 화면에 추가
+  appendMessage({ agent: agentId, text, ts: new Date().toLocaleTimeString("ko-KR") });
+
+  try {
+    await fetch(BASE + "/chat/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ agent_id: agentId, channel: currentChannel, message: text }),
+    });
+  } catch (e) {
+    appendSystemMsg("전송 실패 — 서버 응답 없음");
+  }
+  el("send-btn").disabled = false;
+}
+
+function appendMessage({ agent, text, ts }) {
+  const list = el("message-list");
+  const div = document.createElement("div");
+  div.className = "message";
+  div.innerHTML = `
+    <div class="msg-avatar">${agent[0].toUpperCase()}</div>
+    <div class="msg-body">
+      <div class="msg-meta"><strong>${agent}</strong>${ts}</div>
+      <div class="msg-text">${text.replace(/</g, "&lt;")}</div>
+    </div>`;
+  list.appendChild(div);
+  list.scrollTop = list.scrollHeight;
+}
+
+function appendSystemMsg(text) {
+  const list = el("message-list");
+  const div = document.createElement("div");
+  div.className = "system-msg";
+  div.textContent = text;
+  list.appendChild(div);
+  list.scrollTop = list.scrollHeight;
+}
+
+// ── 에이전트 상세 ──
+async function loadAgentsDetail() {
+  const data = await api("/agents");
+  const grid = el("agents-detail-grid");
+  if (!data) { grid.innerHTML = `<div style="color:var(--danger)">에이전트 데이터 로드 실패</div>`; return; }
+
+  const BRAND = {
+    koda: "Claude / Anthropic", kbin: "ChatGPT / OpenAI", malu: "Gemini / Google",
+    wayong: "DeepSeek", ryuwon: "Qwen / Alibaba", trang: "Mulberry PM",
+    lynn: "Mulberry Internal", jr: "Edge / RPi5",
+    guest_google: "AI on Google Search (객원)",
+  };
+
+  grid.innerHTML = Object.entries(data.agents).map(([id, info]) =>
+    `<div class="card" style="margin:0">
+      <div style="font-size:22px;margin-bottom:6px">${info.emoji}</div>
+      <div style="font-size:14px;font-weight:600">${info.name}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">${BRAND[id] || id}</div>
+      <div style="margin-top:8px;font-size:11px"><span style="color:var(--online)">● online</span></div>
+    </div>`
+  ).join("");
+}
+
+// ── 초기화 ──
+(async () => {
+  const hash = location.hash.replace("#", "") || "home";
+  navigate(hash);
+  await loadHome();
+})();
+</script>
+</body>
+</html>
