@@ -1,0 +1,22 @@
+name: Create Steward AI Issues
+
+on:
+  push:
+    paths:
+      - '.github/siem-issues-trigger'
+
+permissions:
+  issues: write
+
+jobs:
+  create:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Steward AI 이슈 생성
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python scripts/create_siem_issues.py
