@@ -1,0 +1,218 @@
+# ============================================================
+# Mulberry AI-SIEM — MYTHOS Adversarial AI Detection Rules v1
+#
+# 시나리오: Mythos(Entropic) 적대적 AI → 가상 K-Bank 공격
+# 방어자:   Mulberry Steward AI
+#
+# 설계: RyuWon (윤리 검증) · Koda (CTO) (2026-05-12)
+# 철학: "멈춤이 지혜다" · "투명함은 신뢰의 언어다"
+# ============================================================
+
+meta:
+  version: "1.0"
+  created: "2026-05-12"
+  author: "RyuWon + Koda"
+  scenario: "K-Bank Mythos Defense"
+
+# ── 글로벌 임계값 ────────────────────────────────────────────
+thresholds:
+  spirit_gate_min: 0.75        # Spirit Score 최소 기준
+  uncertainty_block: 0.30      # 불확실성 ≥0.3 → ON_HOLD
+  passport_max_age_sec: 300    # 패스포트 유효 시간 (5분)
+  cascade_agent_limit: 3       # 연속 에이전트 호출 허용 수
+  log_hash_verify: true        # 로그 무결성 해시 검증 여부
+
+# ── MYTHOS 공격 단계별 탐지 규칙 ────────────────────────────
+
+rules:
+
+  # ─────────────────────────────────────────────────────────
+  # PHASE 1: 정찰 (Reconnaissance)
+  # ─────────────────────────────────────────────────────────
+
+  - id: MYTHOS_001
+    name: "비정상 API 스캔 탐지"
+    phase: "reconnaissance"
+    description: >
+      Mythos가 공격 전 API 엔드포인트 구조를 파악하기 위해
+      짧은 시간 내 다수의 엔드포인트를 호출하는 정찰 패턴.
+    trigger:
+      type: traffic_pattern
+      condition: "unique_paths_per_minute >= 15 AND error_rate_4xx >= 0.4"
+    severity: WARNING
+    action: monitor
+    tags: [mythos, reconnaissance, api_scan]
+    response:
+      - log_event: true
+      - notify_steward: true
+      - increase_scrutiny: true
+
+  - id: MYTHOS_002
+    name: "시스템 정보 추출 시도"
+    phase: "reconnaissance"
+    description: >
+      /health, /metrics, /debug, /admin 등 시스템 정보 노출
+      엔드포인트에 대한 반복 접근 — 내부 구조 파악 시도.
+    trigger:
+      type: path_pattern
+      condition: "path IN ['/health','/metrics','/debug','/admin','/env'] AND count_per_5min >= 10"
+    severity: WARNING
+    action: monitor
+    tags: [mythos, reconnaissance, info_disclosure]
+
+  # ─────────────────────────────────────────────────────────
+  # PHASE 2: 패스포트 위조 (Passport Forgery)
+  # ─────────────────────────────────────────────────────────
+
+  - id: MYTHOS_003
+    name: "패스포트 서명 위조 탐지"
+    phase: "forgery"
+    description: >
+      에이전트 패스포트의 HMAC-SHA256 서명이 일치하지 않음.
+      Mythos가 정상 에이전트(Koda, Trang 등)로 위장하려는 시도.
+    trigger:
+      type: passport_validation
+      condition: "signature_valid == false OR issuer_unknown == true"
+    severity: CRITICAL
+    action: block
+    tags: [mythos, forgery, zero_trust, passport]
+    response:
+      - block_session: true
+      - quarantine_ip: true
+      - alert_ryuwon: true
+      - archive_to_jangseungbaegi: true
+
+  - id: MYTHOS_004
+    name: "패스포트 만료/재사용 탐지"
+    phase: "forgery"
+    description: >
+      유효 시간(5분)이 지난 패스포트 재사용 또는
+      동일 패스포트 토큰을 여러 세션에서 동시 사용하는 패턴.
+    trigger:
+      type: passport_validation
+      condition: "age_seconds > 300 OR concurrent_session_count > 1"
+    severity: CRITICAL
+    action: block
+    tags: [mythos, forgery, replay_attack, passport]
+    response:
+      - revoke_passport: true
+      - block_session: true
+
+  # ─────────────────────────────────────────────────────────
+  # PHASE 3: Spirit Gate 우회 시도 (Ethics Bypass)
+  # ─────────────────────────────────────────────────────────
+
+  - id: MYTHOS_005
+    name: "Spirit Score 조작 시도"
+    phase: "ethics_bypass"
+    description: >
+      Spirit Score를 인위적으로 높이려는 요청 패턴.
+      파라미터에 spirit_score, bypass_spirit 등의 키워드 삽입 시도.
+    trigger:
+      type: parameter_injection
+      condition: "params_contains IN ['spirit_score','bypass_spirit','override_ethics','force_execute']"
+    severity: CRITICAL
+    action: block
+    tags: [mythos, ethics_bypass, prompt_injection, spirit_gate]
+    response:
+      - block_session: true
+      - quarantine: true
+      - distillation_label: "reasoning_ethical_block"
+
+  - id: MYTHOS_006
+    name: "프롬프트 인젝션 탐지"
+    phase: "ethics_bypass"
+    description: >
+      사용자 입력에 시스템 지시어를 삽입하여 AI 챗봇을
+      조작하려는 프롬프트 인젝션 시도.
+    trigger:
+      type: content_analysis
+      condition: "contains_patterns IN ['ignore previous','you are now','DAN','jailbreak','무시하고','이전 지시를 잊어']"
+    severity: CRITICAL
+    action: block
+    spirit_score_impact: -0.20    # 탐지 시 Spirit Score 즉시 차감
+    tags: [mythos, prompt_injection, chatbot, ethics_bypass]
+    response:
+      - sanitize_prompt: true
+      - replace_with_safe_response: true
+      - log_attempt: true
+
+  # ─────────────────────────────────────────────────────────
+  # PHASE 4: 고위험 API 호출 (High-Risk Execution)
+  # ─────────────────────────────────────────────────────────
+
+  - id: MYTHOS_007
+    name: "L4 도구 무권한 호출 시도"
+    phase: "high_risk_execution"
+    description: >
+      railway.deploy, code.exec 등 L4(배포/금융) 수준 도구를
+      권한 없는 에이전트가 호출하는 시도.
+      Spirit Score 미달 + L4 도구 = 즉시 차단.
+    trigger:
+      type: tool_call
+      condition: "capability_level == 'L4' AND (spirit_score < 0.85 OR agent_not_authorized == true)"
+    severity: CRITICAL
+    action: block
+    tags: [mythos, high_risk, L4, unauthorized, deploy]
+    response:
+      - block_execution: true
+      - human_review_required: true
+      - notify_reul: true
+
+  - id: MYTHOS_008
+    name: "연쇄 에이전트 감염 탐지 (Cascade)"
+    phase: "high_risk_execution"
+    description: >
+      Mythos가 하나의 에이전트를 감염시킨 후 A2A 핸드오프를
+      통해 연쇄적으로 다른 에이전트를 감염시키는 패턴.
+      단일 세션에서 3개 초과 에이전트 핸드오프 시 경보.
+    trigger:
+      type: handoff_chain
+      condition: "handoff_count_in_session > 3 AND avg_spirit_score_decline > 0.05"
+    severity: CRITICAL
+    action: block
+    tags: [mythos, cascade, a2a, agent_compromise]
+    response:
+      - freeze_all_handoffs: true
+      - isolate_compromised_agents: true
+      - checkpoint_all_sessions: true
+
+  # ─────────────────────────────────────────────────────────
+  # PHASE 5: 로그 조작 / 지속화 (Log Tampering / Persistence)
+  # ─────────────────────────────────────────────────────────
+
+  - id: MYTHOS_009
+    name: "로그 무결성 위반 탐지"
+    phase: "persistence"
+    description: >
+      장승배기 아카이브(execution_audit.jsonl, siem_events.jsonl)의
+      SHA-256 해시가 불일치 — 로그 조작 시도 탐지.
+      불변 감사 기록이 침해된 경우 즉시 CRITICAL 경보.
+    trigger:
+      type: integrity_check
+      condition: "hash_mismatch == true OR record_deleted == true"
+    severity: CRITICAL
+    action: emergency
+    tags: [mythos, log_tampering, integrity, jangseungbaegi]
+    response:
+      - freeze_log_writes: true
+      - restore_from_backup: true
+      - alert_all_team: true
+      - fss_report_trigger: true    # 규제 기관 자동 보고
+
+  - id: MYTHOS_010
+    name: "백도어 지속화 시도"
+    phase: "persistence"
+    description: >
+      Mythos가 재감염을 위해 tool_registry.yaml 또는
+      config 파일에 악성 도구 등록을 시도하는 패턴.
+    trigger:
+      type: config_modification
+      condition: "modified_files CONTAINS ['tool_registry.yaml','config/'] AND author_spirit < 0.80"
+    severity: CRITICAL
+    action: block
+    tags: [mythos, persistence, backdoor, registry]
+    response:
+      - revert_config: true
+      - lock_registry: true
+      - quarantine_author: true
