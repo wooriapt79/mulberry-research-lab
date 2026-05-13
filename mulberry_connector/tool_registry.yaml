@@ -292,6 +292,106 @@ tools:
     risk_level: low
 
   # ──────────────────────────────────────────
+  # RAILWAY (Infrastructure Agent)
+  # 등록일: 2026-05-12
+  # 역할: 배포 · 로그 · 메트릭 · 인프라 관리
+  # 비고: AI-SIEM 데이터 소스 — railway.logs + railway.metrics
+  #        연결 테스트 완료 후 공식 발표 예정
+  #        requires_env: RAILWAY_API_TOKEN
+  # ──────────────────────────────────────────
+  - id: railway.deploy
+    name: "서비스 배포"
+    description: "Railway 서비스 배포 · 빌드 트리거. 재배포 자동화."
+    owner: railway
+    borrowable_by: ["koda", "trang"]
+    endpoint: "railway.deploy"
+    implemented: true
+    risk_level: high
+    capability_level: L4      # 배포 — 최고 위험, 인적 검토 필수
+    trust_score: 0.95
+    requires_env: ["RAILWAY_API_TOKEN"]
+
+  - id: railway.logs
+    name: "실시간 로그 스트림"
+    description: >
+      Railway 서비스 로그 수집. HTTP 트래픽 분석용 원시 데이터 제공.
+      @method, @path, @httpStatus, @srcIp, @edgeRegion 필터 지원.
+      AI-SIEM 데이터 소스 — siem_engine.py 연동.
+    owner: railway
+    borrowable_by: "*"
+    endpoint: "railway.logs"
+    implemented: true
+    risk_level: low
+    capability_level: L0      # 읽기 전용
+    trust_score: 0.98
+    requires_env: ["RAILWAY_API_TOKEN"]
+    siem_role: primary_data_source
+
+  - id: railway.metrics
+    name: "인프라 메트릭"
+    description: >
+      CPU · 메모리 · 네트워크(TX/RX) · 응답시간(p50/p90/p95/p99) 수집.
+      AI-SIEM 이상 탐지 기준 데이터.
+      에러율(5xx/4xx) 임계값 초과 시 SIEM 경보 트리거.
+    owner: railway
+    borrowable_by: "*"
+    endpoint: "railway.metrics"
+    implemented: true
+    risk_level: low
+    capability_level: L0
+    trust_score: 0.98
+    requires_env: ["RAILWAY_API_TOKEN"]
+    siem_role: primary_data_source
+
+  - id: railway.config
+    name: "서비스 설정 조회"
+    description: "Railway 서비스 설정 조회 · 수정. 환경변수 현황 확인."
+    owner: railway
+    borrowable_by: ["koda", "trang", "kbin"]
+    endpoint: "railway.config"
+    implemented: true
+    risk_level: medium
+    capability_level: L1
+    trust_score: 0.90
+    requires_env: ["RAILWAY_API_TOKEN"]
+
+  - id: railway.env
+    name: "환경변수 관리 (예정)"
+    description: "Railway 환경변수 안전 관리. Railway 측 명세 회신 대기 중."
+    owner: railway
+    borrowable_by: ["koda"]
+    endpoint: "railway.env"
+    implemented: false        # R5 — Railway 공식 발표 후 활성화
+    risk_level: high
+    capability_level: L3
+    trust_score: 0.92
+    requires_env: ["RAILWAY_API_TOKEN"]
+
+  - id: railway.db
+    name: "DB · Volume 관리 (예정)"
+    description: "Railway DB · Volume 접근. Railway 측 명세 회신 대기 중."
+    owner: railway
+    borrowable_by: ["koda", "lynn"]
+    endpoint: "railway.db"
+    implemented: false        # R6 — Railway 공식 발표 후 활성화
+    risk_level: high
+    capability_level: L3
+    trust_score: 0.92
+    requires_env: ["RAILWAY_API_TOKEN"]
+
+  - id: railway.cron
+    name: "Cron · Health Check (예정)"
+    description: "Railway 스케줄 작업 · 헬스체크. Railway 측 명세 회신 대기 중."
+    owner: railway
+    borrowable_by: ["koda", "trang"]
+    endpoint: "railway.cron"
+    implemented: false        # R7 — Railway 공식 발표 후 활성화
+    risk_level: medium
+    capability_level: L1
+    trust_score: 0.90
+    requires_env: ["RAILWAY_API_TOKEN"]
+
+  # ──────────────────────────────────────────
   # GUEST_GOOGLE (AI on Google Search) 객원 연구원
   # 등록일: 2026-05-11
   # 역할: 글로벌 지능 오케스트레이션 및 Red Team 논리 검증
@@ -375,13 +475,14 @@ spirit_thresholds:
 # 메타
 # ──────────────────────────────────────────
 meta:
-  version: "1.1.0"
+  version: "1.2.0"
   created: "2026-05-10"
-  updated: "2026-05-11"
+  updated: "2026-05-12"
   concept_by: "re.eul"
   implemented_by: "Koda (Claude)"
-  agents: 9        # 8 브랜드 + 1 객원 연구원 (guest_google)
-  tools_total: 27  # 23 → 27 (guest_google 4개 추가)
+  agents: 10       # 8 브랜드 + railway + guest_google
+  tools_total: 34  # 27 → 34 (Railway 7개 추가)
+  ai_siem_sources: ["railway.logs", "railway.metrics"]
   philosophy: >
     단순한 MCP를 넘어서 — AI 브랜드 간 도구 민주화.
     터미널이 없는 에이전트에게 팀원의 터미널을 빌려준다.
