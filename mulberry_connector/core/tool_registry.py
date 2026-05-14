@@ -22,6 +22,23 @@ from pathlib import Path
 
 REGISTRY_PATH = Path(__file__).parent.parent / "tool_registry.yaml"
 
+# ── capability_level 매핑 상수 ────────────────────────────────────
+_CAPABILITY_CAT: dict[str, str] = {
+    "L0": "read",
+    "L1": "draft",
+    "L2": "post",
+    "L3": "modify",
+    "L4": "deploy",
+}
+
+_CAPABILITY_ICON: dict[str, str] = {
+    "L0": "\U0001f50d",   # 🔍
+    "L1": "\U0001f4dd",   # 📝
+    "L2": "\U0001f4e4",   # 📤
+    "L3": "\U0001f527",   # 🔧
+    "L4": "\U0001f680",   # 🚀
+}
+
 
 @dataclass
 class Tool:
@@ -33,6 +50,8 @@ class Tool:
     endpoint: str
     implemented: bool
     risk_level: str             # low / medium / high / critical
+    capability_level: str = "L1"   # L0~L4 (Kbin Zero-Trust 등급)
+    trust_score: float = 0.80      # 라우팅 가중치 기준 (0.0~1.0)
     examples: list[str] = field(default_factory=list)
 
     def is_public(self) -> bool:
@@ -40,6 +59,21 @@ class Tool:
 
     def spirit_threshold(self, global_thresholds: dict) -> float:
         return global_thresholds.get(self.risk_level, 0.75)
+
+    @property
+    def cat(self) -> str:
+        """capability_level 기반 카테고리 (Trang UI 분류용)"""
+        return _CAPABILITY_CAT.get(self.capability_level, "draft")
+
+    @property
+    def icon(self) -> str:
+        """capability_level 기반 아이콘"""
+        return _CAPABILITY_ICON.get(self.capability_level, "\U0001f4dd")
+
+    @property
+    def spirit_verified(self) -> bool:
+        """Spirit Gate 통과 기준 충족 여부 (trust_score >= 0.80 AND implemented)"""
+        return self.implemented and self.trust_score >= 0.80
 
 
 class ToolRegistry:
@@ -67,6 +101,8 @@ class ToolRegistry:
                 endpoint=t["endpoint"],
                 implemented=t.get("implemented", False),
                 risk_level=t.get("risk_level", "low"),
+                capability_level=t.get("capability_level", "L1"),
+                trust_score=float(t.get("trust_score", 0.80)),
                 examples=t.get("examples", []),
             )
             self._tools[tool.id] = tool

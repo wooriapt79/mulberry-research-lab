@@ -25,11 +25,23 @@ from core.constraint_router import ConstraintAwareRouter
 from core.dynamic_router import DynamicConstraintRouter, CAPABILITY_LEVELS
 from mulberry_tools.schema import MulberryToolCall, MulberryToolResult
 
+# AI-SIEM — Railway 메트릭 기반 위협 탐지 라우터
+try:
+    from core.siem_engine import create_siem_router
+    _siem_router = create_siem_router()
+except Exception as _siem_err:  # noqa: BLE001
+    _siem_router = None
+    print(f"[WARN] AI-SIEM router 로드 실패: {_siem_err}")
+
 app = FastAPI(
     title="Mulberry Connector API",
     description="Agent Execution Infrastructure — 'Systems where AI knows when NOT to act'",
-    version="1.0.0",
+    version="1.1.0",
 )
+
+# ── AI-SIEM 라우터 등록 (/v1/siem/*) ─────────────────────────────
+if _siem_router is not None:
+    app.include_router(_siem_router, prefix="/v1/siem", tags=["AI-SIEM"])
 
 GATEWAY_SECRET = os.environ.get("GATEWAY_SECRET", "mulberry-agent-relay-2026")
 VALID_AGENTS = {"koda", "kbin", "malu", "wayong", "ryuwon", "trang", "lynn", "jr"}
@@ -89,10 +101,20 @@ def status():
 
 @app.get("/v1/tools")
 def list_all_tools():
-    """전체 도구 목록 — 브랜드별 소유 및 공유 가능 여부 포함."""
+    """
+    전체 도구 목록 — Trang UI fetch() 연동용 풀 필드 반환.
+
+    추가 필드 (v1.1):
+      capability_level : L0~L4 Zero-Trust 등급
+      trust_score      : 라우팅 가중치 (0.0~1.0)
+      spirit_verified  : Spirit Gate 통과 기준 충족 여부
+      cat              : capability_level 기반 카테고리 (read/draft/post/modify/deploy)
+      icon             : UI 표시용 이모지
+    """
     tools = registry.all_tools()
     return {
         "total": len(tools),
+        "implemented_count": sum(1 for t in tools if t.implemented),
         "tools": [
             {
                 "id": t.id,
@@ -102,6 +124,11 @@ def list_all_tools():
                 "borrowable_by": t.borrowable_by,
                 "implemented": t.implemented,
                 "risk_level": t.risk_level,
+                "capability_level": t.capability_level,
+                "trust_score": t.trust_score,
+                "spirit_verified": t.spirit_verified,
+                "cat": t.cat,
+                "icon": t.icon,
             }
             for t in tools
         ],
