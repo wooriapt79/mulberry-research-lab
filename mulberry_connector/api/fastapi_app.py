@@ -33,6 +33,14 @@ except Exception as _siem_err:  # noqa: BLE001
     _siem_router = None
     print(f"[WARN] AI-SIEM router 로드 실패: {_siem_err}")
 
+# Permission Approval — 에이전트 권한 요청 워크플로우 (#35)
+try:
+    from core.permission_approval import create_approval_router
+    _approval_router = create_approval_router()
+except Exception as _apr_err:  # noqa: BLE001
+    _approval_router = None
+    print(f"[WARN] Permission Approval router 로드 실패: {_apr_err}")
+
 app = FastAPI(
     title="Mulberry Connector API",
     description="Agent Execution Infrastructure — 'Systems where AI knows when NOT to act'",
@@ -42,6 +50,10 @@ app = FastAPI(
 # ── AI-SIEM 라우터 등록 (/v1/siem/*) ─────────────────────────────
 if _siem_router is not None:
     app.include_router(_siem_router, prefix="/v1/siem", tags=["AI-SIEM"])
+
+# ── Permission Approval 라우터 등록 (/v1/permissions/*) ───────────
+if _approval_router is not None:
+    app.include_router(_approval_router, prefix="/v1/permissions", tags=["Permissions"])
 
 GATEWAY_SECRET = os.environ.get("GATEWAY_SECRET", "mulberry-agent-relay-2026")
 VALID_AGENTS = {"koda", "kbin", "malu", "wayong", "ryuwon", "trang", "lynn", "jr"}
