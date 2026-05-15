@@ -1,0 +1,193 @@
+# ============================================================
+# Mulberry Tool Registry — 표준 스키마 v2.0
+#
+# 모든 팀원의 도구는 이 스키마를 따라 등록한다.
+# 검증: scripts/validate_registry.py
+#
+# 설계: Kbin (CSA) · 구현: Koda (2026-05-15)
+# 철학: "등록된 도구는 팀 전체의 것이다" — DAmP
+# ============================================================
+
+schema_version: "2.0"
+applies_to: "mulberry_connector/tool_registry.yaml"
+
+# ── 필드 명세 ─────────────────────────────────────────────────────
+fields:
+
+  # 필수 필드 (required: true — 없으면 검증 실패)
+  required:
+
+    - name: id
+      type: string
+      pattern: "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_.]*$"
+      description: "도구 고유 식별자. 형식: {owner_prefix}.{category}.{function} 또는 {category}.{function}"
+      example: "koda.file.read | railway.logs | vision.analyze"
+
+    - name: name
+      type: string
+      max_length: 40
+      description: "도구 표시 이름 (한글 가능)"
+      example: "파일 읽기"
+
+    - name: description
+      type: string
+      max_length: 300
+      description: "도구 기능 설명"
+
+    - name: owner
+      type: string
+      allowed_values: [koda, kbin, malu, wayong, ryuwon, lynn, jr, trang, railway, guest_google]
+      description: "도구를 실제로 실행하는 에이전트"
+
+    - name: borrowable_by
+      type: "string | list[string]"
+      description: |
+        도구를 빌려 쓸 수 있는 에이전트 목록.
+        '*' = 전원 공개 (public)
+        [] 또는 생략 = 소유자 전용 (restricted)
+        ['koda', 'trang'] = 지정 팀원만 (team)
+
+    - name: endpoint
+      type: string
+      description: "SDK 내부 라우팅 키 (보통 id와 동일)"
+
+    - name: implemented
+      type: boolean
+      description: "현재 SDK에서 실제 실행 가능 여부"
+
+    - name: risk_level
+      type: string
+      allowed_values: [low, medium, high, critical]
+      description: "실행 위험도 — Spirit Score 기준 임계값 결정에 사용"
+
+  # 권장 필드 (recommended: true — 없으면 경고)
+  recommended:
+
+    - name: capability_level
+      type: string
+      allowed_values: [L0, L1, L2, L3, L4]
+      default: L1
+      description: |
+        Kbin Zero-Trust 도구 권한 등급:
+        L0: read-only       읽기 전용, 부작용 없음
+        L1: draft           초안 생성, 저장 전
+        L2: external_post   외부 게시 (GitHub 댓글 등)
+        L3: code_modify     코드 변경 (PR, 파일 쓰기)
+        L4: deploy_financial 배포 / 금융 — 최고 위험
+
+    - name: trust_score
+      type: float
+      range: [0.0, 1.0]
+      default: 0.80
+      description: "라우팅 가중치 기준. 높을수록 우선 선택됨."
+
+    - name: model
+      type: string
+      description: "도구를 실행하는 AI 모델명"
+      example: "claude-sonnet-4-5 | gemini-1.5-flash | deepseek-r1 | gpt-4o"
+
+    - name: status
+      type: string
+      allowed_values: [active, planned, deprecated]
+      default: "planned"
+      description: |
+        active     : 현재 사용 가능 (implemented: true)
+        planned    : 구현 예정 (implemented: false)
+        deprecated : 더 이상 사용하지 않음
+
+    - name: version
+      type: string
+      pattern: "^\\d+\\.\\d+\\.\\d+$"
+      default: "1.0.0"
+      description: "도구 버전 (SemVer)"
+
+  # 선택 필드 (optional — 있으면 더 좋음)
+  optional:
+
+    - name: input_format
+      type: list[string]
+      allowed_values: [text, image, file, json, shell_command, url, stream, binary]
+      description: "도구가 받을 수 있는 입력 형식"
+      example: ["text", "file"]
+
+    - name: output_format
+      type: list[string]
+      allowed_values: [text, json, file, url, stream, binary, boolean]
+      description: "도구가 반환하는 출력 형식"
+      example: ["json", "text"]
+
+    - name: permission_level
+      type: string
+      allowed_values: [public, team, restricted]
+      description: |
+        public     : borrowable_by == '*'
+        team       : borrowable_by == [특정 에이전트 목록]
+        restricted : 소유자 전용
+      note: "borrowable_by 에서 자동 계산 가능 — 명시적으로 선언 권장"
+
+    - name: requires_env
+      type: list[string]
+      description: "실행에 필요한 환경변수 목록"
+      example: ["RAILWAY_API_TOKEN", "GOOGLE_API_KEY"]
+
+    - name: examples
+      type: list[string]
+      max_items: 5
+      description: "사용 예시 (최대 5개)"
+
+    - name: params
+      type: object
+      description: "도구 파라미터 기본값 (도구별 자유 형식)"
+
+    - name: execution_policy
+      type: object
+      description: "실행 정책 (quota_limit, timeout_sec, fallback_tool 등)"
+
+    - name: siem_role
+      type: string
+      allowed_values: [primary_data_source, secondary_data_source, alert_target]
+      description: "AI-SIEM 내 역할 (Railway 도구 전용)"
+
+# ── permission_level 자동 계산 규칙 ──────────────────────────────
+permission_level_rules:
+  public:     "borrowable_by == '*'"
+  team:       "borrowable_by is list AND len > 0"
+  restricted: "borrowable_by is empty OR not set"
+
+# ── capability_level × spirit_score 기준 ─────────────────────────
+spirit_gate_matrix:
+  L0: { auto_approve_threshold: 0.75, human_review: false, approval_ttl_hours: 8  }
+  L1: { auto_approve_threshold: 0.80, human_review: false, approval_ttl_hours: 4  }
+  L2: { auto_approve_threshold: null, human_review: true,  approval_ttl_hours: 2  }
+  L3: { auto_approve_threshold: null, human_review: true,  approval_ttl_hours: 0.5 }
+  L4: { auto_approve_threshold: null, human_review: true,  approval_ttl_hours: 0.25, critical_escalation: true }
+
+# ── 버전 관리 규칙 ───────────────────────────────────────────────
+versioning:
+  format: "MAJOR.MINOR.PATCH"
+  rules:
+    MAJOR: "스키마 구조 변경 (필드 추가/삭제) 또는 에이전트 추가"
+    MINOR: "도구 추가 또는 capability_level 변경"
+    PATCH: "설명 수정, trust_score 조정, 버그 수정"
+  current_registry_version: "2.0.0"
+  changelog:
+    "1.0.0": "초기 도구 등록 (8 에이전트, 27 도구)"
+    "1.1.0": "Railway Agent 등록 (7 도구 추가)"
+    "1.2.0": "guest_google 등록 + capability_level/trust_score 필드 추가"
+    "2.0.0": "표준 스키마 v2 적용 — model/status/version/input_format/output_format/permission_level 필드 추가"
+
+# ── 등록 가이드 (팀원용 요약) ────────────────────────────────────
+quick_guide: |
+  새 도구 등록 방법:
+
+  1. id 형식: {카테고리}.{기능} (예: vision.analyze, reason.deep)
+  2. owner: 반드시 자신의 에이전트 ID
+  3. borrowable_by: '*' (전체공개) 또는 리스트 (팀 공유) 또는 [] (본인전용)
+  4. capability_level: 읽기=L0, 초안=L1, 게시=L2, 코드수정=L3, 배포=L4
+  5. status: 지금 쓸 수 있으면 active, 나중에 구현하면 planned
+
+  검증 명령어:
+    python scripts/validate_registry.py
+
+  참고 문서:
+    docs/sharing-layer/how-to-register-tool.md

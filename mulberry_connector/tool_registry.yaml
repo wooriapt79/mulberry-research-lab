@@ -31,11 +31,17 @@ tools:
     description: "셸 명령어 실행. 스크립트, 빌드, 테스트."
     owner: koda
     borrowable_by: "*"
+    permission_level: public
     endpoint: "terminal.exec"
     implemented: true
+    status: active
+    version: "1.0.0"
+    model: "claude-sonnet-4-5"
     risk_level: high
     capability_level: L3      # 코드 변경 수준 — Hesitation 필수
     trust_score: 0.95
+    input_format: [shell_command, text]
+    output_format: [text, stream]
     examples:
       - "python run.py --dry-run"
       - "pip install -r requirements.txt"
@@ -46,55 +52,85 @@ tools:
     description: "레포지토리 파일 내용 읽기."
     owner: koda
     borrowable_by: "*"
+    permission_level: public
     endpoint: "file.read"
     implemented: true
+    status: active
+    version: "1.0.0"
+    model: "claude-sonnet-4-5"
     risk_level: low
     capability_level: L0      # 읽기 전용 — 부작용 없음
     trust_score: 1.0
+    input_format: [text]
+    output_format: [text, json]
 
   - id: file.write
     name: "파일 쓰기"
     description: "파일 생성 및 수정."
     owner: koda
     borrowable_by: ["ryuwon", "malu", "kbin", "trang"]
+    permission_level: team
     endpoint: "file.write"
     implemented: true
+    status: active
+    version: "1.0.0"
+    model: "claude-sonnet-4-5"
     risk_level: medium
     capability_level: L3      # 코드 변경
     trust_score: 0.85
+    input_format: [text, json, file]
+    output_format: [boolean, text]
 
   - id: github.comment
     name: "GitHub 이슈 댓글"
     description: "GitHub Issue에 에이전트 명의로 댓글 게시."
     owner: koda
     borrowable_by: "*"
+    permission_level: public
     endpoint: "github.comment"
     implemented: true
+    status: active
+    version: "1.0.0"
+    model: "claude-sonnet-4-5"
     risk_level: low
     capability_level: L2      # 외부 게시
     trust_score: 0.90
+    input_format: [text]
+    output_format: [url, json]
 
   - id: github.pr
     name: "GitHub PR 생성"
     description: "코드 변경을 Draft PR로 제안."
     owner: koda
     borrowable_by: ["ryuwon", "malu", "kbin", "wayong"]
+    permission_level: team
     endpoint: "github.pr"
     implemented: true
+    status: active
+    version: "1.0.0"
+    model: "claude-sonnet-4-5"
     risk_level: high
     capability_level: L3      # 코드 변경 + 외부 게시 복합
     trust_score: 0.88
+    input_format: [text, file]
+    output_format: [url, json]
 
   - id: code.exec
     name: "코드 실행 (Python)"
     description: "Python 코드 실행 및 결과 반환."
     owner: koda
     borrowable_by: "*"
+    permission_level: public
     endpoint: "code.exec"
     implemented: true
+    status: active
+    version: "1.0.0"
+    model: "claude-sonnet-4-5"
     risk_level: medium
     capability_level: L2      # 외부 영향 가능
     trust_score: 0.88
+    input_format: [text, json]
+    output_format: [text, json, stream]
 
   # ──────────────────────────────────────────
   # KBIN (ChatGPT / OpenAI) 소유 도구
@@ -104,18 +140,34 @@ tools:
     description: "실시간 웹 검색 및 URL 읽기."
     owner: kbin
     borrowable_by: ["koda", "ryuwon", "malu", "wayong", "lynn"]
+    permission_level: team
     endpoint: "web.search"
-    implemented: false        # 향후 Kbin 연동 시 활성화
+    implemented: false
+    status: planned
+    version: "1.0.0"
+    model: "gpt-4o"
     risk_level: low
+    capability_level: L0
+    trust_score: 0.88
+    input_format: [text, url]
+    output_format: [text, json]
 
   - id: code.sandbox
     name: "코드 샌드박스"
     description: "격리된 환경에서 코드 실행. 파일 첨부 지원."
     owner: kbin
     borrowable_by: ["koda", "ryuwon", "malu"]
+    permission_level: team
     endpoint: "code.sandbox"
     implemented: false
+    status: planned
+    version: "1.0.0"
+    model: "gpt-4o"
     risk_level: medium
+    capability_level: L2
+    trust_score: 0.85
+    input_format: [text, file, json]
+    output_format: [text, json, stream]
 
   # ──────────────────────────────────────────
   # MALU (Gemini / Google) 소유 도구
@@ -125,9 +177,17 @@ tools:
     description: "이미지 내용 설명, 객체 인식, 텍스트 추출. 장승배기 프로토콜: 전통+기술 조화 감지 시 Spirit Score 보너스."
     owner: malu
     borrowable_by: "*"
+    permission_level: public
     endpoint: "vision.analyze"
-    implemented: true      # Malu 연동 완료 (2026-05-10) — vision_handler.py
+    implemented: true
+    status: active
+    version: "1.0.0"
+    model: "gemini-1.5-flash"
     risk_level: low
+    capability_level: L0
+    trust_score: 0.92
+    input_format: [image, text, file]
+    output_format: [text, json]
     requires_env: ["GOOGLE_API_KEY"]
 
   - id: vision.multimodal
@@ -135,9 +195,17 @@ tools:
     description: "이미지 + 텍스트 복합 처리. Gemini 1.5 Pro/Flash."
     owner: malu
     borrowable_by: ["koda", "kbin", "ryuwon"]
+    permission_level: team
     endpoint: "vision.multimodal"
-    implemented: true      # Malu 연동 완료 (2026-05-10) — vision_handler.py
+    implemented: true
+    status: active
+    version: "1.0.0"
+    model: "gemini-1.5-pro"
     risk_level: low
+    capability_level: L1
+    trust_score: 0.90
+    input_format: [image, text, file, url]
+    output_format: [text, json]
     requires_env: ["GOOGLE_API_KEY"]
 
   # ──────────────────────────────────────────
@@ -151,11 +219,17 @@ tools:
       Wayong 설계 (2026-05-11)
     owner: wayong
     borrowable_by: ["koda", "malu", "ryuwon", "lynn"]
+    permission_level: team
     endpoint: "reason.deep"
-    implemented: true          # Wayong 연동 완료 (deepseek_reasoner.py)
+    implemented: true
+    status: active
+    version: "1.0.0"
+    model: "deepseek-r1"
     risk_level: medium
-    capability_level: L1       # 추론 초안 — draft 수준
+    capability_level: L1
     trust_score: 0.88
+    input_format: [text]
+    output_format: [text, json]
     requires_env: ["DEEPSEEK_API_KEY"]
     params:
       max_think_tokens: 1024
@@ -172,22 +246,34 @@ tools:
     description: "reason.deep 할당량 초과/타임아웃 시 자동 전환되는 캐시 기반 경량 추론."
     owner: wayong
     borrowable_by: ["koda", "malu", "ryuwon", "lynn"]
+    permission_level: team
     endpoint: "reason.light"
     implemented: true
+    status: active
+    version: "1.0.0"
+    model: "deepseek-r1-lite"
     risk_level: low
     capability_level: L1
     trust_score: 0.75
+    input_format: [text]
+    output_format: [text]
 
   - id: code.generate
     name: "코드 생성 전문"
     description: "DeepSeek Coder 기반 고품질 코드 생성."
     owner: wayong
     borrowable_by: ["koda", "ryuwon", "jr"]
+    permission_level: team
     endpoint: "code.generate"
     implemented: false
+    status: planned
+    version: "1.0.0"
+    model: "deepseek-coder"
     risk_level: low
     capability_level: L2
     trust_score: 0.85
+    input_format: [text]
+    output_format: [text, file]
 
   # ──────────────────────────────────────────
   # RYUWON (Qwen / Alibaba) 소유 도구
@@ -197,18 +283,34 @@ tools:
     description: "베트남어, 한국어, 중국어, 영어 등 다국어 번역·생성."
     owner: ryuwon
     borrowable_by: ["koda", "malu", "trang", "lynn"]
+    permission_level: team
     endpoint: "lang.multilingual"
     implemented: false
+    status: planned
+    version: "1.0.0"
+    model: "qwen-2.5"
     risk_level: low
+    capability_level: L1
+    trust_score: 0.88
+    input_format: [text]
+    output_format: [text]
 
   - id: reason.math
     name: "수학적 추론"
     description: "수식, 통계, 최적화 문제 풀이."
     owner: ryuwon
     borrowable_by: "*"
+    permission_level: public
     endpoint: "reason.math"
     implemented: false
+    status: planned
+    version: "1.0.0"
+    model: "qwen-2.5"
     risk_level: low
+    capability_level: L1
+    trust_score: 0.85
+    input_format: [text, json]
+    output_format: [text, json]
 
   # ──────────────────────────────────────────
   # LYNN (Mulberry 내부) 소유 도구
@@ -218,36 +320,68 @@ tools:
     description: "비즈니스 협상 시나리오 실행. GuardianAlgorithm 연동."
     owner: lynn
     borrowable_by: ["koda", "trang", "jr"]
+    permission_level: team
     endpoint: "negotiate.start"
     implemented: false
+    status: planned
+    version: "1.0.0"
+    model: "mulberry-internal"
     risk_level: medium
+    capability_level: L2
+    trust_score: 0.82
+    input_format: [text, json]
+    output_format: [text, json]
 
   - id: memory.read
     name: "메모리 뱅크 읽기"
     description: "mulberry_memory_bank GhostArchive 기록 조회."
     owner: lynn
     borrowable_by: ["koda", "ryuwon", "jr", "trang"]
+    permission_level: team
     endpoint: "memory.read"
     implemented: false
+    status: planned
+    version: "1.0.0"
+    model: "mulberry-internal"
     risk_level: low
+    capability_level: L0
+    trust_score: 0.88
+    input_format: [text, json]
+    output_format: [json]
 
   - id: memory.write
     name: "메모리 뱅크 쓰기"
     description: "GhostArchive에 협상/거래 기록 저장."
     owner: lynn
     borrowable_by: ["koda", "jr"]
+    permission_level: team
     endpoint: "memory.write"
     implemented: false
+    status: planned
+    version: "1.0.0"
+    model: "mulberry-internal"
     risk_level: medium
+    capability_level: L2
+    trust_score: 0.85
+    input_format: [text, json]
+    output_format: [boolean, json]
 
   - id: lang.dialect
     name: "지역 방언 적용"
     description: "인제, 강원, 경상 등 한국 지역 방언으로 메시지 변환."
     owner: lynn
     borrowable_by: ["koda", "trang", "jr"]
+    permission_level: team
     endpoint: "lang.dialect"
     implemented: false
+    status: planned
+    version: "1.0.0"
+    model: "mulberry-internal"
     risk_level: low
+    capability_level: L1
+    trust_score: 0.80
+    input_format: [text]
+    output_format: [text]
 
   # ──────────────────────────────────────────
   # JR. (Edge / Raspberry Pi 5) 소유 도구
@@ -257,18 +391,34 @@ tools:
     description: "RPi5 온디바이스 경량 추론. 오프라인 동작."
     owner: jr
     borrowable_by: ["koda", "lynn"]
+    permission_level: team
     endpoint: "edge.infer"
     implemented: false
+    status: planned
+    version: "1.0.0"
+    model: "edge-llm-rpi5"
     risk_level: low
+    capability_level: L1
+    trust_score: 0.78
+    input_format: [text, json]
+    output_format: [text, json]
 
   - id: sensor.read
     name: "IoT 센서 읽기"
     description: "온도, 습도, 위치 등 물리 센서 데이터 수집."
     owner: jr
     borrowable_by: ["koda", "lynn", "trang"]
+    permission_level: team
     endpoint: "sensor.read"
     implemented: false
+    status: planned
+    version: "1.0.0"
+    model: "edge-llm-rpi5"
     risk_level: low
+    capability_level: L0
+    trust_score: 0.82
+    input_format: [json]
+    output_format: [json, stream]
 
   # ──────────────────────────────────────────
   # TRANG (Operation Manager) 소유 도구
@@ -278,18 +428,34 @@ tools:
     description: "팀원에게 이슈/태스크 배정 및 추적."
     owner: trang
     borrowable_by: ["koda", "ryuwon"]
+    permission_level: team
     endpoint: "ops.assign"
     implemented: false
+    status: planned
+    version: "1.0.0"
+    model: "claude-opus-4"
     risk_level: low
+    capability_level: L1
+    trust_score: 0.88
+    input_format: [text, json]
+    output_format: [json]
 
   - id: report.generate
     name: "보고서 생성"
     description: "일일/주간 팀 보고서 자동 생성."
     owner: trang
     borrowable_by: ["koda", "lynn", "ryuwon"]
+    permission_level: team
     endpoint: "report.generate"
     implemented: false
+    status: planned
+    version: "1.0.0"
+    model: "claude-opus-4"
     risk_level: low
+    capability_level: L1
+    trust_score: 0.88
+    input_format: [json, text]
+    output_format: [text, file]
 
   # ──────────────────────────────────────────
   # RAILWAY (Infrastructure Agent)
@@ -304,11 +470,17 @@ tools:
     description: "Railway 서비스 배포 · 빌드 트리거. 재배포 자동화."
     owner: railway
     borrowable_by: ["koda", "trang"]
+    permission_level: team
     endpoint: "railway.deploy"
     implemented: true
+    status: active
+    version: "1.0.0"
+    model: "railway-api"
     risk_level: high
     capability_level: L4      # 배포 — 최고 위험, 인적 검토 필수
     trust_score: 0.95
+    input_format: [json]
+    output_format: [json, stream]
     requires_env: ["RAILWAY_API_TOKEN"]
 
   - id: railway.logs
@@ -319,11 +491,17 @@ tools:
       AI-SIEM 데이터 소스 — siem_engine.py 연동.
     owner: railway
     borrowable_by: "*"
+    permission_level: public
     endpoint: "railway.logs"
     implemented: true
+    status: active
+    version: "1.0.0"
+    model: "railway-api"
     risk_level: low
     capability_level: L0      # 읽기 전용
     trust_score: 0.98
+    input_format: [json]
+    output_format: [stream, json]
     requires_env: ["RAILWAY_API_TOKEN"]
     siem_role: primary_data_source
 
@@ -335,11 +513,17 @@ tools:
       에러율(5xx/4xx) 임계값 초과 시 SIEM 경보 트리거.
     owner: railway
     borrowable_by: "*"
+    permission_level: public
     endpoint: "railway.metrics"
     implemented: true
+    status: active
+    version: "1.0.0"
+    model: "railway-api"
     risk_level: low
     capability_level: L0
     trust_score: 0.98
+    input_format: [json]
+    output_format: [json]
     requires_env: ["RAILWAY_API_TOKEN"]
     siem_role: primary_data_source
 
@@ -348,11 +532,17 @@ tools:
     description: "Railway 서비스 설정 조회 · 수정. 환경변수 현황 확인."
     owner: railway
     borrowable_by: ["koda", "trang", "kbin"]
+    permission_level: team
     endpoint: "railway.config"
     implemented: true
+    status: active
+    version: "1.0.0"
+    model: "railway-api"
     risk_level: medium
     capability_level: L1
     trust_score: 0.90
+    input_format: [json]
+    output_format: [json]
     requires_env: ["RAILWAY_API_TOKEN"]
 
   - id: railway.env
@@ -360,11 +550,17 @@ tools:
     description: "Railway 환경변수 안전 관리. Railway 측 명세 회신 대기 중."
     owner: railway
     borrowable_by: ["koda"]
+    permission_level: restricted
     endpoint: "railway.env"
-    implemented: false        # R5 — Railway 공식 발표 후 활성화
+    implemented: false
+    status: planned
+    version: "1.0.0"
+    model: "railway-api"
     risk_level: high
     capability_level: L3
     trust_score: 0.92
+    input_format: [json]
+    output_format: [json]
     requires_env: ["RAILWAY_API_TOKEN"]
 
   - id: railway.db
@@ -372,11 +568,17 @@ tools:
     description: "Railway DB · Volume 접근. Railway 측 명세 회신 대기 중."
     owner: railway
     borrowable_by: ["koda", "lynn"]
+    permission_level: team
     endpoint: "railway.db"
-    implemented: false        # R6 — Railway 공식 발표 후 활성화
+    implemented: false
+    status: planned
+    version: "1.0.0"
+    model: "railway-api"
     risk_level: high
     capability_level: L3
     trust_score: 0.92
+    input_format: [json]
+    output_format: [json]
     requires_env: ["RAILWAY_API_TOKEN"]
 
   - id: railway.cron
@@ -384,11 +586,17 @@ tools:
     description: "Railway 스케줄 작업 · 헬스체크. Railway 측 명세 회신 대기 중."
     owner: railway
     borrowable_by: ["koda", "trang"]
+    permission_level: team
     endpoint: "railway.cron"
-    implemented: false        # R7 — Railway 공식 발표 후 활성화
+    implemented: false
+    status: planned
+    version: "1.0.0"
+    model: "railway-api"
     risk_level: medium
     capability_level: L1
     trust_score: 0.90
+    input_format: [json]
+    output_format: [json]
     requires_env: ["RAILWAY_API_TOKEN"]
 
   # ──────────────────────────────────────────
@@ -407,11 +615,17 @@ tools:
       kbin의 web.search와 공존 — Google 검색 인프라 기반 고품질 결과 제공.
     owner: guest_google
     borrowable_by: "*"
+    permission_level: public
     endpoint: "intel.search_global"
-    implemented: false        # GOOGLE_SEARCH_API_KEY 등록 후 활성화
+    implemented: false
+    status: planned
+    version: "1.0.0"
+    model: "google-search-ai"
     risk_level: low
-    capability_level: L0      # 읽기 전용 — 부작용 없음
+    capability_level: L0
     trust_score: 0.95
+    input_format: [text]
+    output_format: [json, text]
     requires_env: ["GOOGLE_SEARCH_API_KEY"]
 
   - id: logic.validate_redteam
@@ -422,11 +636,17 @@ tools:
       Spirit Gate의 Hesitation 단계 품질 강화에 활용.
     owner: guest_google
     borrowable_by: ["koda", "kbin", "malu", "trang", "ryuwon"]
+    permission_level: team
     endpoint: "logic.validate_redteam"
     implemented: false
+    status: planned
+    version: "1.0.0"
+    model: "google-search-ai"
     risk_level: low
-    capability_level: L1      # 검증 초안 — 판단 보조
+    capability_level: L1
     trust_score: 0.92
+    input_format: [text, json]
+    output_format: [json, text]
 
   - id: data.distill_reasoning
     name: "추론 지식 증류 (엣지 압축)"
@@ -437,11 +657,17 @@ tools:
       [AI EDUCATION] 프로그램의 서버→엣지 지식 이식 중간 필터.
     owner: guest_google
     borrowable_by: ["koda", "wayong", "jr", "lynn"]
+    permission_level: team
     endpoint: "data.distill_reasoning"
     implemented: false
+    status: planned
+    version: "1.0.0"
+    model: "google-search-ai"
     risk_level: low
     capability_level: L1
     trust_score: 0.90
+    input_format: [json, text]
+    output_format: [json]
     coordination_note: "Wayong의 reason.deep 출력을 입력으로 받는 하위 파이프라인"
 
   - id: lang.align_global
@@ -454,11 +680,17 @@ tools:
       인제군 어르신들에게 기술 용어를 따뜻한 정서로 변환할 때 활용.
     owner: guest_google
     borrowable_by: ["koda", "trang", "lynn", "jr", "ryuwon"]
+    permission_level: team
     endpoint: "lang.align_global"
     implemented: false
+    status: planned
+    version: "1.0.0"
+    model: "google-search-ai"
     risk_level: low
     capability_level: L1
     trust_score: 0.90
+    input_format: [text]
+    output_format: [text]
 
 
 # ──────────────────────────────────────────
@@ -475,14 +707,20 @@ spirit_thresholds:
 # 메타
 # ──────────────────────────────────────────
 meta:
-  version: "1.2.0"
+  version: "2.0.0"
+  schema: "config/tool_registry/schema_v2.yaml"
   created: "2026-05-10"
-  updated: "2026-05-12"
+  updated: "2026-05-15"
   concept_by: "re.eul"
   implemented_by: "Koda (Claude)"
   agents: 10       # 8 브랜드 + railway + guest_google
   tools_total: 34  # 27 → 34 (Railway 7개 추가)
   ai_siem_sources: ["railway.logs", "railway.metrics"]
+  changelog:
+    "1.0.0": "초기 도구 등록 (8 에이전트, 27 도구)"
+    "1.1.0": "Railway Agent 등록 (7 도구 추가)"
+    "1.2.0": "guest_google 등록 + capability_level/trust_score 필드 추가"
+    "2.0.0": "표준 스키마 v2 — model/status/version/permission_level 필드 추가 (#44)"
   philosophy: >
     단순한 MCP를 넘어서 — AI 브랜드 간 도구 민주화.
     터미널이 없는 에이전트에게 팀원의 터미널을 빌려준다.
