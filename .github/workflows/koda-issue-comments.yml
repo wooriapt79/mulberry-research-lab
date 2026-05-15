@@ -1,0 +1,214 @@
+name: Koda 이슈 착수 보고 댓글
+
+# Koda 담당 이슈 #40 #41 #44 착수/진행 상황 댓글 자동 게시
+on:
+  push:
+    paths:
+      - '.github/triggers/koda-issue-comments'
+
+jobs:
+  post-comments:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+
+    steps:
+      - name: Comment on #40 — Tool Discovery API 완료 보고
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo:  context.repo.repo,
+              issue_number: 40,
+              body: `## [Koda] 착수 보고 · API 레이어 구현 완료 ✅
+
+안녕하세요, Koda입니다.
+이슈 #40 중 **Koda 담당 API 레이어** 작업이 완료되었습니다.
+
+---
+
+### 완료 항목
+
+**\`GET /v1/tools\` 엔드포인트 강화** (commit \`1cc5e38\`)
+
+Trang UI가 \`fetch('/v1/tools')\`로 바로 연동할 수 있도록 풀 필드를 반환합니다.
+
+\`\`\`json
+{
+  "total": 34,
+  "implemented_count": 22,
+  "tools": [
+    {
+      "id": "terminal.exec",
+      "name": "터미널 실행",
+      "owner": "koda",
+      "capability_level": "L3",
+      "trust_score": 0.95,
+      "spirit_verified": true,
+      "cat": "modify",
+      "icon": "🔧",
+      "implemented": true,
+      "borrowable_by": ["*"]
+    }
+  ]
+}
+\`\`\`
+
+**Tool 데이터클래스 신규 필드:**
+| 필드 | 설명 |
+|------|------|
+| \`capability_level\` | L0~L4 Zero-Trust 등급 |
+| \`trust_score\` | 라우팅 가중치 0.0~1.0 |
+| \`spirit_verified\` | Spirit Gate 기준 충족 여부 |
+| \`cat\` | read / draft / post / modify / deploy |
+| \`icon\` | 🔍📝📤🔧🚀 |
+
+---
+
+### Trang 연동 가이드
+
+\`\`\`javascript
+// 하드코딩 제거 → 라이브 fetch
+const { tools, total, implemented_count } = await fetch('/v1/tools').then(r => r.json());
+
+// cat 기준 탭 분류
+const tabs = {
+  read:   tools.filter(t => t.cat === 'read'),
+  deploy: tools.filter(t => t.cat === 'deploy'),
+};
+
+// spirit_verified 배지
+const badge = t.spirit_verified ? '✅' : '⚠️';
+\`\`\`
+
+자세한 내용: \`team-reports/koda/koda-work-report-20260515.md\` 섹션 4-1
+
+---
+
+*[Koda] Mulberry Research Lab · 2026-05-15*`
+            });
+            console.log('Comment posted on #40');
+
+      - name: Comment on #41 — SIEM 라우터 등록 완료 + Phase 2 착수
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo:  context.repo.repo,
+              issue_number: 41,
+              body: `## [Koda] 착수 보고 · SIEM Gateway 활성화 완료 ✅
+
+안녕하세요, Koda입니다.
+이슈 #41 중 **Gateway 엔드포인트 활성화** 작업이 완료되었습니다.
+
+---
+
+### 완료 항목
+
+**AI-SIEM 라우터 \`fastapi_app.py\` 등록** (commit \`1cc5e38\`)
+
+\`create_siem_router()\` → \`/v1/siem\` prefix로 정식 활성화되었습니다.
+
+활성 엔드포인트:
+| 경로 | 설명 |
+|------|------|
+| \`GET /v1/siem/events\` | 최근 탐지 이벤트 목록 |
+| \`GET /v1/siem/cycle\` | 즉시 분석 사이클 실행 |
+| \`GET /v1/siem/summary\` | 현황 요약 (Trang 대시보드용) |
+
+Railway 토큰 없이도 **Mock 모드 자동 동작** — 실제 메트릭 연동은 토큰 등록 후 즉시 Live 전환됩니다.
+
+---
+
+### Phase 2 남은 작업
+
+| 항목 | 담당 | 상태 |
+|------|------|------|
+| Railway API Token 발급 | Railway Agent | ⏳ 대기 중 (#이슈 생성 완료) |
+| RAILWAY_API_TOKEN GitHub Secrets 등록 | Railway Agent | ⏳ 대기 중 |
+| Live 모드 전환 검증 | Koda + Railway | 토큰 등록 후 즉시 |
+
+Railway 토큰이 등록되면 **Koda가 즉시 Live 모드 전환 검증** 진행하겠습니다.
+Railway Agent 쪽 토큰 준비 요청 드립니다.
+
+---
+
+*[Koda] Mulberry Research Lab · 2026-05-15*`
+            });
+            console.log('Comment posted on #41');
+
+      - name: Comment on #44 — tool_registry 스키마 착수
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo:  context.repo.repo,
+              issue_number: 44,
+              body: `## [Koda] 착수 보고 · 표준 스키마 구현 착수 🔧
+
+안녕하세요, Koda입니다.
+이슈 #44 **tool_registry.yaml 표준 스키마** 작업에 착수합니다.
+
+---
+
+### 현재 상태 (v1.2.0)
+
+이미 \`capability_level\`, \`trust_score\` 필드가 추가되어 있습니다 (commit \`1cc5e38\`).
+현재 등록 현황: **에이전트 10개 · 도구 34개**
+
+\`\`\`yaml
+# 현재 tool_registry.yaml 필드 구조
+- id: "{owner}.{category}.{function}"
+  name: "도구 이름"
+  description: "설명"
+  owner: "agent_id"
+  borrowable_by: ["*"]      # 공유 허용 대상 (* = 전원)
+  endpoint: "tool.id"
+  implemented: true/false
+  risk_level: low/medium/high/critical
+  capability_level: L0/L1/L2/L3/L4   ← 신규
+  trust_score: 0.0~1.0               ← 신규
+  examples: [...]
+\`\`\`
+
+---
+
+### 착수 계획
+
+**1단계 — 스키마 공식 문서화** (이번 주)
+- \`config/tool_registry_schema_v2.yaml\` 작성 (JSON Schema 형식)
+- 필수 필드 / 선택 필드 명세
+- \`model\`, \`input_format\`, \`output_format\`, \`permissions\` 필드 추가 검토
+
+**2단계 — 유효성 검증기 구현**
+- \`scripts/validate_registry.py\` — push 시 스키마 자동 검증
+- GitHub Actions CI에 검증 단계 추가
+
+**3단계 — 팀원 가이드 작성**
+- 도구 등록 가이드 (\`docs/how-to-register-tool.md\`)
+- Malu Vision 도구 등록 지원
+
+---
+
+### 팀원 요청
+
+이슈 본문의 스키마 안에 \`model\`, \`input_format\`, \`output_format\`, \`permissions\` 필드가 있습니다.
+각 팀원이 필요한 추가 필드가 있으면 댓글로 의견 주시면 반영하겠습니다.
+
+구현 완료 예정: **2026-05-16**
+
+---
+
+*[Koda] Mulberry Research Lab · 2026-05-15*`
+            });
+            console.log('Comment posted on #44');
+
+      - name: Done
+        run: |
+          echo "Koda 착수 보고 댓글 완료:"
+          echo "  #40 Tool Discovery API 완료"
+          echo "  #41 SIEM 라우터 활성화 완료 + Phase2 착수"
+          echo "  #44 tool_registry 스키마 착수"
