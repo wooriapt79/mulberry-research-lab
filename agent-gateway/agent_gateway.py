@@ -7,7 +7,7 @@ v1.2.0 변경사항 (2026-05-08):
   - UTF-8 인코딩 정리 (em dash, 깨진 한글 수정)
   - /trigger 엔드포인트 추가 (SDK v1/action/execute 연동)
   - agent-relay/agent-gateway/ 경로로 이전
-
+h
 v1.1.0 변경사항 (2026-05-05):
   - mulberry_memory_bank (Bank) 레포 공식 등록
   - REGISTERED_REPOS 화이트리스트 추가 (보안 강화)
@@ -433,6 +433,31 @@ def batch_post(req: BatchPostRequest, x_gateway_secret: str = Header(...)):
         "total": len(results),
         "success": sum(1 for r in results if r.get("success")),
     }
+
+
+@app.get("/api/health")
+def api_health():
+    """헬스체크 -- Railway 배포 검증용 (Issue #49 P1)"""
+    return {"status": "ok", "version": "1.3.0", "github_ready": bool(GITHUB_TOKEN), "timestamp": datetime.utcnow().isoformat()}
+
+
+@app.get("/v1/tools")
+def v1_tools():
+    """Tool Registry v1.0.0 -- 공유레이어 도구 목록 (Issue #44, #49 P1)"""
+    return {
+        "schema_version": "1.0.0",
+        "total_tools": 3,
+        "active_tools": 0,
+        "planned_tools": 3,
+        "tools": [
+            {"id": "malu.vision.image_generate", "name": "Malu Vision -- 이미지 생성", "owner": "Malu", "status": "planned", "spirit_score": 0.88, "issue_ref": "#43"},
+            {"id": "trang.passport.agent_restore", "name": "AgentPassport -- 기억 복구", "owner": "Trang", "status": "planned", "spirit_score": 0.95, "issue_ref": "#47"},
+            {"id": "trang.agent.image_advertising", "name": "Image Agent -- 광고 자동화", "owner": "Trang", "status": "planned", "spirit_score": 0.85, "issue_ref": "#45"},
+        ],
+        "registry_meta": {"maintainer": "Nguyen Trang", "next_review": "2026-06-15"},
+        "timestamp": datetime.utcnow().isoformat(),
+    }
+
 
 if __name__ == "__main__":
     import uvicorn

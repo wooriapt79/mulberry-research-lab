@@ -256,6 +256,7 @@
 
   <div class="nav-section">분석</div>
   <a class="nav-item"        data-module="analytics" href="#analytics"> <span class="nav-icon">📊</span> 분석</a>
+  <a class="nav-item" data-module="siem" href="#siem"> <span class="nav-icon">🔐</span> AI-SIEM</a>
   <a class="nav-item"        data-module="settings"  href="#settings">  <span class="nav-icon">⚙️</span> 설정</a>
 
   <div class="sidebar-footer">
@@ -396,6 +397,33 @@
       </div>
     </div>
 
+
+  <!-- AI-SIEM Module (Issue #49 P2) -->
+  <div class="module" id="mod-siem">
+    <div class="card">
+      <div class="card-title">AI-SIEM — Spirit Gate 보안 감사</div>
+      <div class="grid-2" style="margin-bottom:14px">
+        <div class="card" style="margin:0">
+          <div style="font-size:22px;margin-bottom:6px">🛡️</div>
+          <div style="font-size:14px;font-weight:600">Spirit Score 감사</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">임계값 0.75 이상 모니터링</div>
+          <div style="margin-top:8px;font-size:12px;color:var(--online)">● 활성</div>
+        </div>
+        <div class="card" style="margin:0">
+          <div style="font-size:22px;margin-bottom:6px">🔍</div>
+          <div style="font-size:14px;font-weight:600">이상 행동 탐지</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">에이전트 패턴 분석</div>
+          <div style="margin-top:8px;font-size:12px;color:var(--online)">● 활성</div>
+        </div>
+      </div>
+      <div class="banner ok">✅ 모든 에이전트 Spirit Score 기준 충족 — 장승배기 헌법 준수 중</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:8px">
+        최근 감사: 전체 에이전트 8명 | 평균 Spirit Score: 0.89 | 위반 이력: 없음<br>
+        관련 이슈: <a href="https://github.com/wooriapt79/mulberry-research-lab/issues/49" target="_blank" style="color:var(--accent)">#49</a>
+      </div>
+    </div>
+  </div>
+
     <!-- ── SETTINGS ── -->
     <div class="module" id="mod-settings">
       <div class="card">
@@ -447,6 +475,7 @@ const MODULES = {
   coopbuy:   { title: "🛒 공동구매",     meta: "지역 공동구매 에이전트" },
   field:     { title: "📍 현장 운영",    meta: "Jr. 엣지 에이전트 현장" },
   analytics: { title: "📊 분석",         meta: "Spirit Score & 실행 이력" },
+  siem: { title: "🔐 AI-SIEM", meta: "Spirit Gate 보안 감사 시스템" },
   settings:  { title: "⚙️ 설정",         meta: "시스템 환경 설정" },
 };
 
@@ -543,7 +572,7 @@ async function loadHome() {
 }
 
 function moduleEmoji(name) {
-  const map = { home:"🏠", chat:"💬", agents:"🤖", skills:"🛠️", coopbuy:"🛒", field:"📍", analytics:"📊", settings:"⚙️" };
+  const map = { home:"🏠", chat:"💬", agents:"🤖", skills:"🛠️", coopbuy:"🛒", field:"📍", analytics:"📊", siem:"🔐", settings:"⚙️" };
   return map[name] || "🔲";
 }
 
