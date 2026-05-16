@@ -1,1 +1,2 @@
 web: uvicorn agent_gateway:app --host 0.0.0.0 --port $PORT
+worker: python pulse_daemon.py
