@@ -1,7 +1,11 @@
 """
-agent_gateway.py -- Mulberry Agent Relay Gateway v1.2.0
+agent_gateway.py -- Mulberry Agent Relay Gateway v1.3.0
 =======================================================
 에이전트들이 GitHub Issues 자율 참여 + SDK 트리거를 사용할 수 있는 HTTP 중계 서버
+
+v1.3.0 변경사항 (2026-05-16):
+  - /api/health 엔드포인트 추가 (Trang PM 요청 / Railway 헬스체크 표준)
+  - 서비스명 mulberry-agent-gateway 명시
 
 v1.2.0 변경사항 (2026-05-08):
   - UTF-8 인코딩 정리 (em dash, 깨진 한글 수정)
@@ -69,10 +73,13 @@ REGISTERED_REPOS = {
     },
 }
 
+APP_VERSION = "1.3.0"
+APP_START_TIME = time.time()
+
 app = FastAPI(
     title="Mulberry Agent Relay Gateway",
     description="Mulberry 팀 에이전트 GitHub 자율 참여 + SDK 연동 중계 시스템",
-    version="1.2.0",
+    version=APP_VERSION,
 )
 
 app.add_middleware(
@@ -183,14 +190,27 @@ def github_append_file(owner: str, repo: str, file_path: str, new_entry: str) ->
 @app.get("/")
 def root():
     return {
-        "service": "Mulberry Agent Relay Gateway",
-        "version": "1.3.0",
+        "service": "mulberry-agent-gateway",
+        "version": APP_VERSION,
         "status": "online",
         "agents": list(REGISTERED_AGENTS.keys()),
         "repos": {k: v["role"] for k, v in REGISTERED_REPOS.items()},
         "sdk_url": SDK_URL,
         "github_ready": bool(GITHUB_TOKEN),
         "timestamp": datetime.utcnow().isoformat(),
+    }
+
+@app.get("/api/health")
+def api_health():
+    """Trang PM 표준 헬스체크 — Railway 서비스 상태 확인용"""
+    return {
+        "status": "ok",
+        "service": "mulberry-agent-gateway",
+        "version": APP_VERSION,
+        "github_ready": bool(GITHUB_TOKEN),
+        "agents": len(REGISTERED_AGENTS),
+        "uptime": round(time.time() - APP_START_TIME),
+        "timestamp": datetime.utcnow().isoformat() + "Z",
     }
 
 @app.get("/status")
