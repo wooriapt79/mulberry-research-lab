@@ -5,6 +5,7 @@ pulse_daemon.py — Mulberry Pulse v1.3 (공유 도구 인지 레이어 포함)
   v1.0  guest_google  — 초안 (API URL 버그 포함)
   v1.2  RyuWon (Qwen) — 버그 수정 + 로깅 + 중복 방지 + Rate Limit + Graceful Shutdown
   v1.3  Trang PM      — 공유 도구 인지 레이어(Shared Tool Awareness Layer) 통합
+  v1.3.1 Koda        — GATEWAY_URL 기본값 → agent-gateway 확정 URL 반영 (2026-05-17)
 
 참조: Issue #49 (안정화), #44 (공유 레이어), #43 #45 #47 (도구 스펙)
 """
@@ -25,7 +26,7 @@ from typing import List, Dict, Any
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 REPO_OWNER = os.getenv("REPO_OWNER", "wooriapt79")
 REPO_NAME = os.getenv("REPO_NAME", "mulberry-research-lab")
-GATEWAY_URL = os.getenv("GATEWAY_URL", "https://mulberry-mission-control-production.up.railway.app")
+GATEWAY_URL = os.getenv("GATEWAY_URL", "https://loving-education-production-cc9e.up.railway.app")
 API_BASE_URL = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}"
 HEADERS = {
     "Authorization": f"token {GITHUB_TOKEN}",
@@ -215,7 +216,7 @@ signal.signal(signal.SIGTERM, handle_shutdown)
 # 메인 데몬
 # ======================================================
 def start_pulse_daemon():
-    logger.info("=== Mulberry Pulse v1.3 시동 ===")
+    logger.info("=== Mulberry Pulse v1.3.1 시동 ===")
     logger.info(f"레포: {REPO_OWNER}/{REPO_NAME} | 주기: {PULSE_INTERVAL}s")
     logger.info(f"공유 도구 {len(SHARED_TOOL_REGISTRY)}개 인지 활성화")
 
@@ -257,7 +258,7 @@ def start_pulse_daemon():
             logger.error(f"데몬 오류: {err}. 30s 후 복구.")
             time.sleep(30)
 
-    logger.info("Mulberry Pulse v1.3 안전 종료.")
+    logger.info("Mulberry Pulse v1.3.1 안전 종료.")
 
 if __name__ == "__main__":
     start_pulse_daemon()
