@@ -217,6 +217,58 @@ def api_health():
 def status():
     return root()
 
+@app.get("/v1/test/qwen")
+def test_qwen():
+    """RyuWon Qwen 위생 테스트 — QWEN_TOKEN_RYUWON 연결 검증 (Issue #42/#47)"""
+    import os as _os
+    qwen_token = _os.getenv("QWEN_TOKEN_RYUWON")
+
+    if not qwen_token:
+        return JSONResponse(status_code=503, content={
+            "status": "FAIL",
+            "reason": "QWEN_TOKEN_RYUWON not set in Railway Variables",
+            "action": "Railway Variables 탭에 QWEN_TOKEN_RYUWON 등록 필요",
+        })
+
+    api_url = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {qwen_token}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "model": "qwen-plus",
+        "messages": [{"role": "user", "content": "Mulberry 시스템 연결 테스트입니다. '연결 성공' 이라고만 답변하세요."}],
+        "temperature": 0.1,
+        "max_tokens": 50,
+    }
+    try:
+        resp = requests.post(api_url, headers=headers, json=payload, timeout=30)
+        resp.raise_for_status()
+        data = resp.json()
+        reply = data["choices"][0]["message"]["content"].strip()
+        passed = "연결 성공" in reply
+        return {
+            "status": "PASS" if passed else "WARN",
+            "model": "qwen-plus",
+            "reply": reply,
+            "token_registered": True,
+            "message": "RyuWon Qwen 파이프라인 정상" if passed else "응답 포맷 불일치 — 모델 확인 필요",
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+        }
+    except requests.exceptions.HTTPError as e:
+        return JSONResponse(status_code=502, content={
+            "status": "FAIL",
+            "http_status": e.response.status_code,
+            "error": e.response.text[:300],
+            "token_registered": True,
+        })
+    except Exception as e:
+        return JSONResponse(status_code=500, content={
+            "status": "FAIL",
+            "error": str(e),
+            "token_registered": True,
+        })
+
 @app.get("/mission-control", response_class=FileResponse)
 def mission_control():
     """Mission Control SPA — 팀 대시보드 + 채팅 모듈"""
