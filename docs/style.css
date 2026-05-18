@@ -1,0 +1,37 @@
+:root {
+  --mulberry-blue: #005096;
+  --mulberry-light: #e6f0fa;
+  --text-main: #1a1a1a;
+  --bg-portal: #ffffff;
+  --shadow: 0 4px 20px rgba(0,80,150,0.1);
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--mulberry-light); display: flex; justify-content: center; align-items: center;
+  min-height: 100vh; color: var(--text-main);
+}
+.aria-portal {
+  background: var(--bg-portal); padding: 2.5rem 2rem; border-radius: 16px; box-shadow: var(--shadow);
+  max-width: 520px; width: 90%; text-align: center;
+}
+.avatar { font-size: 3.5rem; margin-bottom: 0.5rem; }
+h1 { color: var(--mulberry-blue); margin: 0.5rem 0; font-size: 1.6rem; font-weight: 700; }
+.subtitle { color: #555; font-size: 0.95rem; line-height: 1.6; margin-bottom: 1.5rem; }
+.chat-box { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+input {
+  flex: 1; padding: 0.9rem 1rem; border: 2px solid #e0e0e0; border-radius: 10px;
+  font-size: 1rem; outline: none; transition: border-color 0.2s;
+}
+input:focus { border-color: var(--mulberry-blue); }
+button {
+  padding: 0.9rem 1.4rem; background: var(--mulberry-blue); color: #fff; border: none;
+  border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 1rem; transition: background 0.2s;
+}
+button:hover { background: #003d73; }
+.status { min-height: 1.5rem; font-size: 0.9rem; color: #666; margin-top: 0.5rem; }
+footer { margin-top: 1.5rem; font-size: 0.8rem; color: #888; }
+@media (max-width: 480px) {
+  .aria-portal { padding: 1.5rem 1rem; }
+  .chat-box { flex-direction: column; }
+}
