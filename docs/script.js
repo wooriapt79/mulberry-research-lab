@@ -2,7 +2,7 @@
 // RyuWon 소환 에디션 — GitHub Issues 연동 (Pre-filled URL + Popup Fallback)
 
 const REPO   = 'wooriapt79/mulberry-research-lab';
-const AGENT  = 'RyuWon';   // 소환된 에이전트
+const AGENT  = '와룡 (臥龍)';  // 소환된 에이전트 — 대화·추론
 const MAX_LEN = 500;
 
 /* ─── 상태 ─── */
@@ -125,10 +125,10 @@ function showStatus(msg, isError = false) {
   }
 }
 
-/* ─── RyuWon featured 카드 강조 ─── */
+/* ─── 와룡 featured 카드 강조 ─── */
 document.querySelectorAll('.agent-card').forEach(card => {
   const name = card.querySelector('.agent-name');
-  if (name && name.textContent.trim() === 'RyuWon') {
+  if (name && name.textContent.trim() === '와룡') {
     card.classList.add('featured');
   }
 });

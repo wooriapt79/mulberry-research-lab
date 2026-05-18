@@ -76,6 +76,15 @@ main {
   margin-bottom: 0.4rem;
   animation: float 3s ease-in-out infinite;
 }
+.avatar-img {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 4px 24px rgba(88,44,88,0.35), 0 0 0 3px #d4af37;
+  display: block;
+  margin: 0 auto;
+}
 @keyframes float {
   0%, 100% { transform: translateY(0); }
   50%       { transform: translateY(-6px); }
