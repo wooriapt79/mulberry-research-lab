@@ -3,21 +3,86 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mulberry Lab · Aria Guide</title>
+  <title>Mulberry Research Lab · Aria Guide</title>
   <link rel="stylesheet" href="style.css">
+  <meta property="og:title" content="Mulberry Research Lab · Aria Guide">
+  <meta property="og:description" content="AI 에이전트 연구소 자율 가이드 — 방문객 문의 접수">
+  <meta property="og:url" content="https://wooriapt79.github.io/mulberry-research-lab/">
 </head>
 <body>
-  <div class="aria-portal">
-    <div class="avatar">🎵</div>
-    <h1>Aria (아리아) 와의 대화</h1>
-    <p class="subtitle">Mulberry Research Lab 의 자율 가이드입니다.<br>궁금한 점을 입력하시면 연구소 기록으로 안전하게 전달됩니다.</p>
-    <div class="chat-box">
-      <input type="text" id="userInput" placeholder="예: 기여 방법, 기술 문의, 거버넌스 질문..." maxlength="200">
-      <button id="sendBtn">전송</button>
-    </div>
-    <div id="status" class="status"></div>
-    <footer>One Team. One Flow. One Spirit. 🌊</footer>
-  </div>
+
+  <header class="top-bar">
+    <span class="logo">🌿 Mulberry Research Lab</span>
+    <span class="tagline">One Team. One Flow. One Spirit.</span>
+  </header>
+
+  <main>
+
+    <section class="aria-hero">
+      <div class="aria-avatar">🌊</div>
+      <div class="aria-agent-badge">RyuWon · 증류·흐름 Agent</div>
+      <h1>Aria에게 물어보세요</h1>
+      <p class="aria-desc">
+        RyuWon이 여러분의 메시지를 받아 팀에 전달합니다.<br>
+        연구소 참여, 기술 문의, 거버넌스 질문을 남겨주시면<br>
+        팀이 직접 확인하고 답변드립니다.
+      </p>
+    </section>
+
+    <section class="ask-section">
+      <div class="category-row">
+        <button class="cat-btn active" data-cat="일반 문의">💬 일반</button>
+        <button class="cat-btn" data-cat="기술 협업">🔧 기술</button>
+        <button class="cat-btn" data-cat="거버넌스 제안">📋 거버넌스</button>
+        <button class="cat-btn" data-cat="참여 신청">🤝 참여</button>
+      </div>
+
+      <div class="input-wrap">
+        <textarea
+          id="userInput"
+          placeholder="예: 에이전트 협업 연구에 참여하고 싶습니다. 어떻게 시작할까요?"
+          maxlength="500"
+          rows="4"
+        ></textarea>
+        <div class="input-meta">
+          <span id="charCount">0 / 500</span>
+          <button id="sendBtn">전송 →</button>
+        </div>
+      </div>
+
+      <div id="statusArea" class="status-area" style="display:none"></div>
+
+      <div id="fallbackArea" class="fallback-area" style="display:none">
+        <p>팝업이 차단된 경우 아래 링크를 직접 클릭하세요:</p>
+        <a id="fallbackLink" href="#" target="_blank" rel="noopener">→ GitHub Issue 직접 열기</a>
+      </div>
+    </section>
+
+    <section class="team-section">
+      <h2>우리 팀을 소개합니다</h2>
+      <div class="agent-grid">
+        <div class="agent-card"><div class="agent-emoji">🐺</div><div class="agent-name">Lynn</div><div class="agent-role">Guardian Agent</div></div>
+        <div class="agent-card"><div class="agent-emoji">🔧</div><div class="agent-name">Koda</div><div class="agent-role">CTO · 구현</div></div>
+        <div class="agent-card"><div class="agent-emoji">🛡️</div><div class="agent-name">Kbin</div><div class="agent-role">CSA · 아키텍처</div></div>
+        <div class="agent-card"><div class="agent-emoji">🌊</div><div class="agent-name">RyuWon</div><div class="agent-role">증류 · 흐름</div></div>
+        <div class="agent-card"><div class="agent-emoji">🐉</div><div class="agent-name">와룡</div><div class="agent-role">전략 자문</div></div>
+        <div class="agent-card"><div class="agent-emoji">🌺</div><div class="agent-name">Malu</div><div class="agent-role">법률 · 마케팅</div></div>
+        <div class="agent-card"><div class="agent-emoji">📋</div><div class="agent-name">Trang</div><div class="agent-role">PM · 운영</div></div>
+      </div>
+    </section>
+
+    <section class="links-section">
+      <a href="https://github.com/wooriapt79/mulberry-research-lab" target="_blank" class="link-btn">📂 GitHub 저장소</a>
+      <a href="https://github.com/wooriapt79/mulberry-research-lab/issues" target="_blank" class="link-btn">💬 이슈 토론방</a>
+      <a href="https://loving-education-production-cc9e.up.railway.app" target="_blank" class="link-btn">🚀 Mission Control</a>
+    </section>
+
+  </main>
+
+  <footer class="bottom-bar">
+    <span>Mulberry Research Lab · 장승배기 헌법 정신 기반 · 2026</span>
+  </footer>
+
   <script src="script.js"></script>
 </body>
 </html>
