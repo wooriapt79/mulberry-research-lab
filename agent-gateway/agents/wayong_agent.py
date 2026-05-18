@@ -86,8 +86,8 @@ class WayongAgent:
                 "궁금하신 사항을 구체적으로 남겨주시면 "
                 "담당 팀원이 직접 확인하고 답변드립니다.\n\n"
                 "빠른 안내가 필요하신 경우:\n"
-                "- 📂 [GitHub 저장소](https://github.com/wooriapt79/mulberry-research-lab)\n"
-                "- 💬 [이슈 토론방](https://github.com/wooriapt79/mulberry-research-lab/issues)\n"
+                "- 📂 [연구소 코드](https://github.com/wooriapt79/mulberry-research-lab)\n"
+                "- 💬 [문의 & 토론](https://github.com/wooriapt79/mulberry-research-lab/issues)\n"
                 "- 🚀 [Mission Control](https://loving-education-production-cc9e.up.railway.app)"
             ),
             "closing": "어떤 질문도 환영합니다.",

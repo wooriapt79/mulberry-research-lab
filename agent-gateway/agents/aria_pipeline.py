@@ -35,7 +35,7 @@ class AriaPipeline:
     QUOTA_MSG = (
         "현재 Mulberry 연구소 시스템이 일시적으로 응답하기 어려운 상태입니다.\n\n"
         "아래 방법으로 직접 문의해 주시면 팀이 반드시 확인합니다:\n"
-        "- 💬 [GitHub 이슈 직접 남기기]"
+        "- 💬 [Mulberry 문의 채널 바로가기]"
         "(https://github.com/wooriapt79/mulberry-research-lab/issues/new"
         "?labels=aria-guide)\n\n"
         "*불편을 드려 죄송합니다. Mulberry Research Lab 팀 드림*"

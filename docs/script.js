@@ -5,7 +5,7 @@ const REPO        = 'wooriapt79/mulberry-research-lab';
 const AGENT       = '와룡 (臥龍)';
 const MAX_LEN     = 500;
 const GATEWAY_URL = 'https://loving-education-production-cc9e.up.railway.app';
-const API_TIMEOUT = 9000;  // 9초 — Railway 콜드스타트 고려
+const API_TIMEOUT = 9000;  // 9초 — 콜드스타트 대응
 
 /* ─── 상태 ─── */
 let selectedCategory = '일반 문의';
@@ -68,7 +68,7 @@ sendBtn.addEventListener('click', async () => {
       // 와룡 불가 — RyuWon 단독 응답 (서비스는 살아있음)
       showStatus(
         '🌊 RyuWon이 메시지를 접수했습니다.\n' +
-        '현재 처리 시스템이 일시적으로 제한되어 GitHub로 직접 안내해 드립니다.',
+        '현재 처리 시스템이 일시적으로 제한되어 Mulberry 문의 채널로 안내해 드립니다.',
         'warn'
       );
       openIssueWithFallback(issueUrl, fallbackArea);
@@ -78,7 +78,7 @@ sendBtn.addEventListener('click', async () => {
         `✅ ${AGENT}이 메시지를 받았습니다.\n` +
         `분류: ${result.intake?.intent || selectedCategory} · ` +
         `신뢰도: ${Math.round((result.reasoning?.confidence || 0) * 100)}%\n` +
-        '팀이 GitHub Issue에서 확인 후 직접 답변드립니다.',
+        '팀이 직접 확인 후 답변드립니다.',
         'ok'
       );
       openIssueWithFallback(issueUrl, fallbackArea);
@@ -151,8 +151,8 @@ function errorGuidance(err) {
     return {
       code:    'TIMEOUT',
       message: '⏱️ 서버 응답 시간이 초과되었습니다.\n' +
-               'Railway 서버가 잠시 준비 중일 수 있습니다. ' +
-               '아래 링크로 직접 문의를 남겨주세요.',
+               '서버가 잠시 준비 중일 수 있습니다. ' +
+               '아래 Mulberry 문의 채널을 이용해 주세요.',
     };
   }
 
@@ -160,8 +160,8 @@ function errorGuidance(err) {
   if (err.status === 429) {
     return {
       code:    'QUOTA_EXCEEDED',
-      message: '🔋 현재 AI 처리 용량이 일시적으로 초과되었습니다.\n' +
-               '잠시 후 다시 시도하시거나, 아래 링크로 직접 문의를 남겨주세요.',
+      message: '🔋 현재 처리 용량이 일시적으로 초과되었습니다.\n' +
+               '잠시 후 다시 시도하시거나, 아래 Mulberry 문의 채널을 이용해 주세요.',
     };
   }
 
@@ -170,7 +170,7 @@ function errorGuidance(err) {
     return {
       code:    'SERVICE_UNAVAILABLE',
       message: '🔧 Mulberry 서버가 잠시 점검 중입니다.\n' +
-               '곧 복구될 예정입니다. 아래 링크로 직접 문의를 남겨주세요.',
+               '곧 복구될 예정입니다. 아래 Mulberry 문의 채널을 이용해 주세요.',
     };
   }
 
@@ -179,7 +179,7 @@ function errorGuidance(err) {
     return {
       code:    'NETWORK_ERROR',
       message: '📡 네트워크 연결을 확인해 주세요.\n' +
-               '연결이 어려우시면 아래 링크로 직접 문의를 남겨주세요.',
+               '연결이 어려우시면 아래 Mulberry 문의 채널을 이용해 주세요.',
     };
   }
 
@@ -187,7 +187,7 @@ function errorGuidance(err) {
   return {
     code:    'UNKNOWN',
     message: '⚠️ 일시적인 오류가 발생했습니다.\n' +
-             '팀이 확인 중입니다. 아래 링크로 직접 문의를 남겨주세요.',
+             '팀이 확인 중입니다. 아래 Mulberry 문의 채널을 이용해 주세요.',
   };
 }
 
