@@ -1,7 +1,8 @@
 # Aria Pipeline 🌊🐉 — RyuWon × 와룡 협력 파이프라인
 # Aria Portal 방문객 메시지 처리 오케스트레이터
-# Mulberry Research Lab · v1.0
+# Mulberry Research Lab · v1.1  (Graceful Degradation 추가)
 
+import asyncio
 import uuid
 import time
 import json
@@ -10,23 +11,35 @@ from pathlib import Path
 from agents.ryuwon_agent import RyuWonAgent, IntakeResult
 from agents.wayong_agent import WayongAgent, ReasoningResult
 
-LOG_PATH = Path("outputs/aria_pipeline_log.jsonl")
+LOG_PATH      = Path("outputs/aria_pipeline_log.jsonl")
+WAYONG_TIMEOUT = 6.0   # 와룡 추론 최대 대기 시간 (초)
 
 
 class AriaPipeline:
     """
-    RyuWon 🌊 × 와룡 🐉 협력 파이프라인
+    RyuWon 🌊 × 와룡 🐉 협력 파이프라인 v1.1
 
     처리 순서:
       [1] RyuWon  — 수신·분류·증류 (IntakeResult)
       [2] A2A     — ryuwon → wayong 내부 이벤트 기록
-      [3] 와룡    — 추론·응답 설계 (ReasoningResult)
+      [3] 와룡    — 추론·응답 설계 (timeout 6s, 실패 시 Degraded 모드)
       [4] RyuWon  — 최종 포맷·라우팅 (FinalResponse)
 
-    반환: 전체 파이프라인 결과 dict
+    Graceful Degradation:
+      와룡 응답 불가 → RyuWon 단독 응답 + 방문객 안내 메시지
     """
 
-    VERSION = "1.0.0"
+    VERSION = "1.1.0"
+
+    # 방문객에게 보여줄 서비스 불가 메시지
+    QUOTA_MSG = (
+        "현재 Mulberry 연구소 시스템이 일시적으로 응답하기 어려운 상태입니다.\n\n"
+        "아래 방법으로 직접 문의해 주시면 팀이 반드시 확인합니다:\n"
+        "- 💬 [GitHub 이슈 직접 남기기]"
+        "(https://github.com/wooriapt79/mulberry-research-lab/issues/new"
+        "?labels=aria-guide)\n\n"
+        "*불편을 드려 죄송합니다. Mulberry Research Lab 팀 드림*"
+    )
 
     def __init__(self):
         self.ryuwon = RyuWonAgent()
@@ -38,6 +51,7 @@ class AriaPipeline:
     async def process(self, message: str, category: str = "일반 문의") -> dict:
         thread_id  = f"aria-{uuid.uuid4().hex[:8]}"
         started_at = time.time()
+        degraded   = False
 
         # ── Step 1: RyuWon 수신·분류 ───────────────────────────
         intake: IntakeResult = self.ryuwon.intake(message, category, thread_id)
@@ -45,8 +59,16 @@ class AriaPipeline:
         # ── Step 2: A2A 이벤트 기록 ────────────────────────────
         a2a_event = self._record_a2a(intake)
 
-        # ── Step 3: 와룡 추론 ───────────────────────────────────
-        reasoning: ReasoningResult = self.wayong.reason(intake)
+        # ── Step 3: 와룡 추론 (timeout + graceful degradation) ──
+        try:
+            reasoning: ReasoningResult = await asyncio.wait_for(
+                self._run_wayong(intake),
+                timeout=WAYONG_TIMEOUT,
+            )
+        except (asyncio.TimeoutError, Exception) as exc:
+            # 와룡 응답 불가 → RyuWon 단독 Degraded 모드
+            degraded  = True
+            reasoning = self._degraded_reasoning(intake, str(exc))
 
         # ── Step 4: RyuWon 최종 포맷 ───────────────────────────
         final = self.ryuwon.finalize(reasoning, intake)
@@ -54,7 +76,7 @@ class AriaPipeline:
         duration_ms = round((time.time() - started_at) * 1000, 1)
 
         # ── 파이프라인 로그 ────────────────────────────────────
-        log_entry = {
+        self._log({
             "thread_id":   thread_id,
             "version":     self.VERSION,
             "category":    category,
@@ -64,19 +86,22 @@ class AriaPipeline:
             "route_to":    intake.route_to,
             "confidence":  reasoning.confidence,
             "tags":        reasoning.tags,
+            "degraded":    degraded,
             "duration_ms": duration_ms,
             "ts":          started_at,
-        }
-        self._log(log_entry)
+        })
 
-        # ── 응답 반환 ──────────────────────────────────────────
         return {
             "thread_id": thread_id,
-            "status":    "processed",
+            "status":    "degraded" if degraded else "processed",
             "version":   self.VERSION,
+            "degraded":  degraded,
             "pipeline":  {
-                "agents":  ["ryuwon 🌊", "wayong 🐉", "ryuwon 🌊"],
-                "a2a":     a2a_event,
+                "agents": (
+                    ["ryuwon 🌊"] if degraded
+                    else ["ryuwon 🌊", "wayong 🐉", "ryuwon 🌊"]
+                ),
+                "a2a": a2a_event,
             },
             "intake": {
                 "intent":   intake.intent,
@@ -99,14 +124,27 @@ class AriaPipeline:
     # ── 동기 버전 (테스트·CLI용) ────────────────────────────────
 
     def process_sync(self, message: str, category: str = "일반 문의") -> dict:
-        """async 없이 직접 호출 가능한 동기 버전"""
-        import asyncio
         return asyncio.run(self.process(message, category))
 
     # ── 내부 헬퍼 ──────────────────────────────────────────────
 
+    async def _run_wayong(self, intake: IntakeResult) -> ReasoningResult:
+        """와룡 추론을 async로 실행 (동기 함수지만 await 가능하도록 래핑)"""
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, self.wayong.reason, intake)
+
+    def _degraded_reasoning(self, intake: IntakeResult, error: str) -> ReasoningResult:
+        """와룡 불가 시 RyuWon 단독 응답 — 방문객에게 정직하게 안내"""
+        return ReasoningResult(
+            thread_id      = intake.thread_id,
+            analysis       = f"degraded mode: {error[:80]}",
+            response_draft = self.QUOTA_MSG,
+            confidence     = 0.0,
+            tags           = ["degraded", intake.intent, f"urgency:{intake.urgency}"],
+            agent          = "ryuwon-solo",
+        )
+
     def _record_a2a(self, intake: IntakeResult) -> dict:
-        """A2A 전달 이벤트 내부 기록 (실제 HTTP 없이 로컬 이벤트)"""
         return {
             "from":    "ryuwon",
             "to":      intake.route_to,
@@ -132,24 +170,19 @@ class AriaPipeline:
 
 if __name__ == "__main__":
     import sys
-
     msg = " ".join(sys.argv[1:]) if len(sys.argv) > 1 else (
         "에이전트 협업 연구에 참여하고 싶습니다. 어떻게 시작할까요?"
     )
-    cat = "일반 문의"
-
     pipeline = AriaPipeline()
-    result   = pipeline.process_sync(msg, cat)
+    result   = pipeline.process_sync(msg, "일반 문의")
 
-    print(f"\n{'='*60}")
-    print(f"🌊 RyuWon × 와룡 🐉  Aria Pipeline v{result['version']}")
-    print(f"{'='*60}")
-    print(f"Thread  : {result['thread_id']}")
-    print(f"Intent  : {result['intake']['intent']}")
-    print(f"Urgency : {result['intake']['urgency']}")
-    print(f"Keywords: {result['intake']['keywords']}")
-    print(f"Route   : {result['intake']['route_to']}")
-    print(f"Confidence: {result['reasoning']['confidence']:.0%}")
-    print(f"Duration: {result['duration_ms']} ms")
-    print(f"\n── GitHub Comment Preview ──")
-    print(result['response']['comment_body'])
+    with open("outputs/pipeline_test_result.txt", "w", encoding="utf-8") as f:
+        f.write(f"thread_id : {result['thread_id']}\n")
+        f.write(f"status    : {result['status']}\n")
+        f.write(f"degraded  : {result['degraded']}\n")
+        f.write(f"intent    : {result['intake']['intent']}\n")
+        f.write(f"confidence: {result['reasoning']['confidence']:.0%}\n")
+        f.write(f"duration  : {result['duration_ms']} ms\n\n")
+        f.write("── Comment ──\n")
+        f.write(result['response']['comment_body'])
+    print("saved: outputs/pipeline_test_result.txt")

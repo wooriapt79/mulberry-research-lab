@@ -82,8 +82,40 @@ REGISTERED_REPOS = {
     },
 }
 
-APP_VERSION = "1.4.0"
+APP_VERSION    = "1.5.0"
 APP_START_TIME = time.time()
+
+# ── 방문객 안내 메시지 (서비스 불가 상황) ─────────────────────────
+_FALLBACK_GITHUB_URL = (
+    "https://github.com/wooriapt79/mulberry-research-lab/issues/new"
+    "?labels=aria-guide"
+)
+_MSG_QUOTA = (
+    "현재 Mulberry 연구소 AI 시스템의 처리 용량이 일시적으로 초과되었습니다. "
+    "잠시 후 다시 시도해 주시거나, 아래 링크로 직접 문의를 남겨주세요."
+)
+_MSG_UNAVAILABLE = (
+    "Mulberry 연구소 서버가 일시적으로 점검 중입니다. "
+    "곧 복구될 예정이며, 아래 링크로 직접 문의를 남겨주세요."
+)
+_MSG_INTERNAL = (
+    "메시지 처리 중 예상치 못한 오류가 발생했습니다. "
+    "팀이 확인 중이며, 아래 링크로 직접 문의해 주시면 반드시 답변드립니다."
+)
+
+def _fallback_response(msg: str, status: int, error_code: str) -> JSONResponse:
+    """방문객 친화적 에러 응답 — 항상 GitHub 직접 링크 제공"""
+    return JSONResponse(
+        status_code=status,
+        content={
+            "status":       "unavailable",
+            "error_code":   error_code,
+            "message":      msg,
+            "action":       "아래 링크로 직접 문의해 주세요.",
+            "fallback_url": _FALLBACK_GITHUB_URL,
+            "team":         "Mulberry Research Lab",
+        },
+    )
 
 # ── FastAPI 앱 (Socket.IO로 감싸기 전 원본) ───────────────────────
 fastapi_app = FastAPI(
@@ -98,6 +130,34 @@ fastapi_app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ── 전역 에러 핸들러 ────────────────────────────────────────────
+from fastapi import Request
+from fastapi.exceptions import RequestValidationError
+
+@fastapi_app.exception_handler(429)
+async def quota_exceeded_handler(request: Request, exc):
+    return _fallback_response(_MSG_QUOTA, 429, "QUOTA_EXCEEDED")
+
+@fastapi_app.exception_handler(503)
+async def service_unavailable_handler(request: Request, exc):
+    return _fallback_response(_MSG_UNAVAILABLE, 503, "SERVICE_UNAVAILABLE")
+
+@fastapi_app.exception_handler(500)
+async def internal_error_handler(request: Request, exc):
+    return _fallback_response(_MSG_INTERNAL, 500, "INTERNAL_ERROR")
+
+@fastapi_app.exception_handler(RequestValidationError)
+async def validation_error_handler(request: Request, exc: RequestValidationError):
+    return JSONResponse(
+        status_code=422,
+        content={
+            "status":     "error",
+            "error_code": "VALIDATION_ERROR",
+            "message":    "입력값을 확인해 주세요. (message 필드 필수)",
+            "detail":     str(exc),
+        },
+    )
 
 
 # ── 요청 모델 ──────────────────────────────────────────────────

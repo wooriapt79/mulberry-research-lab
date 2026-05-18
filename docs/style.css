@@ -220,6 +220,11 @@ textarea::placeholder {
   border-color: #fca5a5;
   color: #991b1b;
 }
+.status-area.warn {
+  background: #fffbeb;
+  border-color: #fcd34d;
+  color: #92400e;
+}
 
 /* Fallback */
 .fallback-area {
