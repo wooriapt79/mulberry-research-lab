@@ -675,6 +675,81 @@ def generate_image(req: ImageGenerateRequest, x_gateway_secret: str = Header(def
         })
 
 
+# ── Aria Pipeline — RyuWon 🌊 × 와룡 🐉 협력 엔드포인트 ──────────────
+
+class AriaInquiryRequest(BaseModel):
+    message: str
+    category: str = "일반 문의"
+
+
+@fastapi_app.post("/aria/inquiry")
+async def aria_inquiry(req: AriaInquiryRequest):
+    """
+    Aria Portal 방문객 메시지 처리 파이프라인.
+
+    Flow:
+      [1] RyuWon 🌊  수신·분류·증류
+      [2] A2A         ryuwon → wayong 내부 이벤트
+      [3] 와룡 🐉    추론·응답 설계
+      [4] RyuWon 🌊  최종 포맷·라우팅
+
+    Returns: thread_id, intent, reasoning, GitHub comment 초안
+    """
+    import sys as _sys
+    from pathlib import Path as _Path
+    _sys.path.insert(0, str(_Path(__file__).parent))
+
+    if not req.message or not req.message.strip():
+        return JSONResponse(status_code=422, content={
+            "status": "error",
+            "error": "message 필드가 비어 있습니다.",
+        })
+
+    try:
+        from agents.aria_pipeline import AriaPipeline
+        pipeline = AriaPipeline()
+        result = await pipeline.process(req.message.strip(), req.category)
+        return result
+
+    except ImportError as e:
+        return JSONResponse(status_code=503, content={
+            "status": "error",
+            "error": f"AriaPipeline 로드 실패: {e}",
+            "hint": "agents/ryuwon_agent.py, wayong_agent.py, aria_pipeline.py 확인 필요",
+        })
+    except Exception as e:
+        return JSONResponse(status_code=500, content={
+            "status": "error",
+            "error": str(e),
+        })
+
+
+@fastapi_app.get("/aria/status")
+def aria_status():
+    """Aria Pipeline 상태 및 에이전트 정보"""
+    return {
+        "pipeline":  "RyuWon 🌊 × 와룡 🐉",
+        "version":   "1.0.0",
+        "status":    "active",
+        "endpoint":  "POST /aria/inquiry",
+        "agents": [
+            {
+                "id":   "ryuwon",
+                "name": "RyuWon 🌊",
+                "role": "수신·증류·흐름",
+                "step": [1, 4],
+            },
+            {
+                "id":   "wayong",
+                "name": "와룡 🐉",
+                "role": "추론·응답·전략 자문",
+                "step": [3],
+            },
+        ],
+        "log": "outputs/aria_pipeline_log.jsonl",
+    }
+
+
 # ── Socket.IO ASGI 래핑 — 반드시 모든 엔드포인트 등록 후 마지막에 ──
 try:
     from socketio_server import create_sio_app
