@@ -1,7 +1,14 @@
 """
-agent_gateway.py -- Mulberry Agent Relay Gateway v1.3.0
+agent_gateway.py -- Mulberry Agent Relay Gateway v1.4.0
 =======================================================
-에이전트들이 GitHub Issues 자율 참여 + SDK 트리거를 사용할 수 있는 HTTP 중계 서버
+에이전트들이 GitHub Issues 자율 참여 + SDK 트리거 + 실시간 채팅 + A2A 프로토콜을 사용할 수 있는 통합 게이트웨이
+
+v1.4.0 변경사항 (2026-05-18):
+  - Socket.IO 실시간 채팅 서버 통합 (socketio_server.py)
+  - A2A (Agent-to-Agent) 프로토콜 라우터 추가 (a2a_protocol.py)
+  - /v1/tools/generate-image 이미지 생성 엔드포인트 추가 (image_agent.py)
+  - /sio/status Socket.IO 상태 엔드포인트 추가
+  - FastAPI app → Socket.IO ASGI app 으로 감쌈 (uvicorn 호환 유지)
 
 v1.3.0 변경사항 (2026-05-16):
   - /api/health 엔드포인트 추가 (Trang PM 요청 / Railway 헬스체크 표준)
@@ -11,7 +18,7 @@ v1.2.0 변경사항 (2026-05-08):
   - UTF-8 인코딩 정리 (em dash, 깨진 한글 수정)
   - /trigger 엔드포인트 추가 (SDK v1/action/execute 연동)
   - agent-relay/agent-gateway/ 경로로 이전
-h
+
 v1.1.0 변경사항 (2026-05-05):
   - mulberry_memory_bank (Bank) 레포 공식 등록
   - REGISTERED_REPOS 화이트리스트 추가 (보안 강화)
@@ -23,6 +30,8 @@ v1.1.0 변경사항 (2026-05-05):
   GATEWAY_SECRET      -- API 보안 키
   MULBERRY_REPO_OWNER -- 기본 저장소 소유자 (wooriapt79)
   SDK_URL             -- Mulberry Connector SDK URL (선택)
+  MALU_VISION_API_KEY -- Google AI API Key (이미지 생성용)
+  A2A_ENABLED         -- A2A 프로토콜 활성화 (기본: true)
 """
 
 import os
@@ -73,16 +82,17 @@ REGISTERED_REPOS = {
     },
 }
 
-APP_VERSION = "1.3.0"
+APP_VERSION = "1.4.0"
 APP_START_TIME = time.time()
 
-app = FastAPI(
+# ── FastAPI 앱 (Socket.IO로 감싸기 전 원본) ───────────────────────
+fastapi_app = FastAPI(
     title="Mulberry Agent Relay Gateway",
-    description="Mulberry 팀 에이전트 GitHub 자율 참여 + SDK 연동 중계 시스템",
+    description="Mulberry 팀 에이전트 GitHub 자율 참여 + SDK + Socket.IO + A2A 통합 게이트웨이",
     version=APP_VERSION,
 )
 
-app.add_middleware(
+fastapi_app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_methods=["*"],
@@ -187,7 +197,7 @@ def github_append_file(owner: str, repo: str, file_path: str, new_entry: str) ->
 
 # ── 엔드포인트 ────────────────────────────────────────────────
 
-@app.get("/")
+@fastapi_app.get("/")
 def root():
     return {
         "service": "mulberry-agent-gateway",
@@ -200,7 +210,7 @@ def root():
         "timestamp": datetime.utcnow().isoformat(),
     }
 
-@app.get("/api/health")
+@fastapi_app.get("/api/health")
 def api_health():
     """Trang PM 표준 헬스체크 — Railway 서비스 상태 확인용"""
     return {
@@ -213,11 +223,11 @@ def api_health():
         "timestamp": datetime.utcnow().isoformat() + "Z",
     }
 
-@app.get("/status")
+@fastapi_app.get("/status")
 def status():
     return root()
 
-@app.get("/v1/test/qwen")
+@fastapi_app.get("/v1/test/qwen")
 def test_qwen():
     """RyuWon Qwen 위생 테스트 — QWEN_TOKEN_RYUWON 연결 검증 (Issue #42/#47)"""
     import os as _os
@@ -269,7 +279,7 @@ def test_qwen():
             "token_registered": True,
         })
 
-@app.get("/mission-control", response_class=FileResponse)
+@fastapi_app.get("/mission-control", response_class=FileResponse)
 def mission_control():
     """Mission Control SPA — 팀 대시보드 + 채팅 모듈"""
     html_path = Path(__file__).parent / "mission_control.html"
@@ -280,7 +290,7 @@ def mission_control():
 
 # ── Mission Control API 엔드포인트 (P0 수정 — Issue #38) ──────
 
-@app.get("/metrics/overview")
+@fastapi_app.get("/metrics/overview")
 def metrics_overview():
     """Mission Control — 시스템 메트릭 개요"""
     sdk_ok = False
@@ -313,7 +323,7 @@ def metrics_overview():
     }
 
 
-@app.get("/system/modules/health")
+@fastapi_app.get("/system/modules/health")
 def modules_health():
     """Mission Control — 8개 모듈 헬스 체크"""
     modules = ["home", "chat", "agents", "skills", "coopbuy", "field", "analytics", "settings"]
@@ -338,13 +348,13 @@ def modules_health():
     }
 
 
-@app.get("/agents")
+@fastapi_app.get("/agents")
 def list_agents():
     """전체 에이전트 목록"""
     return {"agents": REGISTERED_AGENTS}
 
 
-@app.get("/agents/{agent_id}")
+@fastapi_app.get("/agents/{agent_id}")
 def get_agent(agent_id: str):
     """개별 에이전트 정보 (P0 수정 — /agents/* 404 해결)"""
     if agent_id not in REGISTERED_AGENTS:
@@ -360,7 +370,7 @@ def get_agent(agent_id: str):
     }
 
 
-@app.get("/chat/channels")
+@fastapi_app.get("/chat/channels")
 def chat_channels():
     """채팅 채널 목록 (P2 수정 — 채팅 초기화 API)"""
     return {
@@ -384,7 +394,7 @@ class ChatMessage(BaseModel):
     issue_number: Optional[int] = None
 
 
-@app.post("/chat/send")
+@fastapi_app.post("/chat/send")
 def chat_send(msg: ChatMessage, x_gateway_secret: str = Header(default="")):
     """채팅 메시지 전송 (선택: GitHub Issue 댓글 연동)"""
     if msg.agent_id not in REGISTERED_AGENTS:
@@ -411,11 +421,11 @@ def chat_send(msg: ChatMessage, x_gateway_secret: str = Header(default="")):
 
     return result
 
-@app.get("/repos")
+@fastapi_app.get("/repos")
 def list_repos():
     return {"repos": REGISTERED_REPOS}
 
-@app.post("/post")
+@fastapi_app.post("/post")
 def post_comment(req: PostRequest, x_gateway_secret: str = Header(...)):
     """GitHub Issue에 에이전트 댓글 게시 (LAB 또는 Bank)"""
     verify_secret(x_gateway_secret)
@@ -428,7 +438,7 @@ def post_comment(req: PostRequest, x_gateway_secret: str = Header(...)):
     result.update({"agent": req.agent_id, "repo": f"{owner}/{req.repo}", "issue": req.issue_number})
     return result
 
-@app.post("/memory")
+@fastapi_app.post("/memory")
 def write_memory(req: MemoryRequest, x_gateway_secret: str = Header(...)):
     """Bank 레포 메모리 파일에 에이전트 기록 추가"""
     verify_secret(x_gateway_secret)
@@ -442,7 +452,7 @@ def write_memory(req: MemoryRequest, x_gateway_secret: str = Header(...)):
     result.update({"agent": req.agent_id, "repo": f"{owner}/mulberry_memory_bank"})
     return result
 
-@app.post("/trigger")
+@fastapi_app.post("/trigger")
 def trigger_sdk(req: TriggerRequest, x_gateway_secret: str = Header(...)):
     """
     Mulberry Connector SDK v1/action/execute 연동 트리거.
@@ -485,7 +495,7 @@ def trigger_sdk(req: TriggerRequest, x_gateway_secret: str = Header(...)):
     except requests.exceptions.Timeout:
         raise HTTPException(status_code=504, detail="SDK 응답 시간 초과")
 
-@app.post("/post/batch")
+@fastapi_app.post("/post/batch")
 def batch_post(req: BatchPostRequest, x_gateway_secret: str = Header(...)):
     """여러 에이전트 메시지 일괄 게시"""
     verify_secret(x_gateway_secret)
@@ -507,28 +517,162 @@ def batch_post(req: BatchPostRequest, x_gateway_secret: str = Header(...)):
     }
 
 
-@app.get("/api/health")
-def api_health():
-    """헬스체크 -- Railway 배포 검증용 (Issue #49 P1)"""
-    return {"status": "ok", "version": "1.3.0", "github_ready": bool(GITHUB_TOKEN), "timestamp": datetime.utcnow().isoformat()}
-
-
-@app.get("/v1/tools")
+@fastapi_app.get("/v1/tools")
 def v1_tools():
-    """Tool Registry v1.0.0 -- 공유레이어 도구 목록 (Issue #44, #49 P1)"""
+    """Tool Registry v2.0.0 -- 공유레이어 도구 목록 (Issue #44, #49 P1)"""
     return {
-        "schema_version": "1.0.0",
-        "total_tools": 3,
-        "active_tools": 0,
-        "planned_tools": 3,
+        "schema_version": "2.0.0",
+        "total_tools": 6,
+        "active_tools": 6,
         "tools": [
-            {"id": "malu.vision.image_generate", "name": "Malu Vision -- 이미지 생성", "owner": "Malu", "status": "planned", "spirit_score": 0.88, "issue_ref": "#43"},
-            {"id": "trang.passport.agent_restore", "name": "AgentPassport -- 기억 복구", "owner": "Trang", "status": "planned", "spirit_score": 0.95, "issue_ref": "#47"},
-            {"id": "trang.agent.image_advertising", "name": "Image Agent -- 광고 자동화", "owner": "Trang", "status": "planned", "spirit_score": 0.85, "issue_ref": "#45"},
+            {
+                "id": "malu.vision.image_generate",
+                "name": "Malu Vision — 이미지 생성",
+                "owner": "Malu",
+                "status": "active",
+                "spirit_score": 0.88,
+                "issue_ref": "#43",
+                "endpoint": "POST /v1/tools/generate-image",
+            },
+            {
+                "id": "trang.passport.agent_restore",
+                "name": "AgentPassport — 기억 복구",
+                "owner": "Trang",
+                "status": "active",
+                "spirit_score": 0.95,
+                "issue_ref": "#47",
+                "cli": "python scripts/passport_loader.py --agent {AGENT_CODE}",
+            },
+            {
+                "id": "trang.agent.image_advertising",
+                "name": "Image Agent — 광고 자동화",
+                "owner": "Trang",
+                "status": "active",
+                "spirit_score": 0.85,
+                "issue_ref": "#45",
+                "endpoint": "POST /v1/tools/generate-image",
+            },
+            {
+                "id": "mulberry.a2a.send",
+                "name": "A2A Protocol — 에이전트 간 메시지",
+                "owner": "Koda",
+                "status": "active",
+                "spirit_score": 0.90,
+                "issue_ref": "#35",
+                "endpoint": "POST /a2a/send",
+            },
+            {
+                "id": "mulberry.approval.check",
+                "name": "Approval Engine — 권한 승인",
+                "owner": "Trang",
+                "status": "active",
+                "spirit_score": 0.92,
+                "issue_ref": "#35",
+                "cli": "python scripts/approval_engine.py --action {ACTION_TYPE}",
+            },
+            {
+                "id": "mulberry.chat.socketio",
+                "name": "Socket.IO — 실시간 채팅",
+                "owner": "Koda",
+                "status": "active",
+                "spirit_score": 0.90,
+                "issue_ref": "#35",
+                "endpoint": "ws://{gateway}/socket.io/",
+            },
         ],
-        "registry_meta": {"maintainer": "Nguyen Trang", "next_review": "2026-06-15"},
+        "registry_meta": {
+            "maintainer": "Nguyen Trang",
+            "version": "2.0.0",
+            "implemented_at": "2026-05-18",
+            "next_review": "2026-06-15",
+        },
         "timestamp": datetime.utcnow().isoformat(),
     }
+
+
+# ── A2A Protocol 라우터 마운트 ────────────────────────────────────
+try:
+    from a2a_protocol import a2a_router
+    fastapi_app.include_router(a2a_router, prefix="/a2a")
+    print("[Gateway] A2A Protocol 라우터 마운트 완료 (/a2a/*)")
+except ImportError as e:
+    print(f"[Gateway] A2A Protocol 로드 실패 (선택적): {e}")
+
+# ── Socket.IO 상태 엔드포인트 ─────────────────────────────────────
+@fastapi_app.get("/sio/status")
+def sio_status():
+    """Socket.IO 실시간 채팅 서버 상태"""
+    try:
+        from socketio_server import get_sio_status
+        return get_sio_status()
+    except ImportError:
+        return {"status": "not_loaded", "message": "socketio_server.py 로드 필요"}
+
+
+# ── Image Agent 엔드포인트 ────────────────────────────────────────
+class ImageGenerateRequest(BaseModel):
+    tool: str = "malu.vision.image_generate"
+    params: dict
+
+
+@fastapi_app.post("/v1/tools/generate-image")
+def generate_image(req: ImageGenerateRequest, x_gateway_secret: str = Header(default="")):
+    """
+    Malu Vision 이미지 생성 엔드포인트.
+    Tool Registry: malu.vision.image_generate (Spirit Score: 0.88)
+    """
+    import sys as _sys
+    from pathlib import Path as _Path
+    _sys.path.insert(0, str(_Path(__file__).parent))
+
+    try:
+        from agents.image_agent import ImageAgent
+        agent = ImageAgent(
+            api_key=os.getenv("MALU_VISION_API_KEY"),
+            report_to_github=bool(x_gateway_secret and x_gateway_secret == GATEWAY_SECRET),
+        )
+        params = req.params
+        result = agent.generate(params)
+
+        # 성공한 이미지만 URL 목록으로 정리
+        images_out = []
+        for img in result.get("images", []):
+            images_out.append({
+                "url": img.get("file", ""),
+                "size": "x".join(str(s) for s in img.get("size", [])),
+                "platform": img.get("platform", ""),
+                "status": img.get("status", ""),
+            })
+
+        return {
+            "status": result["status"],
+            "images": images_out,
+            "spirit_score": result.get("spirit_score"),
+            "generated_at": result.get("generated_at"),
+            "agent": result.get("agent"),
+        }
+    except ImportError as e:
+        return JSONResponse(status_code=503, content={
+            "status": "error",
+            "error": f"ImageAgent 로드 실패: {e}",
+            "hint": "agents/image_agent.py 및 tools/malu_vision.py 확인 필요",
+        })
+    except Exception as e:
+        return JSONResponse(status_code=500, content={
+            "status": "error",
+            "error": str(e),
+        })
+
+
+# ── Socket.IO ASGI 래핑 — 반드시 모든 엔드포인트 등록 후 마지막에 ──
+try:
+    from socketio_server import create_sio_app
+    app = create_sio_app(fastapi_app)
+    print("[Gateway] Socket.IO ASGI 앱 초기화 완료")
+except ImportError as e:
+    # Socket.IO 패키지 없을 때는 FastAPI 그대로 사용
+    app = fastapi_app
+    print(f"[Gateway] Socket.IO 비활성화 (python-socketio 없음): {e}")
 
 
 if __name__ == "__main__":

@@ -1,5 +1,30 @@
+# Mulberry Agent Gateway v1.4.0
+# 업데이트: 2026-05-18 (Trang Spec A/B/C/D 구현)
+
+# ── 웹 서버 ──────────────────────────────────────────────────────
 fastapi==0.111.0
 uvicorn==0.30.1
-requests==2.32.3
-python-dotenv==1.0.1
 pydantic==2.7.1
+python-dotenv==1.0.1
+
+# ── HTTP 클라이언트 ───────────────────────────────────────────────
+requests==2.32.3
+
+# ── Socket.IO (실시간 채팅 + A2A) ─────────────────────────────────
+# Spec C: trang-chat-socketio-a2a-spec-20260518.md
+# FastAPI/ASGI 호환 방식 (Flask-SocketIO 대신)
+python-socketio[asyncio]==5.11.3
+
+# ── 이미지 처리 (Malu Vision) ─────────────────────────────────────
+# Spec B: trang-image-agent-bts-spec-20260518.md
+# Pillow: 플랫폼별 이미지 리사이징
+Pillow==10.3.0
+
+# ── Google AI (Malu Vision API) ───────────────────────────────────
+# Phase 1 MVP: gemini-1.5-flash 텍스트 생성 (이미지 설명)
+# Phase 2: Imagen 3 API 교체 예정
+google-generativeai==0.7.2
+
+# ── YAML (AgentPassport) ─────────────────────────────────────────
+# Spec A: trang-agentpassport-spec-v1-20260518.md
+PyYAML==6.0.1
