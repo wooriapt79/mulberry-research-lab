@@ -34,7 +34,7 @@ def get_gemini_response(api_key: str, prompt: str) -> str:
     """Gemini API 호출 — Malu 응답 반환."""
     url = (
         "https://generativelanguage.googleapis.com/v1beta/models/"
-        f"gemini-1.5-flash:generateContent?key={api_key}"
+        f"gemini-2.0-flash:generateContent?key={api_key}"
     )
     payload = {
         "contents": [
@@ -58,7 +58,7 @@ def get_gemini_response(api_key: str, prompt: str) -> str:
                 return result["candidates"][0]["content"]["parts"][0]["text"]
         except urllib.error.HTTPError as e:
             if e.code == 429 and attempt < 2:
-                wait = (attempt + 1) * 20  # 20초, 40초 대기 후 재시도
+                wait = (attempt + 1) * 60  # 60초, 120초 대기 후 재시도
                 print(f"[Malu] 429 Rate limit — {wait}초 후 재시도 ({attempt+1}/2)")
                 time.sleep(wait)
                 continue
