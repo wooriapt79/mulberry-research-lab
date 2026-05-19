@@ -427,3 +427,42 @@ textarea::placeholder {
   .links-section { flex-direction: column; align-items: center; }
   .link-btn { width: 100%; max-width: 280px; text-align: center; }
 }
+
+/* ── 운영 안내 배너 ── */
+.ops-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: rgba(124,92,252,0.08);
+  border: 1px solid rgba(124,92,252,0.25);
+  border-left: 3px solid #7c5cfc;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin: 16px auto;
+  max-width: 560px;
+}
+.ops-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.ops-text strong {
+  display: block;
+  color: #c084fc;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  letter-spacing: 0.03em;
+}
+.ops-text p {
+  color: #8888aa;
+  font-size: 12.5px;
+  line-height: 1.7;
+  margin: 0;
+}
+.ops-text a {
+  color: #c084fc;
+  text-decoration: none;
+  font-weight: 600;
+}
+.ops-text a:hover { text-decoration: underline; }
