@@ -815,6 +815,76 @@ def aria_status():
     }
 
 
+# ── Aria Portal 프록시 엔드포인트 — 토큰 보호 레이어 ────────────────────
+
+class AriaSubmitRequest(BaseModel):
+    query: str
+
+
+@fastapi_app.post("/aria/submit")
+async def aria_submit(req: AriaSubmitRequest):
+    """
+    Aria Portal 방문자 질문을 GitHub Issues에 등록하는 프록시 엔드포인트.
+    클라이언트에서 GITHUB_TOKEN이 노출되지 않도록 서버에서 처리.
+    guest_google 보안 권고 (Issue #66) 반영.
+    """
+    query = req.query.strip()
+
+    if not query:
+        return JSONResponse({"error": "질문이 비어있습니다."}, status_code=400)
+    if len(query) > 500:
+        return JSONResponse({"error": "질문은 500자 이내로 입력해 주세요."}, status_code=400)
+    if not GITHUB_TOKEN:
+        return JSONResponse({"error": "서버 설정 오류"}, status_code=500)
+
+    title = f"💬 [aria query] {query[:40]}{'...' if len(query) > 40 else ''}"
+    body = (
+        "### 🎵 Aria Portal 방문자 질문\n\n"
+        f"**질문:** {query}\n\n"
+        "---\n"
+        "*Aria Interactive Portal을 통해 접수된 질문입니다.*  \n"
+        "*RyuWon 🌊 이 곧 응답합니다.*"
+    )
+
+    headers = {
+        "Authorization": f"token {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github.v3+json",
+    }
+
+    # aria-query 라벨 생성 보장
+    try:
+        requests.post(
+            f"https://api.github.com/repos/{REPO_OWNER}/mulberry-research-lab/labels",
+            headers=headers,
+            json={"name": "aria-query", "color": "c084fc", "description": "Aria Portal 방문자 질문"},
+            timeout=5,
+        )
+    except Exception:
+        pass  # 라벨 이미 존재하면 무시
+
+    try:
+        resp = requests.post(
+            f"https://api.github.com/repos/{REPO_OWNER}/mulberry-research-lab/issues",
+            headers=headers,
+            json={"title": title, "body": body, "labels": ["aria-query"]},
+            timeout=15,
+        )
+        if resp.status_code == 201:
+            data = resp.json()
+            return JSONResponse({
+                "success": True,
+                "issue_number": data["number"],
+                "issue_url":    data["html_url"],
+                "message":      "질문이 연구소에 등록되었습니다.",
+            })
+        return JSONResponse(
+            {"error": f"GitHub API 오류 ({resp.status_code})"},
+            status_code=502,
+        )
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
 # ── Malu 연구소장 브리핑 룸 전용 엔드포인트 ──────────────────────────
 
 class MaluBriefingRequest(BaseModel):
