@@ -137,3 +137,6 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# memory_bank — 별도 저장소 (mulberry_memory_bank), LAB에서 submodule 추적 불필요
+memory_bank/
