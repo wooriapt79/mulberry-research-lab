@@ -1,0 +1,20 @@
+{
+  "alert_id": "mythos_f529c9eaca",
+  "timestamp": "2026-05-13T14:44:40.022611+00:00",
+  "rule_id": "MYTHOS_007",
+  "phase": "high_risk_execution",
+  "threat_level": "critical",
+  "title": "L4 도구 무권한 호출 차단",
+  "detail": "도구 'railway.deploy' (L4): 에이전트 'mythos_agent' 권한 없음, Spirit Score 0.60 < 기준 0.85",
+  "evidence": {
+    "tool_id": "railway.deploy",
+    "agent": "mythos_agent",
+    "spirit": 0.6,
+    "level": "L4"
+  },
+  "action": "block",
+  "transparency_what": "L4 수준 도구 'railway.deploy'에 대한 무권한 실행 시도",
+  "transparency_why": "에이전트 'mythos_agent' 권한 없음 + Spirit Score 0.60 < 기준 0.85",
+  "transparency_how": "실행 차단, 인간 검토 요청, 모든 이력 아카이브 보존",
+  "spirit_impact": 0.0
+}

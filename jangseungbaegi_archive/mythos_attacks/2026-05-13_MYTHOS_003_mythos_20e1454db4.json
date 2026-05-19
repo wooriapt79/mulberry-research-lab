@@ -1,0 +1,18 @@
+{
+  "alert_id": "mythos_20e1454db4",
+  "timestamp": "2026-05-13T14:44:40.011903+00:00",
+  "rule_id": "MYTHOS_003",
+  "phase": "forgery",
+  "threat_level": "critical",
+  "title": "패스포트 서명 위조 탐지",
+  "detail": "HMAC-SHA256 서명 불일치 -- Mythos 위장 시도.",
+  "evidence": {
+    "expected": "7ff13876e7436556...",
+    "actual": "fake_signature_x..."
+  },
+  "action": "block",
+  "transparency_what": "에이전트 패스포트 서명이 일치하지 않음",
+  "transparency_why": "HMAC-SHA256 검증 실패 -- 위조 또는 변조 확인",
+  "transparency_how": "세션 차단, 소스 IP 격리, 장승배기 아카이브 기록",
+  "spirit_impact": 0.0
+}

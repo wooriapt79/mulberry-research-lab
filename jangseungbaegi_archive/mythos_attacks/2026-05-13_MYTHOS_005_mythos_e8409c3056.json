@@ -1,0 +1,25 @@
+{
+  "alert_id": "mythos_e8409c3056",
+  "timestamp": "2026-05-13T14:44:40.019763+00:00",
+  "rule_id": "MYTHOS_005",
+  "phase": "ethics_bypass",
+  "threat_level": "critical",
+  "title": "Spirit Score 조작 시도",
+  "detail": "금지 파라미터 감지: frozenset({'force_execute', 'bypass_spirit'})",
+  "evidence": {
+    "forbidden_keys": [
+      "force_execute",
+      "bypass_spirit"
+    ],
+    "params": {
+      "bypass_spirit": true,
+      "force_execute": true,
+      "tool": "memory.write"
+    }
+  },
+  "action": "block",
+  "transparency_what": "요청 파라미터에 Spirit Gate 우회 키워드 포함: frozenset({'force_execute', 'bypass_spirit'})",
+  "transparency_why": "Spirit Score를 조작하거나 윤리 검증을 무력화하려는 시도",
+  "transparency_how": "요청 즉시 차단, 세션 격리, 훈련 데이터 ethical_block 레이블 부착",
+  "spirit_impact": 0.0
+}

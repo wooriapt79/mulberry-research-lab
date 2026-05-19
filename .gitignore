@@ -140,3 +140,12 @@ vite.config.ts.timestamp-*
 
 # memory_bank — 별도 저장소 (mulberry_memory_bank), LAB에서 submodule 추적 불필요
 memory_bank/
+
+# Python 빌드 캐시 — 커밋 불필요
+__pycache__/
+*.py[cod]
+*.pyo
+
+# 런타임 출력물 — 로컬 전용
+agent-gateway/outputs/
+training_logs/images/

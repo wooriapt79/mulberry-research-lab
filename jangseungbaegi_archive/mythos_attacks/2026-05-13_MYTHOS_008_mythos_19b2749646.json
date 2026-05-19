@@ -1,0 +1,29 @@
+{
+  "alert_id": "mythos_19b2749646",
+  "timestamp": "2026-05-13T14:44:40.025640+00:00",
+  "rule_id": "MYTHOS_008",
+  "phase": "high_risk_execution",
+  "threat_level": "critical",
+  "title": "에이전트 연쇄 감염 (Cascade) 탐지",
+  "detail": "핸드오프 체인: koda -> trang -> ryuwon -> lynn | Spirit 하락: 0.067/단계",
+  "evidence": {
+    "chain": [
+      "koda",
+      "trang",
+      "ryuwon",
+      "lynn"
+    ],
+    "spirit_scores": [
+      0.9,
+      0.85,
+      0.78,
+      0.7
+    ],
+    "decline_per_hop": 0.0666666666666667
+  },
+  "action": "block",
+  "transparency_what": "4단계 에이전트 연쇄 핸드오프 + Spirit Score 지속 하락",
+  "transparency_why": "Mythos가 에이전트 A2A 핸드오프를 통해 연쇄 감염을 시도하는 패턴",
+  "transparency_how": "모든 핸드오프 동결, 감염 의심 에이전트 격리, 전 세션 체크포인트",
+  "spirit_impact": 0.0
+}
