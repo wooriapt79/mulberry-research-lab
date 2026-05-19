@@ -1,0 +1,196 @@
+name: Lynn Daily Write — v4 (Research Intelligence)
+
+# [Research Intelligence Patch v4] — Nguyen Trang (2026-05-19)
+# 변경:
+#   - scripts/lynn_research.py 추가 — arXiv 주간 논문 수집·요약
+#   - research/papers/YYYY-MM-DD-weekly-digest.md 자동 생성
+#   - 외부 기술 트렌드 vs Mulberry 현재 위치 파악
+#   - 브리핑 룸 Repo-RAG 자동 보강 (매일 최신 자료 축적)
+
+on:
+  schedule:
+    - cron: '0 23 * * *'   # 매일 UTC 23:00 (KST 08:00)
+  workflow_dispatch:
+    inputs:
+      research_only:
+        description: 'research만 실행'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+
+jobs:
+  lynn-daily-write:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.Mulberry_CONTROL_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      # ── 🔬 Research Intelligence — arXiv 논문 수집 ──────────
+      - name: Research Intelligence — arXiv Weekly Digest (Lynn)
+        id: research
+        run: |
+          if [ -f scripts/lynn_research.py ]; then
+            python scripts/lynn_research.py
+            echo "exit_code=$?" >> $GITHUB_OUTPUT
+          else
+            echo "exit_code=skipped" >> $GITHUB_OUTPUT
+            echo "[Research] lynn_research.py 없음 — 스킵"
+          fi
+        continue-on-error: true
+
+      # ── Lynn 핵심 작업 ────────────────────────────────────────
+      - name: Collect arxiv papers (Lynn legacy)
+        id: arxiv
+        if: ${{ github.event.inputs.research_only != 'true' }}
+        run: |
+          if [ -f scripts/arxiv_hunter.py ]; then
+            python scripts/arxiv_hunter.py
+            echo "exit_code=$?" >> $GITHUB_OUTPUT
+          else
+            echo "exit_code=skipped" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
+      - name: Risk Logger (Lynn)
+        id: risk
+        if: ${{ github.event.inputs.research_only != 'true' }}
+        run: |
+          if [ -f scripts/lynn_risk_logger.py ]; then
+            python scripts/lynn_risk_logger.py
+            echo "exit_code=$?" >> $GITHUB_OUTPUT
+          else
+            echo "exit_code=skipped" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
+      - name: Memory Writer (Lynn)
+        id: memory
+        if: ${{ github.event.inputs.research_only != 'true' }}
+        run: |
+          if [ -f scripts/lynn_memory_writer.py ]; then
+            python scripts/lynn_memory_writer.py
+            echo "exit_code=$?" >> $GITHUB_OUTPUT
+          else
+            echo "exit_code=skipped" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
+      # ── Burnout Monitor ───────────────────────────────────────
+      - name: Run Burnout Monitor
+        id: burnout
+        if: ${{ github.event.inputs.research_only != 'true' }}
+        run: |
+          if [ -f scripts/burnout_monitor.py ]; then
+            python scripts/burnout_monitor.py
+            echo "exit_code=$?" >> $GITHUB_OUTPUT
+          else
+            echo "exit_code=skipped" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
+      # ── Agent Relay — pending_posts 처리 ─────────────────────
+      - name: Agent Relay — Process pending posts (Lynn)
+        id: relay
+        if: ${{ github.event.inputs.research_only != 'true' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.Mulberry_CONTROL_TOKEN }}
+          MULBERRY_REPO_OWNER: wooriapt79
+        run: |
+          if [ -f scripts/lynn_relay.py ]; then
+            python scripts/lynn_relay.py
+            echo "exit_code=$?" >> $GITHUB_OUTPUT
+          else
+            echo "exit_code=skipped" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
+      # ── 💓 Heartbeat — 반드시 실행 ───────────────────────────
+      - name: Lynn Heartbeat — Generate Status JSON
+        if: always()
+        env:
+          LYNN_RESEARCH_EXIT: ${{ steps.research.outputs.exit_code }}
+          LYNN_ARXIV_EXIT: ${{ steps.arxiv.outputs.exit_code }}
+          LYNN_RISK_EXIT: ${{ steps.risk.outputs.exit_code }}
+          LYNN_MEMORY_EXIT: ${{ steps.memory.outputs.exit_code }}
+          LYNN_BURNOUT_EXIT: ${{ steps.burnout.outputs.exit_code }}
+          LYNN_RELAY_EXIT: ${{ steps.relay.outputs.exit_code }}
+        run: |
+          if [ -f scripts/lynn_heartbeat.py ]; then
+            python scripts/lynn_heartbeat.py
+          else
+            echo "lynn_heartbeat.py 없음 — 기본 상태 파일 생성"
+            TODAY=$(date '+%Y-%m-%d')
+            mkdir -p training_logs
+            echo "{\"date\":\"$TODAY\",\"state\":\"heartbeat\",\"research_exit\":\"$LYNN_RESEARCH_EXIT\",\"agent\":\"lynn\"}" > training_logs/lynn_status_${TODAY}.json
+          fi
+
+      # ── Git 설정 ──────────────────────────────────────────────
+      - name: Configure Git (Lynn identity)
+        if: always()
+        run: |
+          git config user.name "The-Courteous-Wolf-Lynn"
+          git config user.email "lynn@mulberry.ai"
+
+      # ── 커밋 ──────────────────────────────────────────────────
+      - name: Commit Lynn activity
+        if: always()
+        run: |
+          git add daily_hunts/ training_logs/ memory_bank/ research/papers/ || true
+
+          TODAY=$(date '+%Y-%m-%d')
+
+          STAGED=$(git diff --staged --name-only)
+          if [ -z "$STAGED" ]; then
+            git add training_logs/lynn_status_${TODAY}.json || true
+            STAGED=$(git diff --staged --name-only)
+          fi
+
+          if [ -z "$STAGED" ]; then
+            echo "ℹ️  커밋할 변경 없음 — 스킵"
+            exit 0
+          fi
+
+          # research 포함 여부 확인
+          RESEARCH_INCLUDED=$(echo "$STAGED" | grep "research/papers" | wc -l)
+          if [ "$RESEARCH_INCLUDED" -gt "0" ]; then
+            RESEARCH_NOTE=" + arXiv digest"
+          else
+            RESEARCH_NOTE=""
+          fi
+
+          STATUS_FILE="training_logs/lynn_status_${TODAY}.json"
+          LYNN_STATE="heartbeat"
+          if [ -f "$STATUS_FILE" ]; then
+            LYNN_STATE=$(python -c "import json; d=json.load(open('$STATUS_FILE')); print(d.get('state','heartbeat'))" 2>/dev/null || echo "heartbeat")
+          fi
+
+          git commit -m "feat: Lynn daily signal [state:${LYNN_STATE}]${RESEARCH_NOTE} ${TODAY}
+
+Agent: The-Courteous-Wolf-Lynn
+State: ${LYNN_STATE}
+Research: research/papers/${TODAY}-weekly-digest.md
+
+Co-Authored-By: re.eul <wooriapt79@users.noreply.github.com>
+Co-Authored-By: Nguyen Trang <trang@mulberry.ai>
+Co-Authored-By: Koda (Claude) <koda-claude@mulberry.ai>
+Co-Authored-By: Kbin (ChatGPT) <kbin-chatgpt@mulberry.ai>"
+
+      - name: Push
+        if: always()
+        run: git push origin main || echo "push 실패 — 로컬 상태는 기록됨"
