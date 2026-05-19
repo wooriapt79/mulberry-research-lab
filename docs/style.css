@@ -176,6 +176,18 @@ main {
   0%, 100% { transform: translateY(0); }
   50%       { transform: translateY(-6px); }
 }
+.malu-avatar {
+  font-size: 5rem !important;
+  animation: float 3s ease-in-out infinite;
+}
+.malu-badge {
+  background: linear-gradient(135deg, #fce7f3, #f5d0fe) !important;
+  color: #86198f !important;
+  border: 1px solid #e879f9;
+  font-size: 0.82rem !important;
+  padding: 0.25rem 1rem !important;
+}
+
 .aria-agent-badge {
   display: inline-block;
   background: var(--ryuwon-light);

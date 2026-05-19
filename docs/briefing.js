@@ -121,7 +121,7 @@ briefingBtn.addEventListener('click', async () => {
   briefingBtn.textContent = '탐색 중...';
 
   // 로딩 버블
-  const loadingId = appendMsg('system', '🌊 RyuWon이 레포를 탐색하고 있습니다...', true);
+  const loadingId = appendMsg('system', '🌺 Malu가 연구소 자료를 탐색하고 있습니다...', true);
 
   try {
     // 1차: Gateway API 시도
@@ -199,7 +199,7 @@ function localBriefing(question, topic) {
 function appendMsg(role, text, isLoading = false) {
   const history = document.getElementById('chatHistory');
   const id = `msg-${Date.now()}`;
-  const avatar = role === 'user' ? '👤' : '🌊';
+  const avatar = role === 'user' ? '👤' : '🌺';
   const cls    = role === 'user' ? 'user' : 'system';
 
   const div = document.createElement('div');
