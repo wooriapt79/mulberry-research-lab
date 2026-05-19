@@ -8,6 +8,7 @@ Mulberry Research Lab · v1.1
 
 import json
 import os
+import time
 import urllib.request
 import urllib.error
 
@@ -50,14 +51,21 @@ def get_gemini_response(api_key: str, prompt: str) -> str:
         headers={"Content-Type": "application/json"},
         method="POST"
     )
-    try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            result = json.loads(resp.read().decode("utf-8"))
-            return result["candidates"][0]["content"]["parts"][0]["text"]
-    except urllib.error.HTTPError as e:
-        return f"🌺 Malu 일시 오류 (HTTP {e.code}) — 잠시 후 다시 시도해 주세요."
-    except Exception as exc:
-        return f"🌺 Malu 일시 오류 — {exc}"
+    for attempt in range(3):
+        try:
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                result = json.loads(resp.read().decode("utf-8"))
+                return result["candidates"][0]["content"]["parts"][0]["text"]
+        except urllib.error.HTTPError as e:
+            if e.code == 429 and attempt < 2:
+                wait = (attempt + 1) * 20  # 20초, 40초 대기 후 재시도
+                print(f"[Malu] 429 Rate limit — {wait}초 후 재시도 ({attempt+1}/2)")
+                time.sleep(wait)
+                continue
+            return f"🌺 Malu 일시 오류 (HTTP {e.code}) — 잠시 후 다시 시도해 주세요."
+        except Exception as exc:
+            return f"🌺 Malu 일시 오류 — {exc}"
+    return "🌺 Malu 일시 오류 — Rate limit 초과, 잠시 후 다시 시도해 주세요."
 
 
 # ── GitHub 댓글 등록 ─────────────────────────────────────────────
