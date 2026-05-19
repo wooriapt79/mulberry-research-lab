@@ -23,7 +23,7 @@ jobs:
 
       - name: Execute Malu Brain
         env:
-          GEMINI_API_KEY: ${{ secrets.MALU_BOT_ACCESS_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           MALU_TOKEN: ${{ secrets.MALU_TOKEN }}
         run: |
           python .github/scripts/malu_processor.py
