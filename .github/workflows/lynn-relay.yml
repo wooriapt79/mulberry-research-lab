@@ -1,0 +1,49 @@
+name: Lynn Relay — Pending Posts 자동 처리
+
+# 친절한 늑대 Lynn 🐺 — pending_posts 폴더의 메시지를 GitHub Issues에 자동 게시
+# 트리거: 매 30분 자동 실행 + 수동 트리거 가능
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'   # 30분마다 (UTC 기준)
+  workflow_dispatch:          # 수동 실행 (Actions 탭 → Run workflow)
+    inputs:
+      dry_run:
+        description: 'Dry run (실제 게시 안함, 미리보기만)'
+        required: false
+        default: 'false'
+        type: boolean
+
+jobs:
+  lynn_relay:
+    runs-on: ubuntu-latest
+    name: Lynn 🐺 — Pending Posts 처리
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run Lynn Relay
+        env:
+          GITHUB_TOKEN:      ${{ secrets.GITHUB_TOKEN }}
+          MULBERRY_REPO_OWNER: wooriapt79
+        run: |
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            echo "[Lynn] Dry-run 모드"
+            python scripts/lynn_relay.py --dry-run
+          else
+            echo "[Lynn] 실제 게시 모드"
+            python scripts/lynn_relay.py
+          fi
+
+      - name: Report result
+        if: always()
+        run: echo "[Lynn Relay] 완료 — $(date -u '+%Y-%m-%d %H:%M UTC')"
