@@ -191,7 +191,7 @@ async function fetchBriefing(question, topic) {
     const data = await res.json();
     const body = data?.response?.comment_body || data?.response || '';
     // 응답 본문 추출 (와룡 또는 Malu 섹션)
-    const match = body.match(/## 🌺 Malu|## 🐉 와룡[\s\S]+?\n\n([\s\S]+?)(?:\n---|\*신뢰도|$)/);
+    const match = body.match(/(?:## 🌺 Malu|## 🐉 와룡)[\s\S]+?\n\n([\s\S]+?)(?:\n---|\*신뢰도|$)/);
     return match ? match[1].trim() : (typeof body === 'string' ? body : localBriefing(question, topic));
   } catch(e) {
     clearTimeout(timer);
