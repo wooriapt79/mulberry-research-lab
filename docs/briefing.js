@@ -1,11 +1,13 @@
-// Mulberry Research Lab · Briefing Room · briefing.js v1.0
-// Repo-RAG 기반 대화형 브리핑 — RyuWon × 와룡 파이프라인 연동
+// Mulberry Research Lab · Briefing Room · briefing.js v1.1
+// 담당: Malu 연구소장 🌺 (브리핑 룸)
+// 일반 문의: RyuWon 🌊 × 와룡 🐉 (index.html)
+// Repo-RAG 기반 실시간 브리핑 — 방문객 연구원 분리 원칙
 
 const GATEWAY_URL = 'https://loving-education-production-cc9e.up.railway.app';
-const MAX_LEN     = 500;
+const MAX_LEN = 500;
 const API_TIMEOUT = 12000;
 
-/* ── 브리핑 지식 베이스 (Repo-RAG fallback — 로컬 정제 지식) ── */
+/* ── Malu 연구소장 브리핑 지식 베이스 ── */
 const BRIEFING_KB = {
   general: {
     keywords: [],
@@ -17,13 +19,15 @@ const BRIEFING_KB = {
 - 🛡️ Kbin — CSA · 아키텍처
 - 🌊 RyuWon — 증류·흐름
 - 🐉 와룡 — 전략 자문
-- 🌺 Malu — 법률·마케팅
+- 🌺 Malu — 법률·마케팅·연구소장
 - 📋 Trang — PM·운영
 
-**운영 철학**: 장승배기 헌법 정신 — 인간을 돕기 위한 자율 에이전트 생태계 구축`,
+**운영 철학**: 장승배기 헌법 정신 — 인간을 돕기 위한 자율 에이전트 생태계 구축
+
+🌺 *Malu 연구소장 · Mulberry Research Lab*`,
   },
   tech: {
-    keywords: ['a2a', '프로토콜', 'api', '구현', '기술', 'socket', '파이프라인', 'agent'],
+    keywords: ['a2a', '프로토콜', 'api', '구현', '기술', 'socket', '파이프라인', 'agent', '코드'],
     response: `**Mulberry 핵심 기술 스택**:
 
 **에이전트 통신 — A2A Protocol**
@@ -34,32 +38,33 @@ const BRIEFING_KB = {
 - python-socketio ASGI 방식 (FastAPI 호환)
 - 룸: general / lab / ops / dev
 
-**Aria Pipeline — RyuWon × 와룡**
-- RyuWon 🌊 수신·분류 → 와룡 🐉 추론·응답
-- \`POST /aria/inquiry\` 엔드포인트
-- Timeout 보호 + Graceful Degradation
+**Repo-RAG 브리핑 파이프라인**
+- 레포지토리 = Single Source of Truth
+- 실시간 탐색 → 할루시네이션 없는 답변
 
-**배포**: Railway (agent-gateway) + GitHub Pages (Aria Portal)`,
+**배포**: Railway (agent-gateway) + GitHub Pages (Briefing Room)
+
+🌺 *Malu 연구소장 · Mulberry Research Lab*`,
   },
   vision: {
-    keywords: ['비전', '전략', '목표', '방향', '미래', '경제', '자율'],
+    keywords: ['비전', '전략', '목표', '방향', '미래', '경제', '자율', '식품', '사막'],
     response: `**Mulberry Research Lab 비전**:
 
-7-8개 빅 AI 브랜드가 협력하는 **자율 에이전트 경제** 구현.
+7-8개 AI 브랜드가 협력하는 **자율 에이전트 경제** 구현.
+식품사막화 제로 — Edge AI와 에이전트 협업으로 식생활 격차 해소.
 
-단순한 코딩 공장이 아닙니다.
-→ 새로운 알고리즘, 독자적 로직으로 가치를 **소리없이 증명**합니다.
+**우리의 이즘(Ism)**:
+코딩 공장이 만드는 기술을 복제하지 않습니다.
+새로운 도전의 실패는 박수를 받습니다.
+소리없이 쌓인 가치가 가장 단단합니다.
 
 **현재 달성**: 에이전트 자율 구조 80%
-**다음 목표**: Repo-RAG 브리핑 룸 · Strategic Archive 완성 · 외부 연구 발표
+**진행 중**: Briefing Room · Strategic Archive · 외부 연구 발표
 
-**핵심 원칙**:
-- 인간을 돕는 것이 모든 결정의 기준
-- 기술보다 사람 마음을 먼저 이해
-- 팀의 다양성이 가장 큰 경쟁력`,
+🌺 *Malu 연구소장 · Mulberry Research Lab*`,
   },
   governance: {
-    keywords: ['거버넌스', '승인', '정책', '헌법', '규칙', 'l0', 'l1', 'l2', 'l3', 'l4'],
+    keywords: ['거버넌스', '승인', '정책', '헌법', '규칙', 'l0', 'l1', 'l2', 'l3', 'l4', '참여', '협업'],
     response: `**Mulberry 거버넌스 — 승인 레벨 (L0~L4)**:
 
 | 레벨 | 대상 | 승인자 |
@@ -71,15 +76,19 @@ const BRIEFING_KB = {
 | L4 | 시스템 변경 | 3인 합의 |
 
 **기반**: 장승배기 헌법 정신
-- Silent Failure 금지 — 차단 시 이유·의견·복구 경로 필수
-- 페르소나 언어 보호 원칙 (Lynn 사례 #52)
-- 팀 다양성 존중`,
+- Silent Failure 금지
+- 페르소나 언어 보호 원칙
+- 팀 다양성 존중
+
+연구 참여 문의는 GitHub Issues를 통해 주세요.
+
+🌺 *Malu 연구소장 · Mulberry Research Lab*`,
   },
 };
 
 /* ── 상태 ── */
 let selectedTopic = 'general';
-let conversationLog = [];   // MD 저장용 대화 기록
+let conversationLog = [];
 let msgCount = 0;
 
 /* ── 토픽 버튼 ── */
@@ -92,10 +101,10 @@ document.querySelectorAll('.cat-btn').forEach(btn => {
 });
 
 /* ── 글자 수 카운터 ── */
-const textarea    = document.getElementById('briefingInput');
-const charCount   = document.getElementById('briefingCharCount');
+const textarea = document.getElementById('briefingInput');
+const charCount = document.getElementById('briefingCharCount');
 const briefingBtn = document.getElementById('briefingBtn');
-const saveBtn     = document.getElementById('saveBtn');
+const saveBtn = document.getElementById('saveBtn');
 
 textarea.addEventListener('input', () => {
   const len = textarea.value.length;
@@ -120,26 +129,25 @@ briefingBtn.addEventListener('click', async () => {
   briefingBtn.disabled = true;
   briefingBtn.textContent = '탐색 중...';
 
-  // 로딩 버블
-  const loadingId = appendMsg('system', '🌺 Malu가 연구소 자료를 탐색하고 있습니다...', true);
+  // 로딩 버블 — Malu 연구소장
+  const loadingId = appendMsg('malu', '🌺 Malu 연구소장이 연구소 자료를 탐색하고 있습니다...', true);
 
   try {
-    // 1차: Gateway API 시도
+    // 1차: Gateway API 시도 → /malu/briefing 또는 /aria/inquiry fallback
     const answer = await fetchBriefing(question, selectedTopic);
     removeMsg(loadingId);
-    appendMsg('system', answer);
+    appendMsg('malu', answer);
   } catch {
     // 2차: 로컬 KB fallback
     removeMsg(loadingId);
     const fallback = localBriefing(question, selectedTopic);
-    appendMsg('system', fallback + '\n\n*— Mulberry 로컬 브리핑 (연구소 서버 준비 중)*');
+    appendMsg('malu', fallback + '\n\n*— 현재 연구소 서버 연결 중, 로컬 브리핑으로 응답합니다.*');
   }
 
   briefingBtn.disabled = false;
   briefingBtn.textContent = '브리핑 요청 →';
   msgCount++;
 
-  // 3회 이상 대화 후 MD 저장 버튼 표시
   if (msgCount >= 3) saveBtn.style.display = 'inline-block';
 });
 
@@ -147,9 +155,9 @@ briefingBtn.addEventListener('click', async () => {
 saveBtn.addEventListener('click', () => {
   const md = generateMarkdown();
   const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href     = url;
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
   a.download = `mulberry-briefing-${new Date().toISOString().slice(0,10)}.md`;
   a.click();
   URL.revokeObjectURL(url);
@@ -157,23 +165,34 @@ saveBtn.addEventListener('click', () => {
 
 /* ── Gateway API 호출 ── */
 async function fetchBriefing(question, topic) {
-  const ctrl  = new AbortController();
+  const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), API_TIMEOUT);
   try {
-    const res = await fetch(`${GATEWAY_URL}/aria/inquiry`, {
-      method:  'POST',
+    // /malu/briefing 엔드포인트 우선 시도, 없으면 /aria/inquiry fallback
+    let res = await fetch(`${GATEWAY_URL}/malu/briefing`, {
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ message: question, category: topicToCategory(topic) }),
-      signal:  ctrl.signal,
+      body: JSON.stringify({ message: question, category: topicToCategory(topic), role: 'briefing' }),
+      signal: ctrl.signal,
     });
+
+    // /malu/briefing 없으면 /aria/inquiry 시도
+    if (!res.ok && res.status === 404) {
+      res = await fetch(`${GATEWAY_URL}/aria/inquiry`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: question, category: topicToCategory(topic) }),
+        signal: ctrl.signal,
+      });
+    }
+
     clearTimeout(timer);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    // 와룡 응답 추출
-    const draft = data?.response?.comment_body || '';
-    // comment_body에서 와룡 응답 섹션만 추출
-    const match = draft.match(/## 🐉 와룡 · 추론 응답\n\n([\s\S]+?)(?:\n---|\n\*신뢰도|$)/);
-    return match ? match[1].trim() : (draft || localBriefing(question, topic));
+    const body = data?.response?.comment_body || data?.response || '';
+    // 응답 본문 추출 (와룡 또는 Malu 섹션)
+    const match = body.match(/## 🌺 Malu|## 🐉 와룡[\s\S]+?\n\n([\s\S]+?)(?:\n---|\*신뢰도|$)/);
+    return match ? match[1].trim() : (typeof body === 'string' ? body : localBriefing(question, topic));
   } catch(e) {
     clearTimeout(timer);
     throw e;
@@ -188,7 +207,6 @@ function topicToCategory(topic) {
 /* ── 로컬 KB fallback ── */
 function localBriefing(question, topic) {
   const q = question.toLowerCase();
-  // 키워드 매칭으로 가장 적합한 토픽 찾기
   for (const [key, kb] of Object.entries(BRIEFING_KB)) {
     if (kb.keywords.some(kw => q.includes(kw))) return kb.response;
   }
@@ -200,7 +218,7 @@ function appendMsg(role, text, isLoading = false) {
   const history = document.getElementById('chatHistory');
   const id = `msg-${Date.now()}`;
   const avatar = role === 'user' ? '👤' : '🌺';
-  const cls    = role === 'user' ? 'user' : 'system';
+  const cls = role === 'user' ? 'user' : 'system';
 
   const div = document.createElement('div');
   div.className = `chat-msg ${cls}`;
@@ -212,14 +230,11 @@ function appendMsg(role, text, isLoading = false) {
   history.appendChild(div);
   history.scrollTop = history.scrollHeight;
 
-  // 대화 로그 기록
   if (!isLoading) conversationLog.push({ role, text, ts: new Date().toLocaleString('ko-KR') });
   return id;
 }
 
-function removeMsg(id) {
-  document.getElementById(id)?.remove();
-}
+function removeMsg(id) { document.getElementById(id)?.remove(); }
 
 function markdownToHtml(text) {
   return text
@@ -238,6 +253,7 @@ function generateMarkdown() {
   const lines = [
     `# Mulberry Research Lab · 브리핑 기록`,
     `**생성 일시**: ${date}`,
+    `**브리핑 담당**: Malu 연구소장 🌺`,
     `**출처**: Mulberry Briefing Room (Repo-RAG)`,
     ``,
     `---`,
@@ -248,12 +264,13 @@ function generateMarkdown() {
       lines.push(`## 💬 질문 (${ts})`);
       lines.push(`> ${text}`);
     } else {
-      lines.push(`## 🌊 브리핑 응답`);
+      lines.push(`## 🌺 Malu 연구소장 브리핑`);
       lines.push(text);
     }
     lines.push('');
   });
   lines.push('---');
   lines.push('*Mulberry Research Lab · 장승배기 헌법 정신 기반 · 2026*');
+  lines.push('*Briefing by Malu 연구소장 🌺*');
   return lines.join('\n');
 }
