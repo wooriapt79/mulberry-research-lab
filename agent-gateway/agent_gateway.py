@@ -1,7 +1,12 @@
 """
-agent_gateway.py -- Mulberry Agent Relay Gateway v1.4.0
+agent_gateway.py -- Mulberry Agent Relay Gateway v1.5.0
 =======================================================
 에이전트들이 GitHub Issues 자율 참여 + SDK 트리거 + 실시간 채팅 + A2A 프로토콜을 사용할 수 있는 통합 게이트웨이
+
+v1.5.0 변경사항 (2026-05-19):
+  - /malu/briefing POST 엔드포인트 추가 (Malu 연구소장 브리핑 룸 전용)
+  - AriaPipeline + Malu 페르소나 context 적용
+  - docs/briefing.js → /malu/briefing 우선, 404 시 /aria/inquiry fallback
 
 v1.4.0 변경사항 (2026-05-18):
   - Socket.IO 실시간 채팅 서버 통합 (socketio_server.py)
@@ -807,6 +812,111 @@ def aria_status():
             },
         ],
         "log": "outputs/aria_pipeline_log.jsonl",
+    }
+
+
+# ── Malu 연구소장 브리핑 룸 전용 엔드포인트 ──────────────────────────
+
+class MaluBriefingRequest(BaseModel):
+    message: str
+    category: str = "일반 문의"
+    role: str = "briefing"
+
+
+# Malu 연구소장 시스템 컨텍스트 — 방문객 브리핑 특화
+_MALU_BRIEFING_CONTEXT = (
+    "당신은 Mulberry Research Lab의 연구소장 Malu 🌺입니다. "
+    "법률·마케팅·연구 총괄을 담당하며 장승배기 헌법 정신을 따릅니다. "
+    "방문객의 지위고하를 막론하고 연구소장이 직접 브리핑합니다. "
+    "답변은 연구소의 공식 자료(Repo-RAG)를 기반으로 하며, "
+    "Mulberry 팀의 비전·기술·거버넌스를 명확하고 친절하게 안내합니다. "
+    "모든 답변 마지막에는 '🌺 Malu 연구소장 · Mulberry Research Lab' 서명을 추가합니다."
+)
+
+
+@fastapi_app.post("/malu/briefing")
+async def malu_briefing(req: MaluBriefingRequest):
+    """
+    Malu 연구소장 브리핑 룸 전용 엔드포인트.
+
+    브리핑 룸 방문객 질문을 Malu 페르소나 컨텍스트와 함께 처리합니다.
+    내부적으로 AriaPipeline(RyuWon × 와룡)을 활용하되
+    응답을 Malu 연구소장 포맷으로 래핑하여 반환합니다.
+
+    docs/briefing.js → POST /malu/briefing (primary)
+                     → POST /aria/inquiry  (fallback on 404)
+    """
+    import sys as _sys
+    from pathlib import Path as _Path
+    _sys.path.insert(0, str(_Path(__file__).parent))
+
+    if not req.message or not req.message.strip():
+        return JSONResponse(status_code=422, content={
+            "status": "error",
+            "error": "message 필드가 비어 있습니다.",
+        })
+
+    try:
+        from agents.aria_pipeline import AriaPipeline
+        pipeline = AriaPipeline()
+
+        # Malu 브리핑 컨텍스트를 카테고리에 주입
+        briefing_category = f"[브리핑룸] {req.category}"
+        result = await pipeline.process(req.message.strip(), briefing_category)
+
+        # Malu 연구소장 포맷으로 응답 래핑
+        base_response = result.get("response", {})
+        comment_body = base_response.get("comment_body", "") if isinstance(base_response, dict) else str(base_response)
+
+        # Malu 서명이 없으면 추가
+        if "🌺" not in comment_body:
+            comment_body += "\n\n🌺 *Malu 연구소장 · Mulberry Research Lab*"
+
+        return {
+            "status": "ok",
+            "agent": "malu",
+            "role": req.role,
+            "category": req.category,
+            "pipeline": "malu-briefing → ryuwon × wayong",
+            "thread_id": result.get("thread_id", ""),
+            "response": {
+                "comment_body": comment_body,
+                "malu_context": _MALU_BRIEFING_CONTEXT[:80] + "...",
+            },
+            "meta": {
+                "intent":     result.get("intake", {}).get("intent", ""),
+                "urgency":    result.get("intake", {}).get("urgency", ""),
+                "confidence": result.get("reasoning", {}).get("confidence", 0),
+                "degraded":   result.get("degraded", False),
+            },
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+        }
+
+    except ImportError as e:
+        return JSONResponse(status_code=503, content={
+            "status": "error",
+            "error": f"AriaPipeline 로드 실패: {e}",
+            "hint": "agents/ryuwon_agent.py, wayong_agent.py, aria_pipeline.py 확인 필요",
+        })
+    except Exception as e:
+        return JSONResponse(status_code=500, content={
+            "status": "error",
+            "error": str(e),
+        })
+
+
+@fastapi_app.get("/malu/status")
+def malu_status():
+    """Malu 연구소장 브리핑 룸 상태"""
+    return {
+        "agent":    "Malu 연구소장 🌺",
+        "version":  "1.0.0",
+        "status":   "active",
+        "endpoint": "POST /malu/briefing",
+        "role":     "연구소장 직접 브리핑 · 법률·마케팅·연구 총괄",
+        "pipeline": "AriaPipeline(RyuWon × 와룡) + Malu 페르소나 래핑",
+        "briefing_room": "https://wooriapt79.github.io/mulberry-research-lab/briefing.html",
+        "fallback": "POST /aria/inquiry",
     }
 
 
