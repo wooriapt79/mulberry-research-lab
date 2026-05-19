@@ -1,11 +1,13 @@
-// Mulberry Research Lab · Aria Portal · script.js v2.1
-// RyuWon × 와룡 파이프라인 연동 + 3단 Fallback (할당량·세션 만료 대응)
+// Mulberry Research Lab · Aria Portal · script.js v3.0
+// RyuWon × 와룡 파이프라인 + /aria/submit 프록시 통합
+// guest_google 보안 권고(Issue #66) 반영: GITHUB_TOKEN 서버 보관
 
-const REPO        = 'wooriapt79/mulberry-research-lab';
-const AGENT       = '와룡 (臥龍)';
-const MAX_LEN     = 500;
-const GATEWAY_URL = 'https://loving-education-production-cc9e.up.railway.app';
-const API_TIMEOUT = 9000;  // 9초 — 콜드스타트 대응
+const REPO           = 'wooriapt79/mulberry-research-lab';
+const AGENT          = '와룡 (臥龍)';
+const MAX_LEN        = 500;
+const GATEWAY_URL    = 'https://loving-education-production-cc9e.up.railway.app';
+const ARIA_SUBMIT    = `${GATEWAY_URL}/aria/submit`;
+const API_TIMEOUT    = 9000;  // 9초 — 콜드스타트 대응
 
 /* ─── 상태 ─── */
 let selectedCategory = '일반 문의';
@@ -58,7 +60,31 @@ sendBtn.addEventListener('click', async () => {
 
   setLoading(true);
 
-  // ── Step 1: Aria Pipeline API 호출 시도 ───────────────────
+  // ── Step 1: /aria/submit 프록시 호출 (토큰 서버 보관) ────
+  try {
+    const submitResult = await callAriaSubmit(msg);
+    setLoading(false);
+
+    if (submitResult.success) {
+      // ✅ 이슈 등록 성공
+      showStatus(
+        `✅ 질문이 연구소에 등록되었습니다! (Issue #${submitResult.issue_number})\n` +
+        '🌊 RyuWon이 곧 응답합니다.',
+        'ok'
+      );
+      // 등록된 이슈 링크 표시
+      fallbackLink.href = submitResult.issue_url;
+      fallbackLink.textContent = `Issue #${submitResult.issue_number} 바로 확인하기 →`;
+      fallbackArea.style.display = 'block';
+      textarea.value = '';
+      charCount.textContent = `0 / ${MAX_LEN}`;
+      return;
+    }
+  } catch (submitErr) {
+    // /aria/submit 실패 시 Step 2(AI 파이프라인)로 fallback
+  }
+
+  // ── Step 2: Aria AI Pipeline 호출 시도 ───────────────────
   try {
     const result = await callAriaPipeline(msg, selectedCategory);
 
@@ -89,11 +115,11 @@ sendBtn.addEventListener('click', async () => {
   } catch (err) {
     setLoading(false);
 
-    // ── Step 2: API 실패 — 에러 종류별 안내 메시지 ──────────
+    // ── Step 3: 모든 API 실패 — 에러 종류별 안내 메시지 ─────
     const guidance = errorGuidance(err);
     showStatus(guidance.message, 'error');
 
-    // ── Step 3: GitHub Issue 직접 열기 안내 ─────────────────
+    // ── Step 4: GitHub Issue 직접 열기 안내 (최후 fallback) ─
     fallbackArea.style.display = 'block';
     openIssueWithFallback(issueUrl, fallbackArea);
   }
@@ -110,6 +136,33 @@ textarea.addEventListener('keydown', (e) => {
 /* ─────────────────────────────────────────────────────────────
    API 호출
 ───────────────────────────────────────────────────────────── */
+
+async function callAriaSubmit(message) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), API_TIMEOUT);
+
+  try {
+    const res = await fetch(ARIA_SUBMIT, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ query: message }),
+      signal:  controller.signal,
+    });
+    clearTimeout(timer);
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      const err  = new Error(data.error || `HTTP ${res.status}`);
+      err.status = res.status;
+      throw err;
+    }
+
+    return await res.json();
+  } catch (e) {
+    clearTimeout(timer);
+    throw e;
+  }
+}
 
 async function callAriaPipeline(message, category) {
   const controller = new AbortController();
