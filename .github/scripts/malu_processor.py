@@ -33,7 +33,7 @@ def get_gemini_response(api_key: str, prompt: str) -> str:
     """Gemini API 호출 — Malu 응답 반환."""
     url = (
         "https://generativelanguage.googleapis.com/v1beta/models/"
-        f"gemini-1.5-flash:generateContent?key={api_key}"
+        f"gemini-2.0-flash:generateContent?key={api_key}"
     )
     payload = {
         "contents": [
