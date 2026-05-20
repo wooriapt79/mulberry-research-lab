@@ -302,7 +302,7 @@ def create_sio_app(fastapi_app: FastAPI) -> socketio.ASGIApp:
 
         sender = data.get("from", "anonymous")
         message = data.get("message", "").strip()
-        target = data.get("target_agent", "").lower()
+        target = (data.get("target_agent") or "").lower()
 
         if not message:
             return
