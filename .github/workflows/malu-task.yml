@@ -6,7 +6,10 @@ on:
 
 jobs:
   malu_run:
-    if: contains(github.event.comment.body, '@Malu-Agent')
+    if: |
+      contains(github.event.comment.body, '@Malu-Agent') ||
+      contains(github.event.comment.body, '@malu-agent') ||
+      contains(github.event.comment.body, '@Malu-agent')
     runs-on: ubuntu-latest
     permissions:
       issues: write
