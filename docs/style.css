@@ -145,7 +145,12 @@ main {
 .aria-hero {
   text-align: center;
   padding: 60px 24px 48px;
-  background: linear-gradient(160deg, #0a0d1a 0%, #0a1a2e 50%, #0a1a1a 100%);
+  background:
+    linear-gradient(160deg,
+      rgba(10,13,26,0.85) 0%,
+      rgba(10,26,46,0.78) 50%,
+      rgba(10,26,26,0.85) 100%),
+    url('assets/aria-portal-hero.png') center/cover no-repeat;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
   position: relative;
