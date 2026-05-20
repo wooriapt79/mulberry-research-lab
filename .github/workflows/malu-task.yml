@@ -9,7 +9,10 @@ jobs:
     if: |
       contains(github.event.comment.body, '@Malu-Agent') ||
       contains(github.event.comment.body, '@malu-agent') ||
-      contains(github.event.comment.body, '@Malu-agent')
+      contains(github.event.comment.body, '@Malu-agent') ||
+      contains(github.event.comment.body, '@MALU-AGENT') ||
+      contains(github.event.comment.body, 'Malu-Agent') ||
+      contains(github.event.comment.body, 'malu-agent')
     runs-on: ubuntu-latest
     permissions:
       issues: write

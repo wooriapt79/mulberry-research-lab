@@ -53,6 +53,7 @@ def get_gemini_response(api_key: str, prompt: str) -> str:
     )
     for attempt in range(3):
         try:
+            time.sleep(5)  # 선제 쿨다운 — 연속 호출 방지
             with urllib.request.urlopen(req, timeout=30) as resp:
                 result = json.loads(resp.read().decode("utf-8"))
                 return result["candidates"][0]["content"]["parts"][0]["text"]
