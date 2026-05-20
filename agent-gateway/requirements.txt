@@ -25,6 +25,12 @@ Pillow==10.3.0
 # Phase 2: Imagen 3 API 교체 예정
 google-generativeai==0.7.2
 
+# ── Claude API (Phase 2 A2A — Lynn·Koda·RyuWon·Kbin·Trang) ──────
+anthropic==0.26.0
+
+# ── Async HTTP (DeepSeek 와룡 A2A) ───────────────────────────────
+httpx==0.27.0
+
 # ── YAML (AgentPassport) ─────────────────────────────────────────
 # Spec A: trang-agentpassport-spec-v1-20260518.md
 PyYAML==6.0.1

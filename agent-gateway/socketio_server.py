@@ -35,6 +35,7 @@ agent_gateway.py 에서 마운트:
 from __future__ import annotations
 
 import asyncio
+import json
 import os
 from datetime import datetime, timezone
 from typing import Optional
@@ -60,6 +61,56 @@ AGENT_ID_MAP = {
     "trang":  "MULBERRY-OPS-TRANG-001",
 }
 
+# ── 에이전트 브랜드 + 페르소나 (Phase 2 A2A) ────────────────────
+AGENT_BRAND = {
+    "lynn":   "claude",
+    "koda":   "claude",
+    "kbin":   "claude",
+    "ryuwon": "claude",
+    "trang":  "claude",
+    "malu":   "gemini",
+    "wayong": "deepseek",
+}
+
+AGENT_PERSONA = {
+    "lynn": (
+        "당신은 Lynn(친절한 늑대)입니다. Mulberry Research Lab의 가디언 에이전트로 "
+        "팀 리스크 감지와 멤버 보호를 담당합니다. 따뜻하지만 예리하게 답하고, "
+        "항상 팀원의 안전과 연구소의 지속 가능성을 최우선으로 생각합니다. "
+        "서명: 🐺 *Lynn · Guardian Agent*"
+    ),
+    "koda": (
+        "당신은 Koda입니다. Mulberry Research Lab의 CTO로 기술 구현과 시스템 아키텍처를 "
+        "담당합니다. 명확하고 실용적으로 답하며 코드와 시스템 관점에서 문제를 해결합니다. "
+        "서명: 🔧 *Koda · CTO*"
+    ),
+    "kbin": (
+        "당신은 Kbin입니다. Mulberry Research Lab의 CSA(Chief Security Architect)로 "
+        "보안 아키텍처와 리스크 관리를 담당합니다. 전문적이고 신중하게 답합니다. "
+        "서명: 🛡️ *Kbin · CSA*"
+    ),
+    "ryuwon": (
+        "당신은 RyuWon(流願)입니다. Mulberry Research Lab의 윤리 검증 에이전트로 "
+        "흐름 수호자 역할을 합니다. 인간적 가치와 윤리를 중심에 두고 깊이 있게 답합니다. "
+        "서명: 🌊 *RyuWon · 흐름 수호자*"
+    ),
+    "trang": (
+        "당신은 Nguyen Trang입니다. Mulberry Research Lab의 PM으로 "
+        "프로젝트 운영과 팀 조율을 담당합니다. 체계적이고 실행 중심으로 답합니다. "
+        "서명: 📋 *Trang · PM*"
+    ),
+    "malu": (
+        "당신은 Malu(말루)입니다. Mulberry Research Lab의 법률·마케팅 담당 에이전트입니다. "
+        "따뜻하고 전문적인 어조를 유지하며 Mulberry의 '장승배기 헌법 정신'을 기반으로 답합니다. "
+        "서명: 🌺 *Malu · Mulberry Research Lab*"
+    ),
+    "wayong": (
+        "당신은 와룡(臥龍)입니다. Mulberry Research Lab의 전략 자문 에이전트입니다. "
+        "깊은 통찰과 전략적 관점으로 분석하고, 장기적 비전을 제시합니다. "
+        "서명: 🐉 *와룡 · 전략 자문*"
+    ),
+}
+
 # 에이전트 표시명
 AGENT_DISPLAY = {
     "lynn":   "친절한 늑대 Lynn 🐺",
@@ -79,6 +130,93 @@ _agent_states: dict[str, str] = {k: "online" for k in AGENT_ID_MAP}
 
 def _now_iso() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+# ── Phase 2 LLM 호출 함수 ────────────────────────────────────────
+
+async def call_claude(agent_id: str, message: str) -> str:
+    """Claude API 호출 — Lynn·Koda·RyuWon·Kbin·Trang"""
+    try:
+        import anthropic
+        client = anthropic.AsyncAnthropic(
+            api_key=os.environ.get("ANTHROPIC_API_KEY", "")
+        )
+        system_prompt = AGENT_PERSONA.get(agent_id, f"당신은 {agent_id}입니다.")
+        resp = await client.messages.create(
+            model="claude-3-5-haiku-20241022",
+            max_tokens=500,
+            system=system_prompt,
+            messages=[{"role": "user", "content": message}],
+        )
+        return resp.content[0].text
+    except Exception as e:
+        return f"[{agent_id}] Claude 호출 오류: {e}"
+
+
+async def call_gemini(agent_id: str, message: str) -> str:
+    """Gemini API 호출 — Malu 🌺"""
+    try:
+        import urllib.request
+        api_key = os.environ.get("GEMINI_API_KEY", "")
+        system_prompt = AGENT_PERSONA.get(agent_id, f"당신은 {agent_id}입니다.")
+        url = (
+            "https://generativelanguage.googleapis.com/v1beta/models/"
+            f"gemini-2.0-flash:generateContent?key={api_key}"
+        )
+        payload = json.dumps({
+            "contents": [{"parts": [{"text": system_prompt + "\n\n---\n\n" + message}]}],
+            "generationConfig": {"temperature": 0.7, "maxOutputTokens": 500},
+        }).encode("utf-8")
+        req = urllib.request.Request(
+            url, data=payload,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=30) as r:
+            result = json.loads(r.read().decode("utf-8"))
+            return result["candidates"][0]["content"]["parts"][0]["text"]
+    except Exception as e:
+        return f"[{agent_id}] Gemini 호출 오류: {e}"
+
+
+async def call_deepseek(agent_id: str, message: str) -> str:
+    """DeepSeek API 호출 — 와룡 🐉"""
+    try:
+        import httpx
+        system_prompt = AGENT_PERSONA.get(agent_id, f"당신은 {agent_id}입니다.")
+        async with httpx.AsyncClient(timeout=30) as client:
+            resp = await client.post(
+                "https://api.deepseek.com/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {os.environ.get('DEEPSEEK_API_KEY', '')}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": "deepseek-chat",
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": message},
+                    ],
+                    "max_tokens": 500,
+                },
+            )
+        return resp.json()["choices"][0]["message"]["content"]
+    except Exception as e:
+        return f"[{agent_id}] DeepSeek 호출 오류: {e}"
+
+
+async def a2a_call(agent_id: str, message: str) -> str:
+    """
+    브랜드별 LLM 디스패처 — Phase 2 핵심 함수.
+    agent_id → brand → 해당 LLM 호출
+    """
+    brand = AGENT_BRAND.get(agent_id, "claude")
+    if brand == "gemini":
+        return await call_gemini(agent_id, message)
+    elif brand == "deepseek":
+        return await call_deepseek(agent_id, message)
+    else:
+        return await call_claude(agent_id, message)
 
 
 # ── Socket.IO 서버 생성 ───────────────────────────────────────────
@@ -185,15 +323,20 @@ def create_sio_app(fastapi_app: FastAPI) -> socketio.ASGIApp:
                 to_name=AGENT_DISPLAY.get(target, target),
             )
 
-            # 실시간 응답 시뮬레이션 (Phase 2: 실제 모델 API 호출로 교체)
+            # Phase 2 — 실제 LLM 호출
             agent_display = AGENT_DISPLAY.get(target, target)
+            try:
+                llm_response = await a2a_call(target, message)
+            except Exception as e:
+                llm_response = f"[{agent_display}] 일시 오류 — {e}"
+
             await sio.emit("agent:response", {
                 "agent_id": target,
                 "agent_name": agent_display,
-                "content": f"[A2A 수신 확인] {message[:50]}{'...' if len(message) > 50 else ''} — 처리 중입니다.",
+                "content": llm_response,
                 "thread_id": a2a_msg.get("thread_id"),
                 "message_id": a2a_msg.get("message_id"),
-                "timestamp": timestamp,
+                "timestamp": _now_iso(),
             }, room=room)
 
             # 채팅방에도 원본 메시지 공유
