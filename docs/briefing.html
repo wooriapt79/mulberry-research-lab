@@ -27,6 +27,30 @@
     min-height: 100vh;
   }
 
+  /* ── VILLAGE HERO IMAGE ── */
+  .village-hero {
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    line-height: 0;
+  }
+  .village-hero img {
+    width: 100%;
+    height: auto;
+    max-height: 400px;
+    object-fit: cover;
+    object-position: center 30%;
+    display: block;
+  }
+  .village-hero::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 120px;
+    background: linear-gradient(to bottom, transparent, var(--bg));
+    pointer-events: none;
+  }
+
   /* ── PAGE NAV ── */
   .page-nav {
     display: flex;
@@ -262,6 +286,11 @@
 </style>
 </head>
 <body>
+
+<!-- MULBERRY VILLAGE HERO -->
+<div class="village-hero">
+  <img src="mulberry-village.png" alt="Mulberry Village — Code Hygiene Standard: Purity for Humanity">
+</div>
 
 <!-- PAGE NAV -->
 <nav class="page-nav">

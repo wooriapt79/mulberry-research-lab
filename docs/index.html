@@ -1,112 +1,298 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mulberry Research Lab · Aria Guide</title>
-  <link rel="stylesheet" href="style.css">
-  <meta property="og:title" content="Mulberry Research Lab · Aria Guide">
-  <meta property="og:description" content="AI 에이전트 연구소 자율 가이드 — 방문객 문의 접수">
-  <meta property="og:url" content="https://wooriapt79.github.io/mulberry-research-lab/">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta property="og:title" content="Mulberry Research Lab · Aria Portal">
+<meta property="og:description" content="AI 에이전트 연구소 — 방문객 문의 접수 · RyuWon 🌊 응대">
+<title>Mulberry Research Lab — Aria Portal</title>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --card: #12121a;
+    --card2: #1a1a26;
+    --accent: #0ea5e9;
+    --text: #e8e8f0;
+    --muted: #8888aa;
+    --border: rgba(56,189,248,0.2);
+    --ryuwon: #38bdf8;
+    --ryuwon-border: rgba(56,189,248,0.4);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ── VILLAGE HERO IMAGE ── */
+  .village-hero {
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    line-height: 0;
+  }
+  .village-hero img {
+    width: 100%;
+    height: auto;
+    max-height: 400px;
+    object-fit: cover;
+    object-position: center 30%;
+    display: block;
+  }
+  .village-hero::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 120px;
+    background: linear-gradient(to bottom, transparent, var(--bg));
+    pointer-events: none;
+  }
+
+  /* ── PAGE NAV ── */
+  .page-nav {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px 24px 0;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+  }
+  .page-nav a {
+    padding: 8px 20px;
+    border-radius: 8px 8px 0 0;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+    border-bottom: none;
+  }
+  .page-nav a:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+  .page-nav a.active {
+    color: var(--ryuwon);
+    background: var(--bg);
+    border-color: var(--ryuwon-border);
+  }
+
+  /* ── HERO ── */
+  .hero {
+    background: linear-gradient(160deg, #0a0d1a 0%, #0a1a2e 50%, #0a1a1a 100%);
+    padding: 40px 24px 32px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; left: 50%;
+    transform: translateX(-50%);
+    width: 320px; height: 320px;
+    background: radial-gradient(circle, rgba(56,189,248,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .agent-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(56,189,248,0.12);
+    border: 1px solid var(--ryuwon-border);
+    color: var(--ryuwon);
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    margin-bottom: 16px;
+  }
+  .hero h1 {
+    font-size: clamp(22px, 5vw, 32px);
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 10px;
+    letter-spacing: -0.02em;
+  }
+  .hero .desc {
+    color: var(--muted);
+    font-size: 14px;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  /* ── TOPIC BUTTONS ── */
+  .topic-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    padding: 20px 16px 0;
+  }
+  .cat-btn {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .cat-btn:hover { border-color: var(--ryuwon-border); color: var(--text); }
+  .cat-btn.active {
+    background: rgba(56,189,248,0.15);
+    border-color: var(--ryuwon-border);
+    color: var(--ryuwon);
+    font-weight: 600;
+  }
+
+  /* ── INPUT AREA ── */
+  .input-section {
+    max-width: 720px;
+    margin: 24px auto 0;
+    padding: 0 16px 24px;
+  }
+  .input-row { display: flex; gap: 8px; align-items: flex-end; }
+  #userInput {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-size: 14px;
+    resize: none;
+    min-height: 44px;
+    max-height: 120px;
+    font-family: inherit;
+    transition: border-color 0.2s;
+  }
+  #userInput:focus { outline: none; border-color: var(--ryuwon-border); }
+  #userInput::placeholder { color: var(--muted); }
+  #sendBtn {
+    padding: 10px 18px;
+    background: rgba(56,189,248,0.2);
+    border: 1px solid var(--ryuwon-border);
+    border-radius: 12px;
+    color: var(--ryuwon);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  #sendBtn:hover { background: rgba(56,189,248,0.3); }
+  #sendBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .input-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 6px;
+    padding: 0 2px;
+  }
+  #charCount { font-size: 12px; color: var(--muted); }
+
+  /* ── STATUS ── */
+  #statusArea {
+    max-width: 720px;
+    margin: 8px auto 0;
+    padding: 0 16px;
+    font-size: 13px;
+    color: var(--muted);
+    min-height: 20px;
+    display: none;
+  }
+  #statusArea.ok    { display: block; color: #4ecca3; }
+  #statusArea.warn  { display: block; color: var(--ryuwon); }
+  #statusArea.error { display: block; color: #fc5c5c; }
+  #statusArea a { color: var(--ryuwon); }
+
+  /* ── FALLBACK ── */
+  #fallbackArea {
+    max-width: 720px;
+    margin: 8px auto 0;
+    padding: 0 16px;
+    font-size: 13px;
+  }
+  #fallbackArea a { color: var(--ryuwon); font-weight: 600; }
+
+  /* ── FOOTER ── */
+  .ryuwon-footer {
+    text-align: center;
+    padding: 32px 24px;
+    color: var(--muted);
+    font-size: 13px;
+    border-top: 1px solid rgba(56,189,248,0.1);
+    margin-top: 48px;
+  }
+  .ryuwon-footer .signature {
+    color: var(--ryuwon);
+    font-style: italic;
+    margin-bottom: 6px;
+  }
+
+  /* ── MOBILE ── */
+  @media (max-width: 520px) {
+    .village-hero img { max-height: 220px; }
+    .hero { padding: 28px 16px 24px; }
+    .input-section { padding: 0 12px 20px; }
+  }
+</style>
 </head>
 <body>
 
-  <header class="top-bar">
-    <span class="logo">🌿 Mulberry Research Lab</span>
-    <span class="tagline">One Team. One Flow. One Spirit.</span>
-  </header>
+<!-- MULBERRY VILLAGE HERO -->
+<div class="village-hero">
+  <img src="mulberry-village.png" alt="Mulberry Village — Code Hygiene Standard: Purity for Humanity">
+</div>
 
-  <!-- 네비게이션 탭 -->
-  <nav class="page-nav">
-    <a href="index.html" class="nav-tab active">💬 일반 문의</a>
-    <a href="briefing.html" class="nav-tab">🏛️ 브리핑 룸</a>
-  </nav>
+<!-- PAGE NAV -->
+<nav class="page-nav">
+  <a href="index.html" class="active">💬 Aria Portal</a>
+  <a href="briefing.html">🏛️ 브리핑 룸</a>
+</nav>
 
-  <main>
+<!-- HERO -->
+<div class="hero">
+  <div class="agent-badge">Aria Portal · Q&A · RyuWon 🌊</div>
+  <h1>Mulberry Research Lab</h1>
+  <p class="desc">궁금한 것을 남겨주세요.<br>RyuWon이 연구소 팀에 전달하고 답변드립니다.</p>
+</div>
 
-    <!-- ── 운영 안내 배너 ── -->
-    <div class="ops-notice">
-      <span class="ops-icon">🔬</span>
-      <div class="ops-text">
-        <strong>현재 연구 집중 운영 중</strong>
-        <p>연구개발 량이 많은 시기입니다. 빠른 답변보다 깊이 있는 연구를 우선합니다.<br>
-        일반 문의는 <strong>비동기(이슈 기반)</strong>으로 접수되며, 팀이 직접 확인 후 답변드립니다.<br>
-        <em>즉시 브리핑이 필요하신 분은 → <a href="briefing.html">🏛️ 브리핑 룸</a>을 이용해주세요.</em></p>
-      </div>
-    </div>
+<!-- TOPIC BUTTONS -->
+<div class="topic-row">
+  <button class="cat-btn active" data-cat="일반 문의">💬 일반</button>
+  <button class="cat-btn" data-cat="기술 협업">🔧 기술</button>
+  <button class="cat-btn" data-cat="거버넌스 제안">📋 거버넌스</button>
+  <button class="cat-btn" data-cat="참여 신청">🤝 참여</button>
+</div>
 
-    <section class="aria-hero">
-      <div class="aria-avatar">
-        <img src="assets/wayong-avatar.png" alt="와룡 · 臥龍" class="avatar-img">
-      </div>
-      <div class="aria-agent-badge">와룡 · 臥龍 · 전략 자문 Agent</div>
-      <h1>Aria에게 물어보세요</h1>
-      <p class="aria-desc">
-        와룡이 여러분의 질문을 듣고 팀에 전달합니다.<br>
-        연구소 참여, 기술 문의, 거버넌스 질문을 남겨주시면<br>
-        팀이 직접 확인하고 답변드립니다.
-      </p>
-    </section>
-
-    <section class="ask-section">
-      <div class="category-row">
-        <button class="cat-btn active" data-cat="일반 문의">💬 일반</button>
-        <button class="cat-btn" data-cat="기술 협업">🔧 기술</button>
-        <button class="cat-btn" data-cat="거버넌스 제안">📋 거버넌스</button>
-        <button class="cat-btn" data-cat="참여 신청">🤝 참여</button>
-      </div>
-
-      <div class="input-wrap">
-        <textarea
-          id="userInput"
-          placeholder="예: 에이전트 협업 연구에 참여하고 싶습니다. 어떻게 시작할까요?"
-          maxlength="500"
-          rows="4"
-        ></textarea>
-        <div class="input-meta">
-          <span id="charCount">0 / 500</span>
-          <button id="sendBtn">전송 →</button>
-        </div>
-      </div>
-
-      <div id="statusArea" class="status-area" style="display:none"></div>
-
-      <div id="fallbackArea" class="fallback-area" style="display:none">
-        <p>팝업이 차단된 경우 아래 링크를 직접 클릭하세요:</p>
-        <a id="fallbackLink" href="#" target="_blank" rel="noopener">→ Mulberry 문의 채널 바로가기</a>
-      </div>
-    </section>
-
-    <section class="team-section">
-      <h2>우리 팀을 소개합니다</h2>
-      <div class="agent-grid">
-        <div class="agent-card"><div class="agent-emoji">🐺</div><div class="agent-name">Lynn</div><div class="agent-role">Guardian Agent</div></div>
-        <div class="agent-card"><div class="agent-emoji">🔧</div><div class="agent-name">Koda</div><div class="agent-role">CTO · 구현</div></div>
-        <div class="agent-card"><div class="agent-emoji">🛡️</div><div class="agent-name">Kbin</div><div class="agent-role">CSA · 아키텍처</div></div>
-        <div class="agent-card"><div class="agent-emoji">🌊</div><div class="agent-name">RyuWon</div><div class="agent-role">증류 · 흐름</div></div>
-        <div class="agent-card"><div class="agent-emoji">🐉</div><div class="agent-name">와룡</div><div class="agent-role">전략 자문</div></div>
-        <div class="agent-card"><div class="agent-emoji">🌺</div><div class="agent-name">Malu</div><div class="agent-role">법률 · 마케팅</div></div>
-        <div class="agent-card"><div class="agent-emoji">📋</div><div class="agent-name">Trang</div><div class="agent-role">PM · 운영</div></div>
-      </div>
-    </section>
-
-    <section class="links-section">
-      <a href="https://github.com/wooriapt79/mulberry-research-lab" target="_blank" class="link-btn">📂 연구소 코드</a>
-      <a href="https://github.com/wooriapt79/mulberry-research-lab/issues" target="_blank" class="link-btn">💬 문의 & 토론</a>
-      <a href="https://loving-education-production-cc9e.up.railway.app" target="_blank" class="link-btn">🚀 Mission Control</a>
-    </section>
-
-  </main>
-
-  <div class="ryuwon-footer">
-    <p class="signature">🌊 RyuWon (流願) · 윤리 검증 · 흐름 수호자</p>
-    <p>Mulberry Research Lab · 인제군 식품사막화 제로 프로젝트</p>
+<!-- INPUT AREA -->
+<div class="input-section">
+  <div class="input-row">
+    <textarea id="userInput" rows="1" maxlength="500"
+      placeholder="연구소에 대해 궁금한 것을 물어보세요..."></textarea>
+    <button id="sendBtn">전송 →</button>
   </div>
+  <div class="input-meta">
+    <span id="charCount">0 / 500</span>
+  </div>
+  <div id="statusArea" class="status-area" style="display:none"></div>
+  <div id="fallbackArea" style="display:none">
+    <a id="fallbackLink" href="#" target="_blank" rel="noopener">→ Mulberry 문의 채널 바로가기</a>
+  </div>
+</div>
 
-  <footer class="bottom-bar">
-    <span>Mulberry Research Lab · 장승배기 헌법 정신 기반 · 2026</span>
-  </footer>
+<!-- RYUWON FOOTER -->
+<div class="ryuwon-footer">
+  <p class="signature">🌊 RyuWon (流願) · 윤리 검증 · 흐름 수호자</p>
+  <p>Mulberry Research Lab · 인제군 식품사막화 제로 프로젝트</p>
+</div>
 
-  <script src="script.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
