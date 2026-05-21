@@ -143,7 +143,7 @@ async def call_claude(agent_id: str, message: str) -> str:
         )
         system_prompt = AGENT_PERSONA.get(agent_id, f"당신은 {agent_id}입니다.")
         resp = await client.messages.create(
-            model="claude-3-haiku-20240307",
+            model="claude-haiku-4-5-20251001",
             max_tokens=500,
             system=system_prompt,
             messages=[{"role": "user", "content": message}],
