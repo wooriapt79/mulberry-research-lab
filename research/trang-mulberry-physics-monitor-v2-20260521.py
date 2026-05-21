@@ -1,7 +1,7 @@
 # mulberry_physics_monitor.py  v2.0
 # Mulberry 연구소 자율성 상전이(Phase Transition) 실시간 관측 스크립트
 # 물리 매핑: 동역학 시스템 / 임계점 도달 조건 / 엔트로피 배출률
-#
+# Kramers-Langevin 방정식
 # v2.0 수정 내역 (2026-05-21, Trang 코드 분석 반영)
 # ─────────────────────────────────────────────────
 # [FIX-1] l_jr() 반환값 상한선 min(..., 1.0) 추가
