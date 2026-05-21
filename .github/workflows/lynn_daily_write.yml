@@ -155,11 +155,10 @@ jobs:
 
           TODAY=$(date '+%Y-%m-%d')
 
+          # heartbeat 파일 강제 추가 (-f: gitignore 우회, 신규/수정 모두 포함)
+          git add -f training_logs/lynn_status_${TODAY}.json || true
+
           STAGED=$(git diff --staged --name-only)
-          if [ -z "$STAGED" ]; then
-            git add training_logs/lynn_status_${TODAY}.json || true
-            STAGED=$(git diff --staged --name-only)
-          fi
 
           if [ -z "$STAGED" ]; then
             echo "ℹ️  커밋할 변경 없음 — 스킵"

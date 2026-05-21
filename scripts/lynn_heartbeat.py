@@ -19,6 +19,7 @@ CSA Kbin 처방 (2026-05-17):
 import json
 import os
 import sys
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -114,6 +115,7 @@ def build_status(state: str, details: dict) -> dict:
     return {
         "date": TODAY,
         "timestamp": TIMESTAMP,
+        "run_id": str(uuid.uuid4()),   # 매 실행마다 고유값 — git 항상 변경 감지
         "agent": "The-Courteous-Wolf-Lynn",
         "state": state,
         "message": state_messages.get(state, f"Lynn state: {state}"),
