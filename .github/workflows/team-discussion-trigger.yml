@@ -1,0 +1,73 @@
+name: Team Discussion Auto-Response
+
+# Mulberry Research Lab — 팀 이슈 자동 토론 워크플로우
+# 트리거: 이슈에 'team-discussion' 라벨 부착
+# 응답: Kbin(Claude) · RyuWon(Claude) · Malu(Gemini) 3인 자동 댓글
+# 아카이브: discussion_logs/issue-{번호}/ 저장 후 커밋
+#
+# 작성: Koda (2026-05-23) — Trang 스펙 기반
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  team-auto-response:
+    if: github.event.label.name == 'team-discussion'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # ── 에이전트 3인 LLM 호출 + 댓글 게시 ──────────────────────
+      - name: Team Discussion — Agent Auto Response
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GEMINI_API_KEY:    ${{ secrets.GEMINI_API_KEY }}
+          DISCUSSION_TOKEN:  ${{ secrets.MALU_GITHUB_TOKEN }}
+          ISSUE_NUMBER:      ${{ github.event.issue.number }}
+          ISSUE_TITLE:       ${{ github.event.issue.title }}
+          ISSUE_BODY:        ${{ github.event.issue.body }}
+          REPO_FULL:         ${{ github.repository }}
+        run: python .github/scripts/team_discuss.py
+
+      # ── discussion_logs 아카이브 커밋 ───────────────────────────
+      - name: Configure Git
+        if: always()
+        run: |
+          git config user.name  "Mulberry-Team-Bot"
+          git config user.email "team-bot@mulberry.ai"
+
+      - name: Commit discussion archive
+        if: always()
+        run: |
+          git add discussion_logs/ || true
+          STAGED=$(git diff --staged --name-only)
+          if [ -z "$STAGED" ]; then
+            echo "아카이브 변경 없음 — 스킵"
+            exit 0
+          fi
+          git commit -m "feat(discussion): Issue #${{ github.event.issue.number }} 팀 토론 아카이브
+
+이슈: ${{ github.event.issue.title }}
+응답: Kbin · RyuWon · Malu
+날짜: $(date '+%Y-%m-%d')"
+
+      - name: Push archive
+        if: always()
+        env:
+          PUSH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git remote set-url origin https://x-access-token:${PUSH_TOKEN}@github.com/${{ github.repository }}.git
+          git push origin main
