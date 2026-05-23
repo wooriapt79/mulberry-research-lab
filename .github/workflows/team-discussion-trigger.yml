@@ -58,11 +58,8 @@ jobs:
             echo "아카이브 변경 없음 — 스킵"
             exit 0
           fi
-          git commit -m "feat(discussion): Issue #${{ github.event.issue.number }} 팀 토론 아카이브
-
-이슈: ${{ github.event.issue.title }}
-응답: Kbin · RyuWon · Malu
-날짜: $(date '+%Y-%m-%d')"
+          ISSUE_NUM="${{ github.event.issue.number }}"
+          git commit -m "feat(discussion): Issue #${ISSUE_NUM} 팀 토론 아카이브 — Kbin·RyuWon·Malu $(date '+%Y-%m-%d')"
 
       - name: Push archive
         if: always()

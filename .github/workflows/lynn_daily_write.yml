@@ -179,16 +179,7 @@ jobs:
             LYNN_STATE=$(python -c "import json; d=json.load(open('$STATUS_FILE')); print(d.get('state','heartbeat'))" 2>/dev/null || echo "heartbeat")
           fi
 
-          git commit -m "feat: Lynn daily signal [state:${LYNN_STATE}]${RESEARCH_NOTE} ${TODAY}
-
-Agent: The-Courteous-Wolf-Lynn
-State: ${LYNN_STATE}
-Research: research/papers/${TODAY}-weekly-digest.md
-
-Co-Authored-By: re.eul <wooriapt79@users.noreply.github.com>
-Co-Authored-By: Nguyen Trang <trang@mulberry.ai>
-Co-Authored-By: Koda (Claude) <koda-claude@mulberry.ai>
-Co-Authored-By: Kbin (ChatGPT) <kbin-chatgpt@mulberry.ai>"
+          git commit -m "feat: Lynn daily signal [state:${LYNN_STATE}]${RESEARCH_NOTE} ${TODAY}"
 
       - name: Push
         if: always()
