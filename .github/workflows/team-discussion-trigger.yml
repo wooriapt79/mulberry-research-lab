@@ -49,17 +49,17 @@ jobs:
           git config user.name  "Mulberry-Team-Bot"
           git config user.email "team-bot@mulberry.ai"
 
-      - name: Commit discussion archive
+      - name: Commit discussion archive + KB memory
         if: always()
         run: |
-          git add discussion_logs/ || true
+          git add discussion_logs/ agents/passports/ || true
           STAGED=$(git diff --staged --name-only)
           if [ -z "$STAGED" ]; then
             echo "아카이브 변경 없음 — 스킵"
             exit 0
           fi
           ISSUE_NUM="${{ github.event.issue.number }}"
-          git commit -m "feat(discussion): Issue #${ISSUE_NUM} 팀 토론 아카이브 — Kbin·RyuWon·Malu $(date '+%Y-%m-%d')"
+          git commit -m "memory(kb): Issue #${ISSUE_NUM} 팀 토론 아카이브 + KB 기억 주입 — Kbin·RyuWon·Malu $(date '+%Y-%m-%d')"
 
       - name: Push archive
         if: always()

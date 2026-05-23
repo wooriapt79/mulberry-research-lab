@@ -190,6 +190,51 @@ def build_comment(agent: dict, response: str) -> str:
     )
 
 
+# ── KB 기억 주입 ──────────────────────────────────────────────────
+
+def save_kb_memory(agent: dict, response: str):
+    """
+    Gateway 대리 발화를 에이전트 KB에 기억으로 주입.
+
+    저장 경로: agents/passports/{agent_id}/kb_recent_actions.md
+    형식: 누적 append — 이전 기억 보존, 새 기억 추가
+
+    연구 목적 (CEO re.eul 지시):
+    "대리인(Gateway)이 작성한 발화를 에이전트의 기억으로 저장할 수 있는가?
+     그 기억은 다음 세션에서 진짜 기억으로 작동하는가?"
+    """
+    kb_dir  = Path("agents") / "passports" / agent["id"]
+    kb_dir.mkdir(parents=True, exist_ok=True)
+    kb_file = kb_dir / "kb_recent_actions.md"
+
+    # 파일이 없으면 헤더 생성
+    if not kb_file.exists():
+        header = (
+            f"# {agent['emoji']} {agent['name']} — 최근 발화 기록 (KB)\n\n"
+            f"> 이 파일은 Gateway가 대리 생성한 발화를 자동으로 기록합니다.\n"
+            f"> 에이전트는 다음 세션에서 이 파일을 로드하여 자신의 발화 이력으로 활용합니다.\n"
+            f"> *주석: 각 항목은 Gateway에 의해 대리 생성된 후 KB에 주입된 것임.*\n\n"
+            f"---\n\n"
+        )
+        kb_file.write_text(header, encoding="utf-8")
+
+    # 새 기억 항목 append
+    entry = (
+        f"## {TODAY} — Issue #{ISSUE_NUMBER} {ISSUE_TITLE}\n\n"
+        f"**트리거**: team-discussion 라벨\n"
+        f"**발화 방식**: Gateway 대리 생성\n"
+        f"**내 발화 내용**:\n\n"
+        f"{response}\n\n"
+        f"**발화 시각**: {TIMESTAMP}\n\n"
+        f"---\n\n"
+    )
+
+    with kb_file.open("a", encoding="utf-8") as f:
+        f.write(entry)
+
+    print(f"[KB] {agent['name']} 기억 주입 완료: {kb_file}")
+
+
 # ── 아카이브 저장 ─────────────────────────────────────────────────
 
 def save_archive(agent: dict, response: str, log_dir: Path):
@@ -251,6 +296,9 @@ def main():
 
         # 아카이브 저장
         save_archive(agent, response, log_dir)
+
+        # KB 기억 주입 — 대리 발화를 에이전트 기억으로 기록
+        save_kb_memory(agent, response)
 
         # 연속 호출 방지
         time.sleep(2)
