@@ -33,7 +33,7 @@ jobs:
       # ── 에이전트 3인 LLM 호출 + 댓글 게시 ──────────────────────
       - name: Team Discussion — Agent Auto Response
         env:
-          ANTHROPIC_API_KEY: ${{ vars.ANTHROPIC_API_KEY_VAR }}
+          ANTHROPIC_API_KEY: ${{ vars.ANTHROPIC_API_KEY_V3 }}
           GEMINI_API_KEY:    ${{ secrets.GEMINI_API_KEY }}
           DISCUSSION_TOKEN:  ${{ secrets.MALU_GITHUB_TOKEN }}
           ISSUE_NUMBER:      ${{ github.event.issue.number }}
