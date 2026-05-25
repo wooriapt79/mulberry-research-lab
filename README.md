@@ -29,3 +29,18 @@
 
 ---
 **Last Updated**: 2026-04-11 23:58:17 | **Status**: Active 🐺
+
+
+---
+
+## 🤝 연관 저장소 (Connected Repositories)
+
+| 저장소 | 역할 |
+|--------|------|
+| [mulberry-auto-code-pilot](https://github.com/wooriapt79/mulberry-auto-code-pilot) | 🤖 자율 코드 생성 시스템 — 이슈 라벨 트리거 → Claude Haiku 코드 생성 → 샌드박스 실행 |
+| [mulberry-](https://github.com/wooriapt79/mulberry-) | 🌟 Mulberry 메인 저장소 — Mission Control 서버 |
+
+> **Auto Code Pilot** 은 이 연구소(LAB)에서 설계한 Agent Passport, 공유 도구 레이어 스펙을 실제 코드로 구현하는 실행 엔진입니다.
+> LAB의 연구 결과 → Auto Code Pilot이 코드로 증명합니다.
+
+*연결 이슈: [Issue #73 — Auto Code Pilot v0.1 런칭](https://github.com/wooriapt79/mulberry-research-lab/issues/73)*
