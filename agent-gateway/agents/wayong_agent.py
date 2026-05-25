@@ -88,7 +88,7 @@ class WayongAgent:
                 "빠른 안내가 필요하신 경우:\n"
                 "- 📂 [연구소 코드](https://github.com/wooriapt79/mulberry-research-lab)\n"
                 "- 💬 [문의 & 토론](https://github.com/wooriapt79/mulberry-research-lab/issues)\n"
-                "- 🚀 [Mission Control](https://loving-education-production-cc9e.up.railway.app)"
+                "- 🚀 [Mission Control](https://mulberry-mission-control-production.up.railway.app/)"
             ),
             "closing": "어떤 질문도 환영합니다.",
             "confidence_base": 0.80,
