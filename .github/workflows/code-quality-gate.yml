@@ -1,0 +1,75 @@
+name: Code Quality Gate — Mulberry v1.0
+
+# Mulberry Research Lab — 코드 품질 게이트
+# Phase 1: Python 내부 코드 자동 검증
+# 트리거: PR 생성·업데이트 시 자동 실행
+#
+# 작성: Koda CTO · 2026-05-27
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '**.py'
+  workflow_dispatch:
+    inputs:
+      target:
+        description: '검사 대상 파일 또는 폴더'
+        required: false
+        default: '.'
+
+jobs:
+  quality-gate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Quality Gate Tools
+        run: |
+          pip install bandit radon pyflakes
+
+      - name: Run Code Quality Gate
+        id: gate
+        run: |
+          TARGET="${{ github.event.inputs.target || '.' }}"
+          python .github/scripts/quality_gate/run_gate.py "$TARGET"
+        continue-on-error: true
+
+      - name: Post Quality Report to PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            if (!fs.existsSync('quality_report.md')) {
+              console.log('quality_report.md 없음 — 스킵');
+              return;
+            }
+            const report = fs.readFileSync('quality_report.md', 'utf8');
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: report
+            });
+
+      - name: Gate 판정 결과 확인
+        run: |
+          if [ -f gate_result.json ]; then
+            VERDICT=$(python -c "import json; print(json.load(open('gate_result.json'))['verdict'])")
+            echo "최종 판정: $VERDICT"
+            if [ "$VERDICT" = "BLOCK" ]; then
+              echo "❌ BLOCK — PR 머지 불가"
+              exit 1
+            fi
+          fi
