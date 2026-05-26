@@ -57,16 +57,12 @@ jobs:
             exit 0
           fi
           echo "리포트 파일 확인: $(wc -c < quality_report.md) bytes"
-          BODY=$(python3 -c "
-          import json, sys
-          text = open('quality_report.md', encoding='utf-8').read()
-          print(json.dumps({'body': text}))
-          ")
+          python3 -c "import json; open('comment_body.json','w',encoding='utf-8').write(json.dumps({'body': open('quality_report.md',encoding='utf-8').read()}))"
           curl -s -X POST \
             -H "Authorization: token $GITHUB_TOKEN" \
-            -H "Accept: application/vnd.github.v3+json" \
+            -H "Content-Type: application/json" \
             "https://api.github.com/repos/${REPO}/issues/${PR_NUMBER}/comments" \
-            -d "$BODY"
+            -d @comment_body.json
           echo "댓글 게시 완료"
 
       - name: Gate 판정 결과 확인
