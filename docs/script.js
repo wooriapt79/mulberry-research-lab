@@ -8,6 +8,15 @@ const MAX_LEN        = 500;
 const GATEWAY_URL    = 'https://loving-education-production-cc9e.up.railway.app';
 const ARIA_SUBMIT    = `${GATEWAY_URL}/aria/submit`;
 const API_TIMEOUT    = 9000;  // 9초 — 콜드스타트 대응
+// RyuWon × 와룡 파이프라인 + /aria/submit 프록시 통합
+// guest_google 보안 권고(Issue #66) 반영: GITHUB_TOKEN 서버 보관
+
+const REPO           = 'wooriapt79/mulberry-research-lab';
+const AGENT          = '와룡 (臥龍)';
+const MAX_LEN        = 500;
+const GATEWAY_URL    = 'https://loving-education-production-cc9e.up.railway.app';
+const ARIA_SUBMIT    = `${GATEWAY_URL}/aria/submit`;
+const API_TIMEOUT    = 9000;  // 9초 — 콜드스타트 대응
 
 /* ─── 상태 ─── */
 let selectedCategory = '일반 문의';
@@ -275,7 +284,11 @@ function openIssueWithFallback(issueUrl, fallbackArea) {
 
 function showStatus(msg, type = 'ok') {
   const el = document.getElementById('statusArea');
-  el.textContent = msg;
+  const html = msg
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
+    .replace(/\n/g, '<br>');
+  el.innerHTML = html;
   el.style.display = 'block';
   el.className = 'status-area' + (type !== 'ok' ? ` ${type}` : '');
 }
