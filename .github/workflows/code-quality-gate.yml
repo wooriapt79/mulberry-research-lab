@@ -51,17 +51,22 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            if (!fs.existsSync('quality_report.md')) {
+            const path = require('path');
+            const reportPath = path.join(process.env.GITHUB_WORKSPACE, 'quality_report.md');
+            console.log('리포트 경로:', reportPath);
+            if (!fs.existsSync(reportPath)) {
               console.log('quality_report.md 없음 — 스킵');
               return;
             }
-            const report = fs.readFileSync('quality_report.md', 'utf8');
+            const report = fs.readFileSync(reportPath, 'utf8');
+            console.log('리포트 내용 확인:', report.substring(0, 100));
             await github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: report
             });
+            console.log('댓글 게시 완료');
 
       - name: Gate 판정 결과 확인
         run: |
