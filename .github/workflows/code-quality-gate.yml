@@ -50,13 +50,20 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          echo "=== DEBUG ==="
+          echo "Event: ${{ github.event_name }}"
+          echo "PR Number: ${{ github.event.pull_request.number }}"
+          echo "Repo: ${{ github.repository }}"
+          ls -la quality_report.md || echo "❌ quality_report.md 없음"
+          echo "=== END DEBUG ==="
           if [ ! -f quality_report.md ]; then
             echo "quality_report.md 없음 — 스킵"
             exit 0
           fi
-          echo "리포트 파일 확인: $(wc -c < quality_report.md) bytes"
-          gh pr comment ${{ github.event.pull_request.number }} --body-file quality_report.md
-          echo "댓글 게시 완료"
+          gh pr comment ${{ github.event.pull_request.number }} \
+            --body-file quality_report.md \
+            --repo ${{ github.repository }}
+          echo "✅ 댓글 게시 완료"
 
       - name: Gate 판정 결과 확인
         run: |
