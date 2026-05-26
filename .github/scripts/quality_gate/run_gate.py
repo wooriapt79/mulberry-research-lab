@@ -145,7 +145,11 @@ def check_complexity():
 
     over_limit = []
     for filepath, blocks in data.items():
+        if not isinstance(blocks, list):
+            continue
         for block in blocks:
+            if not isinstance(block, dict):
+                continue
             cc = block.get("complexity", 0)
             if cc > THRESHOLDS["complexity_max"]:
                 over_limit.append({
