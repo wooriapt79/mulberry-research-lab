@@ -48,21 +48,14 @@ jobs:
       - name: Post Quality Report to PR
         if: github.event_name == 'pull_request'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_NUMBER:    ${{ github.event.pull_request.number }}
-          REPO:         ${{ github.repository }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [ ! -f quality_report.md ]; then
             echo "quality_report.md 없음 — 스킵"
             exit 0
           fi
           echo "리포트 파일 확인: $(wc -c < quality_report.md) bytes"
-          python3 -c "import json; open('comment_body.json','w',encoding='utf-8').write(json.dumps({'body': open('quality_report.md',encoding='utf-8').read()}))"
-          curl -s -X POST \
-            -H "Authorization: token $GITHUB_TOKEN" \
-            -H "Content-Type: application/json" \
-            "https://api.github.com/repos/${REPO}/issues/${PR_NUMBER}/comments" \
-            -d @comment_body.json
+          gh pr comment ${{ github.event.pull_request.number }} --body-file quality_report.md
           echo "댓글 게시 완료"
 
       - name: Gate 판정 결과 확인
