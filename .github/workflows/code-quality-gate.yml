@@ -89,12 +89,13 @@ jobs:
             console.log('✅ 댓글 게시 완료');
 
       - name: Gate 판정 결과 확인
+        continue-on-error: true
         run: |
           if [ -f gate_result.json ]; then
             VERDICT=$(python -c "import json; print(json.load(open('gate_result.json'))['verdict'])")
             echo "최종 판정: $VERDICT"
             if [ "$VERDICT" = "BLOCK" ]; then
-              echo "❌ BLOCK — PR 머지 불가"
+              echo "❌ BLOCK — 리포트 확인 후 대표님이 최종 결정"
               exit 1
             fi
           fi
