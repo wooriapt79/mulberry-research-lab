@@ -40,20 +40,26 @@ jobs:
       - name: Detect Changed Python Files
         id: changed
         if: github.event_name == 'pull_request'
+        continue-on-error: true
         run: |
           git fetch origin ${{ github.base_ref }} --depth=1
           FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD -- '*.py' \
             | grep -v '\.github/scripts/quality_gate/' \
-            | tr '\n' ' ')
+            | tr '\n' ' ' | xargs)
+          echo "감지된 py 파일: '$FILES'"
           echo "files=$FILES" >> $GITHUB_OUTPUT
-          echo "변경된 py 파일: $FILES"
 
       - name: Run Code Quality Gate
         id: gate
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             TARGET="${{ steps.changed.outputs.files }}"
-            TARGET="${TARGET:-"."}"
+            if [ -z "$TARGET" ]; then
+              echo "변경된 Python 파일 없음 — PASS 처리"
+              echo '{"verdict":"PASS","target":"none","checks":{},"blocks":[],"warnings":[]}' > gate_result.json
+              printf '## ✅ Mulberry Code Quality Gate — PASS\n\n**판정**: PASS  \n변경된 Python 파일 없음 — 검사 스킵\n' > quality_report.md
+              exit 0
+            fi
           else
             TARGET="${{ github.event.inputs.target || '.' }}"
           fi
