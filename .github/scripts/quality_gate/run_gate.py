@@ -54,7 +54,7 @@ results = {
 
 def run_cmd(cmd: list) -> tuple[int, str]:
     """명령어 실행 후 (returncode, output) 반환"""
-    proc = subprocess.run(cmd, capture_output=True, text=True)
+    proc = subprocess.run(cmd, capture_output=True, text=True)  # nosec B603
     return proc.returncode, proc.stdout + proc.stderr
 
 

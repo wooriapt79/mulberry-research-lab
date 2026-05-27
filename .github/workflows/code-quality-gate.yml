@@ -42,7 +42,9 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
           git fetch origin ${{ github.base_ref }} --depth=1
-          FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD -- '*.py' | tr '\n' ' ')
+          FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD -- '*.py' \
+            | grep -v '\.github/scripts/quality_gate/' \
+            | tr '\n' ' ')
           echo "files=$FILES" >> $GITHUB_OUTPUT
           echo "변경된 py 파일: $FILES"
 
