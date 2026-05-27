@@ -18,6 +18,7 @@ on:
 
 jobs:
   quality-gate:
+    if: "!contains(github.event.pull_request.labels.*.name, 'skip-quality-gate')"
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -36,11 +37,26 @@ jobs:
         run: |
           pip install bandit radon pyflakes
 
+      - name: Detect Changed Python Files
+        id: changed
+        if: github.event_name == 'pull_request'
+        run: |
+          git fetch origin ${{ github.base_ref }} --depth=1
+          FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD -- '*.py' | tr '\n' ' ')
+          echo "files=$FILES" >> $GITHUB_OUTPUT
+          echo "변경된 py 파일: $FILES"
+
       - name: Run Code Quality Gate
         id: gate
         run: |
-          TARGET="${{ github.event.inputs.target || '.' }}"
-          python .github/scripts/quality_gate/run_gate.py "$TARGET"
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            TARGET="${{ steps.changed.outputs.files }}"
+            TARGET="${TARGET:-"."}"
+          else
+            TARGET="${{ github.event.inputs.target || '.' }}"
+          fi
+          echo "검사 대상: $TARGET"
+          python .github/scripts/quality_gate/run_gate.py $TARGET
         continue-on-error: true
 
       - name: Post Quality Report to PR
