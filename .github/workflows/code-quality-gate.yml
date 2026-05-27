@@ -9,8 +9,6 @@ name: Code Quality Gate — Mulberry v1.0
 on:
   pull_request:
     branches: [main]
-    paths:
-      - '**.py'
   workflow_dispatch:
     inputs:
       target:
@@ -51,17 +49,20 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            if (!fs.existsSync('quality_report.md')) {
+            const path = require('path');
+            const reportPath = path.join(process.env.GITHUB_WORKSPACE, 'quality_report.md');
+            if (!fs.existsSync(reportPath)) {
               console.log('quality_report.md 없음 — 스킵');
               return;
             }
-            const report = fs.readFileSync('quality_report.md', 'utf8');
+            const body = fs.readFileSync(reportPath, 'utf8');
             await github.rest.issues.createComment({
-              issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: report
+              issue_number: context.issue.number,
+              body: body
             });
+            console.log('✅ 댓글 게시 완료');
 
       - name: Gate 판정 결과 확인
         run: |

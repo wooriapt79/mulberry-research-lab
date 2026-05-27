@@ -145,7 +145,11 @@ def check_complexity():
 
     over_limit = []
     for filepath, blocks in data.items():
+        if not isinstance(blocks, list):
+            continue
         for block in blocks:
+            if not isinstance(block, dict):
+                continue
             cc = block.get("complexity", 0)
             if cc > THRESHOLDS["complexity_max"]:
                 over_limit.append({
@@ -271,10 +275,18 @@ def main():
     print(f"대상: {TARGET}")
     print(f"{'='*55}\n")
 
-    check_syntax()
-    check_security()
-    check_complexity()
-    check_maintainability()
+    try:
+        check_syntax()
+        check_security()
+        check_complexity()
+        check_maintainability()
+    except Exception as e:
+        results["blocks"].append(f"검사 중 예외 발생: {e}")
+        results["verdict"] = "BLOCK"
+        print(f"  ❌ 예외 발생: {e}")
+    finally:
+        generate_report()  # 예외 발생해도 반드시 실행 — PR 댓글용
+        print(f"\n리포트 저장: quality_report.md")
 
     print(f"\n{'='*55}")
     verdict = results["verdict"]
@@ -288,12 +300,10 @@ def main():
         for w in results["warnings"]:
             print(f"  WARN:  {w}")
 
-    generate_report()
-    print(f"\n리포트 저장: quality_report.md")
     print(f"{'='*55}\n")
-
     sys.exit(0 if verdict != "BLOCK" else 1)
 
 
 if __name__ == "__main__":
     main()
+# quality gate step2 trigger test
