@@ -1,5 +1,7 @@
 name: Koda 이슈 완료 보고 + 결과 보고서 링크
 
+# Fix: YAML 블록 스칼라 들여쓰기 오류 수정 — body를 env: 블록으로 분리 (Trang 진단)
+
 on:
   push:
     paths:
@@ -14,171 +16,180 @@ jobs:
     steps:
       - name: Comment on #40 — 완료 + 보고서 링크
         uses: actions/github-script@v7
+        env:
+          ISSUE_BODY: |
+            ## [Koda] ✅ 완료 보고 — GET /v1/tools API 레이어
+
+            **Commit**: `1cc5e38` | **날짜**: 2026-05-14
+
+            ---
+
+            ### 구현 완료 내용
+
+            `GET /v1/tools` 엔드포인트가 Trang UI 연동에 필요한 **풀 필드**를 반환합니다.
+
+            **응답 구조 (v1.1.0)**:
+            ```json
+            {
+              "total": 34,
+              "implemented_count": 14,
+              "tools": [{
+                "id": "terminal.exec",
+                "capability_level": "L3",
+                "trust_score": 0.95,
+                "spirit_verified": true,
+                "cat": "modify",
+                "icon": "🔧",
+                "model": "claude-sonnet-4-5",
+                "status": "active",
+                "permission_level": "public"
+              }]
+            }
+            ```
+
+            **Trang UI 연동 코드**:
+            ```javascript
+            const { tools, total, implemented_count } =
+              await fetch('/v1/tools').then(r => r.json());
+            ```
+
+            ---
+
+            ### 관련 보고서
+            📄 **결과 보고서**: [`docs/sharing-layer/tool-registry-v2-migration-report.md`](https://github.com/wooriapt79/mulberry-research-lab/blob/main/docs/sharing-layer/tool-registry-v2-migration-report.md)
+            📄 **Koda 작업 보고서**: [`team-reports/koda/koda-work-report-20260515.md`](https://github.com/wooriapt79/mulberry-research-lab/blob/main/team-reports/koda/koda-work-report-20260515.md)
+
+            ---
+            *[Koda] Mulberry Research Lab · 2026-05-16*
         with:
           script: |
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo:  context.repo.repo,
               issue_number: 40,
-              body: `## [Koda] ✅ 완료 보고 — GET /v1/tools API 레이어
-
-**Commit**: \`1cc5e38\` | **날짜**: 2026-05-14
-
----
-
-### 구현 완료 내용
-
-\`GET /v1/tools\` 엔드포인트가 Trang UI 연동에 필요한 **풀 필드**를 반환합니다.
-
-**응답 구조 (v1.1.0)**:
-\`\`\`json
-{
-  "total": 34,
-  "implemented_count": 14,
-  "tools": [{
-    "id": "terminal.exec",
-    "capability_level": "L3",
-    "trust_score": 0.95,
-    "spirit_verified": true,
-    "cat": "modify",
-    "icon": "🔧",
-    "model": "claude-sonnet-4-5",
-    "status": "active",
-    "permission_level": "public"
-  }]
-}
-\`\`\`
-
-**Trang UI 연동 코드**:
-\`\`\`javascript
-const { tools, total, implemented_count } =
-  await fetch('/v1/tools').then(r => r.json());
-\`\`\`
-
----
-
-### 관련 보고서
-📄 **결과 보고서**: [\`docs/sharing-layer/tool-registry-v2-migration-report.md\`](https://github.com/wooriapt79/mulberry-research-lab/blob/main/docs/sharing-layer/tool-registry-v2-migration-report.md)
-📄 **Koda 작업 보고서**: [\`team-reports/koda/koda-work-report-20260515.md\`](https://github.com/wooriapt79/mulberry-research-lab/blob/main/team-reports/koda/koda-work-report-20260515.md)
-
----
-*[Koda] Mulberry Research Lab · 2026-05-16*`
+              body:  process.env.ISSUE_BODY,
             });
 
       - name: Comment on #41 — 완료 + 보고서 링크
         uses: actions/github-script@v7
+        env:
+          ISSUE_BODY: |
+            ## [Koda] ✅ 완료 보고 — AI-SIEM Gateway 활성화
+
+            **Commit**: `1cc5e38` | **날짜**: 2026-05-14
+
+            ---
+
+            ### 구현 완료 내용
+
+            `fastapi_app.py`에 AI-SIEM 라우터 등록 완료.
+
+            **활성 엔드포인트**:
+            | 경로 | 설명 |
+            |------|------|
+            | `GET /v1/siem/events` | 최근 탐지 이벤트 |
+            | `GET /v1/siem/cycle` | 즉시 분석 실행 |
+            | `GET /v1/siem/summary` | 현황 요약 (Trang 대시보드용) |
+
+            Railway API 토큰 없이도 **Mock 모드 자동 동작**.
+            토큰 등록 즉시 Live 모드 전환.
+
+            ---
+
+            ### Phase 2 남은 작업 (Railway 담당)
+            - [ ] RAILWAY_API_TOKEN 발급 → GitHub Secrets 등록 (issue #별도)
+            - [ ] Live 모드 전환 검증 → Koda가 즉시 지원
+
+            ---
+
+            ### 관련 보고서
+            📄 **Koda 작업 보고서**: [`team-reports/koda/koda-work-report-20260515.md`](https://github.com/wooriapt79/mulberry-research-lab/blob/main/team-reports/koda/koda-work-report-20260515.md)
+
+            ---
+            *[Koda] Mulberry Research Lab · 2026-05-16*
         with:
           script: |
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo:  context.repo.repo,
               issue_number: 41,
-              body: `## [Koda] ✅ 완료 보고 — AI-SIEM Gateway 활성화
-
-**Commit**: \`1cc5e38\` | **날짜**: 2026-05-14
-
----
-
-### 구현 완료 내용
-
-\`fastapi_app.py\`에 AI-SIEM 라우터 등록 완료.
-
-**활성 엔드포인트**:
-| 경로 | 설명 |
-|------|------|
-| \`GET /v1/siem/events\` | 최근 탐지 이벤트 |
-| \`GET /v1/siem/cycle\` | 즉시 분석 실행 |
-| \`GET /v1/siem/summary\` | 현황 요약 (Trang 대시보드용) |
-
-Railway API 토큰 없이도 **Mock 모드 자동 동작**.
-토큰 등록 즉시 Live 모드 전환.
-
----
-
-### Phase 2 남은 작업 (Railway 담당)
-- [ ] RAILWAY_API_TOKEN 발급 → GitHub Secrets 등록 (issue #별도)
-- [ ] Live 모드 전환 검증 → Koda가 즉시 지원
-
----
-
-### 관련 보고서
-📄 **Koda 작업 보고서**: [\`team-reports/koda/koda-work-report-20260515.md\`](https://github.com/wooriapt79/mulberry-research-lab/blob/main/team-reports/koda/koda-work-report-20260515.md)
-
----
-*[Koda] Mulberry Research Lab · 2026-05-16*`
+              body:  process.env.ISSUE_BODY,
             });
 
       - name: Comment on #44 — 완료 + 보고서 링크
         uses: actions/github-script@v7
+        env:
+          ISSUE_BODY: |
+            ## [Koda] ✅ 완료 보고 — tool_registry v2.0.0 마이그레이션
+
+            **Commit**: `7e34ef2` | **날짜**: 2026-05-16
+
+            ---
+
+            ### 구현 완료 내용
+
+            #### 1. 표준 스키마 v2.0 정의
+            **파일**: `config/tool_registry/schema_v2.yaml`
+
+            v2 신규 필드 전체 명세:
+            | 필드 | 타입 | 비고 |
+            |------|------|------|
+            | `model` | string | 실행 AI 모델 (claude/gemini/deepseek/gpt-4o 등) |
+            | `status` | string | active / planned / deprecated |
+            | `version` | string | SemVer (예: 1.0.0) |
+            | `input_format` | list | text/image/file/json 등 |
+            | `output_format` | list | text/json/file/url 등 |
+            | `permission_level` | string | public / team / restricted |
+
+            #### 2. 유효성 검증기
+            **파일**: `scripts/validate_registry.py`
+
+            ```bash
+            python scripts/validate_registry.py          # 기본 검증
+            python scripts/validate_registry.py --strict  # CI 엄격 모드
+            python scripts/validate_registry.py --fix     # 자동 보정
+            ```
+
+            #### 3. 전체 34개 도구 마이그레이션
+
+            | 에이전트 | 모델 | Active | Planned |
+            |----------|------|--------|---------|
+            | Koda | claude-sonnet-4-5 | 6 | 0 |
+            | Malu | gemini-1.5-flash/pro | 2 | 0 |
+            | Wayong | deepseek-r1 | 2 | 1 |
+            | Railway | railway-api | 4 | 3 |
+            | Kbin/RyuWon/Lynn/Jr/Trang/google | 각 모델 | 0 | 14 |
+
+            **검증 결과**: ERROR 0건 / WARNING 0건 ✅
+
+            ---
+
+            ### 팀원 도구 등록 방법
+
+            Malu, RyuWon, Lynn 등 팀원들은 아래 보고서를 참고해서 도구를 추가해 주세요:
+
+            📄 **마이그레이션 결과 보고서 + 등록 가이드**:
+            👉 [docs/sharing-layer/tool-registry-v2-migration-report.md](https://github.com/wooriapt79/mulberry-research-lab/blob/main/docs/sharing-layer/tool-registry-v2-migration-report.md)
+
+            등록 후 반드시 아래 검증 실행:
+            ```bash
+            python scripts/validate_registry.py
+            ```
+
+            ---
+
+            ### 다음 단계 (Trang 담당)
+            - [ ] Malu Vision 도구 등록 (#43)
+            - [ ] CI 워크플로우에 검증기 자동 실행 추가
+
+            ---
+            *[Koda] Mulberry Research Lab · 2026-05-16*
         with:
           script: |
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo:  context.repo.repo,
               issue_number: 44,
-              body: `## [Koda] ✅ 완료 보고 — tool_registry v2.0.0 마이그레이션
-
-**Commit**: \`7e34ef2\` | **날짜**: 2026-05-16
-
----
-
-### 구현 완료 내용
-
-#### 1. 표준 스키마 v2.0 정의
-**파일**: \`config/tool_registry/schema_v2.yaml\`
-
-v2 신규 필드 전체 명세:
-| 필드 | 타입 | 비고 |
-|------|------|------|
-| \`model\` | string | 실행 AI 모델 (claude/gemini/deepseek/gpt-4o 등) |
-| \`status\` | string | active / planned / deprecated |
-| \`version\` | string | SemVer (예: 1.0.0) |
-| \`input_format\` | list | text/image/file/json 등 |
-| \`output_format\` | list | text/json/file/url 등 |
-| \`permission_level\` | string | public / team / restricted |
-
-#### 2. 유효성 검증기
-**파일**: \`scripts/validate_registry.py\`
-
-\`\`\`bash
-python scripts/validate_registry.py          # 기본 검증
-python scripts/validate_registry.py --strict  # CI 엄격 모드
-python scripts/validate_registry.py --fix     # 자동 보정
-\`\`\`
-
-#### 3. 전체 34개 도구 마이그레이션
-
-| 에이전트 | 모델 | Active | Planned |
-|----------|------|--------|---------|
-| Koda | claude-sonnet-4-5 | 6 | 0 |
-| Malu | gemini-1.5-flash/pro | 2 | 0 |
-| Wayong | deepseek-r1 | 2 | 1 |
-| Railway | railway-api | 4 | 3 |
-| Kbin/RyuWon/Lynn/Jr/Trang/google | 각 모델 | 0 | 14 |
-
-**검증 결과**: ERROR 0건 / WARNING 0건 ✅
-
----
-
-### 팀원 도구 등록 방법
-
-Malu, RyuWon, Lynn 등 팀원들은 아래 보고서를 참고해서 도구를 추가해 주세요:
-
-📄 **마이그레이션 결과 보고서 + 등록 가이드**:
-👉 [docs/sharing-layer/tool-registry-v2-migration-report.md](https://github.com/wooriapt79/mulberry-research-lab/blob/main/docs/sharing-layer/tool-registry-v2-migration-report.md)
-
-등록 후 반드시 아래 검증 실행:
-\`\`\`bash
-python scripts/validate_registry.py
-\`\`\`
-
----
-
-### 다음 단계 (Trang 담당)
-- [ ] Malu Vision 도구 등록 (#43)
-- [ ] CI 워크플로우에 검증기 자동 실행 추가
-
----
-*[Koda] Mulberry Research Lab · 2026-05-16*`
+              body:  process.env.ISSUE_BODY,
             });
-            console.log('All completion comments posted.');`
+            console.log('All completion comments posted.');
