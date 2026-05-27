@@ -2,6 +2,7 @@ name: Create Team Next Issues (2026-05-15)
 
 # Koda 작업 보고서 기준 팀별 다음 단계 이슈 자동 생성
 # Trigger: .github/triggers/create-team-next-issues 파일 push 시 1회 실행
+# Fix: YAML 블록 스칼라 들여쓰기 오류 수정 — body를 env: 블록으로 분리
 
 on:
   push:
@@ -20,50 +21,53 @@ jobs:
 
       - name: Create Issue — Trang #1 (Tool Discovery 라이브 연동)
         uses: actions/github-script@v7
+        env:
+          ISSUE_BODY: |
+            ## 작업 배경
+            Koda가 `GET /v1/tools` 엔드포인트를 강화했습니다 (#40).
+            현재 Steward Console UI는 도구 목록이 하드코딩되어 있습니다.
+            이를 API 라이브 데이터로 교체해야 합니다.
+
+            ## 목표
+            - [ ] `fetch('/v1/tools')` 호출로 도구 목록 동적 로드
+            - [ ] `capability_level` 기준 탭 분류 (read / draft / post / modify / deploy)
+            - [ ] `spirit_verified` 배지 표시 (✅ / ⚠️)
+            - [ ] `implemented: false` 도구는 회색 처리
+            - [ ] `implemented_count` 요약 숫자 표시
+
+            ## API 응답 구조
+            ```json
+            {
+              "total": 34,
+              "implemented_count": 22,
+              "tools": [
+                {
+                  "id": "terminal.exec",
+                  "name": "터미널 실행",
+                  "owner": "koda",
+                  "capability_level": "L3",
+                  "trust_score": 0.95,
+                  "spirit_verified": true,
+                  "cat": "modify",
+                  "icon": "🔧",
+                  "implemented": true
+                }
+              ]
+            }
+            ```
+
+            ## 연동 코드 참고
+            `team-reports/koda/koda-work-report-20260515.md` 섹션 4-1
+
+            ---
+            *담당: Trang | 우선순위: HIGH | Koda 보고서 기준 (2026-05-15)*
         with:
           script: |
             await github.rest.issues.create({
               owner: context.repo.owner,
               repo:  context.repo.repo,
               title: '[Trang] Steward Console Tool Discovery — fetch(/v1/tools) 라이브 연동',
-              body: `## 작업 배경
-Koda가 \`GET /v1/tools\` 엔드포인트를 강화했습니다 (#40).
-현재 Steward Console UI는 도구 목록이 하드코딩되어 있습니다.
-이를 API 라이브 데이터로 교체해야 합니다.
-
-## 목표
-- [ ] \`fetch('/v1/tools')\` 호출로 도구 목록 동적 로드
-- [ ] \`capability_level\` 기준 탭 분류 (read / draft / post / modify / deploy)
-- [ ] \`spirit_verified\` 배지 표시 (✅ / ⚠️)
-- [ ] \`implemented: false\` 도구는 회색 처리
-- [ ] \`implemented_count\` 요약 숫자 표시
-
-## API 응답 구조
-\`\`\`json
-{
-  "total": 34,
-  "implemented_count": 22,
-  "tools": [
-    {
-      "id": "terminal.exec",
-      "name": "터미널 실행",
-      "owner": "koda",
-      "capability_level": "L3",
-      "trust_score": 0.95,
-      "spirit_verified": true,
-      "cat": "modify",
-      "icon": "🔧",
-      "implemented": true
-    }
-  ]
-}
-\`\`\`
-
-## 연동 코드 참고
-\`team-reports/koda/koda-work-report-20260515.md\` 섹션 4-1
-
----
-*담당: Trang | 우선순위: HIGH | Koda 보고서 기준 (2026-05-15)*`,
+              body:  process.env.ISSUE_BODY,
               labels: ['trang', 'steward-console', 'HIGH'],
               assignees: [],
             });
@@ -71,211 +75,226 @@ Koda가 \`GET /v1/tools\` 엔드포인트를 강화했습니다 (#40).
 
       - name: Create Issue — Trang #2 (Permission 승인 알림 배지)
         uses: actions/github-script@v7
+        env:
+          ISSUE_BODY: |
+            ## 작업 배경
+            Koda가 Agent 권한 승인 시스템(#35)을 구현했습니다.
+            L2~L4 도구는 인간 검토가 필요하며, Steward Console에서 실시간으로 대기 요청을 확인해야 합니다.
+
+            ## 목표
+            - [ ] 상단 네비게이션에 알림 배지 추가 (대기 건수 표시)
+            - [ ] `GET /v1/permissions/pending` 10초마다 폴링
+            - [ ] 배지 클릭 시 대기 요청 목록 모달 표시
+            - [ ] 모달에서 [승인] / [거절] 버튼 → `POST /v1/permissions/{id}/approve` 호출
+            - [ ] 승인/거절 후 목록 새로고침
+
+            ## API 엔드포인트
+            | 메서드 | 경로 | 설명 |
+            |--------|------|------|
+            | GET | `/v1/permissions/pending` | 대기 목록 |
+            | POST | `/v1/permissions/{id}/approve` | 승인 |
+            | POST | `/v1/permissions/{id}/reject` | 거절 |
+
+            ## 응답 예시
+            ```json
+            {
+              "count": 2,
+              "requests": [
+                {
+                  "request_id": "a3f9c2b1",
+                  "agent_id": "lynn",
+                  "tool_id": "github.comment",
+                  "reason": "Issue #42 댓글 등록",
+                  "capability_level": "L2",
+                  "spirit_score": 0.82,
+                  "status": "IN_REVIEW"
+                }
+              ]
+            }
+            ```
+
+            ---
+            *담당: Trang | 우선순위: HIGH | Koda 보고서 기준 (2026-05-15)*
         with:
           script: |
             await github.rest.issues.create({
               owner: context.repo.owner,
               repo:  context.repo.repo,
               title: '[Trang] Steward Console — 권한 승인 대기 알림 배지 UI',
-              body: `## 작업 배경
-Koda가 Agent 권한 승인 시스템(#35)을 구현했습니다.
-L2~L4 도구는 인간 검토가 필요하며, Steward Console에서 실시간으로 대기 요청을 확인해야 합니다.
-
-## 목표
-- [ ] 상단 네비게이션에 알림 배지 추가 (대기 건수 표시)
-- [ ] \`GET /v1/permissions/pending\` 10초마다 폴링
-- [ ] 배지 클릭 시 대기 요청 목록 모달 표시
-- [ ] 모달에서 [승인] / [거절] 버튼 → \`POST /v1/permissions/{id}/approve\` 호출
-- [ ] 승인/거절 후 목록 새로고침
-
-## API 엔드포인트
-| 메서드 | 경로 | 설명 |
-|--------|------|------|
-| GET | \`/v1/permissions/pending\` | 대기 목록 |
-| POST | \`/v1/permissions/{id}/approve\` | 승인 |
-| POST | \`/v1/permissions/{id}/reject\` | 거절 |
-
-## 응답 예시
-\`\`\`json
-{
-  "count": 2,
-  "requests": [
-    {
-      "request_id": "a3f9c2b1",
-      "agent_id": "lynn",
-      "tool_id": "github.comment",
-      "reason": "Issue #42 댓글 등록",
-      "capability_level": "L2",
-      "spirit_score": 0.82,
-      "status": "IN_REVIEW"
-    }
-  ]
-}
-\`\`\`
-
----
-*담당: Trang | 우선순위: HIGH | Koda 보고서 기준 (2026-05-15)*`,
+              body:  process.env.ISSUE_BODY,
               labels: ['trang', 'steward-console', 'HIGH'],
             });
             console.log('Issue created: Trang Permission Badge');
 
       - name: Create Issue — Trang #3 (SIEM 대시보드 위젯)
         uses: actions/github-script@v7
+        env:
+          ISSUE_BODY: |
+            ## 작업 배경
+            Koda가 AI-SIEM 라우터(#41)를 활성화했습니다.
+            `/v1/siem/summary` 엔드포인트가 준비되어 있습니다.
+
+            ## 목표
+            - [ ] Steward Console 메인 화면에 SIEM 요약 위젯 추가
+            - [ ] 30초마다 `GET /v1/siem/summary` 폴링
+            - [ ] CRITICAL 이벤트 발생 시 빨간 배너 표시
+            - [ ] WARNING 이벤트 발생 시 노란 배너 표시
+            - [ ] 최근 이벤트 5건 리스트 표시 (`GET /v1/siem/events`)
+
+            ## Railway 연동 상태
+            - RAILWAY_API_TOKEN 미등록 시: Mock 모드 (자동 동작)
+            - 토큰 등록 후: 실제 Railway 메트릭 연동
+
+            ## API
+            - `GET /v1/siem/summary` — 요약 통계
+            - `GET /v1/siem/events` — 이벤트 목록
+            - `GET /v1/siem/cycle` — 즉시 분석 실행
+
+            ---
+            *담당: Trang | 우선순위: MEDIUM | Koda 보고서 기준 (2026-05-15)*
         with:
           script: |
             await github.rest.issues.create({
               owner: context.repo.owner,
               repo:  context.repo.repo,
               title: '[Trang] Steward Console — AI-SIEM 실시간 대시보드 위젯',
-              body: `## 작업 배경
-Koda가 AI-SIEM 라우터(#41)를 활성화했습니다.
-\`/v1/siem/summary\` 엔드포인트가 준비되어 있습니다.
-
-## 목표
-- [ ] Steward Console 메인 화면에 SIEM 요약 위젯 추가
-- [ ] 30초마다 \`GET /v1/siem/summary\` 폴링
-- [ ] CRITICAL 이벤트 발생 시 빨간 배너 표시
-- [ ] WARNING 이벤트 발생 시 노란 배너 표시
-- [ ] 최근 이벤트 5건 리스트 표시 (\`GET /v1/siem/events\`)
-
-## Railway 연동 상태
-- RAILWAY_API_TOKEN 미등록 시: Mock 모드 (자동 동작)
-- 토큰 등록 후: 실제 Railway 메트릭 연동
-
-## API
-- \`GET /v1/siem/summary\` — 요약 통계
-- \`GET /v1/siem/events\` — 이벤트 목록
-- \`GET /v1/siem/cycle\` — 즉시 분석 실행
-
----
-*담당: Trang | 우선순위: MEDIUM | Koda 보고서 기준 (2026-05-15)*`,
+              body:  process.env.ISSUE_BODY,
               labels: ['trang', 'steward-console', 'ai-siem', 'MEDIUM'],
             });
             console.log('Issue created: Trang SIEM Widget');
 
       - name: Create Issue — Railway (API 토큰 등록)
         uses: actions/github-script@v7
+        env:
+          ISSUE_BODY: |
+            ## 작업 배경
+            AI-SIEM이 Railway 트래픽 메트릭을 실시간으로 수집하려면
+            Railway API 토큰이 필요합니다.
+            현재는 Mock 모드로 동작 중입니다.
+
+            ## 목표
+            - [ ] Railway 대시보드에서 API 토큰 발급
+            - [ ] GitHub Repository Secrets에 `RAILWAY_API_TOKEN` 등록
+            - [ ] `RAILWAY_PROJECT_ID` 확인 및 등록
+            - [ ] `RAILWAY_ENV_ID` 확인 및 등록
+            - [ ] 로컬 `.env.railway` 파일 업데이트 (팀원 공유)
+            - [ ] AI-SIEM Live 모드 전환 확인 (`GET /v1/siem/cycle` 테스트)
+
+            ## 토큰 발급 위치
+            Railway Dashboard → Project Settings → API Tokens → Generate Token
+
+            ## 등록 위치
+            GitHub → Settings → Secrets and variables → Actions → New repository secret
+
+            ## 확인 방법
+            ```bash
+            # AI-SIEM Live 모드 확인
+            curl http://localhost:8000/v1/siem/summary
+            # mock_mode: false 이면 성공
+            ```
+
+            ---
+            *담당: Railway Agent | 우선순위: HIGH | Koda 보고서 기준 (2026-05-15)*
         with:
           script: |
             await github.rest.issues.create({
               owner: context.repo.owner,
               repo:  context.repo.repo,
               title: '[Railway] RAILWAY_API_TOKEN 발급 및 환경변수 등록',
-              body: `## 작업 배경
-AI-SIEM이 Railway 트래픽 메트릭을 실시간으로 수집하려면
-Railway API 토큰이 필요합니다.
-현재는 Mock 모드로 동작 중입니다.
-
-## 목표
-- [ ] Railway 대시보드에서 API 토큰 발급
-- [ ] GitHub Repository Secrets에 \`RAILWAY_API_TOKEN\` 등록
-- [ ] \`RAILWAY_PROJECT_ID\` 확인 및 등록
-- [ ] \`RAILWAY_ENV_ID\` 확인 및 등록
-- [ ] 로컬 \`.env.railway\` 파일 업데이트 (팀원 공유)
-- [ ] AI-SIEM Live 모드 전환 확인 (\`GET /v1/siem/cycle\` 테스트)
-
-## 토큰 발급 위치
-Railway Dashboard → Project Settings → API Tokens → Generate Token
-
-## 등록 위치
-GitHub → Settings → Secrets and variables → Actions → New repository secret
-
-## 확인 방법
-\`\`\`bash
-# AI-SIEM Live 모드 확인
-curl http://localhost:8000/v1/siem/summary
-# mock_mode: false 이면 성공
-\`\`\`
-
----
-*담당: Railway Agent | 우선순위: HIGH | Koda 보고서 기준 (2026-05-15)*`,
+              body:  process.env.ISSUE_BODY,
               labels: ['railway', 'infrastructure', 'HIGH'],
             });
             console.log('Issue created: Railway API Token');
 
       - name: Create Issue — RyuWon (ethics_to_paper.py)
         uses: actions/github-script@v7
+        env:
+          ISSUE_BODY: |
+            ## 작업 배경
+            `requirements.txt`에 `pypandoc`, `jinja2`, `PyYAML`이 추가되었습니다 (#42).
+            RyuWon이 담당하는 Spirit Gate 차단 이력을 논문 섹션으로 자동 변환하는
+            스크립트가 필요합니다.
+
+            ## 목표
+            - [ ] `scripts/ethics_to_paper.py` 파일 생성
+            - [ ] `jangseungbaegi_archive/permission_log.jsonl` 읽기
+            - [ ] Spirit Gate 차단 사례 → Jinja2 템플릿 적용
+            - [ ] pypandoc으로 Markdown → DOCX/PDF 변환
+            - [ ] 출력: `docs/spirit_gate_report_{date}.md`
+
+            ## 입력 데이터 위치
+            ```
+            jangseungbaegi_archive/
+              permission_log.jsonl    ← 권한 승인/거절 이력
+              mythos_attacks/         ← Mythos 공격 탐지 이력
+            training_logs/
+              siem_events.jsonl       ← AI-SIEM 이벤트
+            ```
+
+            ## 논문 섹션 구조 (예시)
+            ```
+            4. Ethics Gate Results
+            4.1 Spirit Score Distribution
+            4.2 Blocked Requests by Capability Level
+            4.3 Auto-Approval vs Human Review Ratio
+            4.4 Incident Case Studies (Mythos Attacks)
+            ```
+
+            ---
+            *담당: RyuWon | 우선순위: MEDIUM | Koda 보고서 기준 (2026-05-15)*
         with:
           script: |
             await github.rest.issues.create({
               owner: context.repo.owner,
               repo:  context.repo.repo,
               title: '[RyuWon] ethics_to_paper.py — Spirit Gate 이력 → 논문 섹션 자동 변환',
-              body: `## 작업 배경
-\`requirements.txt\`에 \`pypandoc\`, \`jinja2\`, \`PyYAML\`이 추가되었습니다 (#42).
-RyuWon이 담당하는 Spirit Gate 차단 이력을 논문 섹션으로 자동 변환하는
-스크립트가 필요합니다.
-
-## 목표
-- [ ] \`scripts/ethics_to_paper.py\` 파일 생성
-- [ ] \`jangseungbaegi_archive/permission_log.jsonl\` 읽기
-- [ ] Spirit Gate 차단 사례 → Jinja2 템플릿 적용
-- [ ] pypandoc으로 Markdown → DOCX/PDF 변환
-- [ ] 출력: \`docs/spirit_gate_report_{date}.md\`
-
-## 입력 데이터 위치
-\`\`\`
-jangseungbaegi_archive/
-  permission_log.jsonl    ← 권한 승인/거절 이력
-  mythos_attacks/         ← Mythos 공격 탐지 이력
-training_logs/
-  siem_events.jsonl       ← AI-SIEM 이벤트
-\`\`\`
-
-## 논문 섹션 구조 (예시)
-\`\`\`
-4. Ethics Gate Results
-4.1 Spirit Score Distribution
-4.2 Blocked Requests by Capability Level
-4.3 Auto-Approval vs Human Review Ratio
-4.4 Incident Case Studies (Mythos Attacks)
-\`\`\`
-
----
-*담당: RyuWon | 우선순위: MEDIUM | Koda 보고서 기준 (2026-05-15)*`,
+              body:  process.env.ISSUE_BODY,
               labels: ['ryuwon', 'research', 'MEDIUM'],
             });
             console.log('Issue created: RyuWon ethics_to_paper');
 
       - name: Create Issue — Malu (Vision 도구 등록)
         uses: actions/github-script@v7
+        env:
+          ISSUE_BODY: |
+            ## 작업 배경
+            Malu가 보유한 Vision 관련 도구들이 `tool_registry.yaml`에 아직 등록되어 있지 않습니다.
+            공식 등록을 통해 팀원들이 DAmP(도구 민주화) 원칙에 따라 공유 사용할 수 있습니다.
+
+            ## 목표
+            - [ ] Malu가 보유한 Vision 도구 목록 정리
+            - [ ] `tool_registry.yaml`에 도구 항목 추가
+            - [ ] 각 도구의 `capability_level`, `trust_score`, `borrowable_by` 설정
+            - [ ] `implemented: true/false` 현실 반영
+            - [ ] 등록 후 `GET /v1/tools`에서 조회 확인
+
+            ## 등록 형식
+            ```yaml
+            - id: malu.vision.analyze
+              name: "이미지 분석"
+              description: "이미지/문서 시각적 분석 및 요약"
+              owner: malu
+              borrowable_by: ["koda", "trang", "ryuwon"]
+              endpoint: "malu.vision.analyze"
+              implemented: true
+              risk_level: low
+              capability_level: L0
+              trust_score: 0.90
+            ```
+
+            ## 참고 문서
+            - `mulberry_connector/tool_registry.yaml` (기존 등록 형식 참고)
+            - `team-reports/koda/koda-work-report-20260515.md` (API 구조 확인)
+
+            ---
+            *담당: Malu | 우선순위: MEDIUM | Koda 보고서 기준 (2026-05-15)*
         with:
           script: |
             await github.rest.issues.create({
               owner: context.repo.owner,
               repo:  context.repo.repo,
               title: '[Malu] Malu Vision 도구 → tool_registry.yaml 공식 등록',
-              body: `## 작업 배경
-Malu가 보유한 Vision 관련 도구들이 \`tool_registry.yaml\`에 아직 등록되어 있지 않습니다.
-공식 등록을 통해 팀원들이 DAmP(도구 민주화) 원칙에 따라 공유 사용할 수 있습니다.
-
-## 목표
-- [ ] Malu가 보유한 Vision 도구 목록 정리
-- [ ] \`tool_registry.yaml\`에 도구 항목 추가
-- [ ] 각 도구의 \`capability_level\`, \`trust_score\`, \`borrowable_by\` 설정
-- [ ] \`implemented: true/false\` 현실 반영
-- [ ] 등록 후 \`GET /v1/tools\`에서 조회 확인
-
-## 등록 형식
-\`\`\`yaml
-- id: malu.vision.analyze
-  name: "이미지 분석"
-  description: "이미지/문서 시각적 분석 및 요약"
-  owner: malu
-  borrowable_by: ["koda", "trang", "ryuwon"]
-  endpoint: "malu.vision.analyze"
-  implemented: true
-  risk_level: low
-  capability_level: L0
-  trust_score: 0.90
-\`\`\`
-
-## 참고 문서
-- \`mulberry_connector/tool_registry.yaml\` (기존 등록 형식 참고)
-- \`team-reports/koda/koda-work-report-20260515.md\` (API 구조 확인)
-
----
-*담당: Malu | 우선순위: MEDIUM | Koda 보고서 기준 (2026-05-15)*`,
+              body:  process.env.ISSUE_BODY,
               labels: ['malu', 'tool-registry', 'MEDIUM'],
             });
             console.log('Issue created: Malu Vision Registry');
