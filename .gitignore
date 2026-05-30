@@ -149,3 +149,4 @@ __pycache__/
 # 런타임 출력물 — 로컬 전용
 agent-gateway/outputs/
 training_logs/images/
+.env.local
