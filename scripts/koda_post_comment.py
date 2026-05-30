@@ -18,6 +18,10 @@ import sys
 import urllib.request
 from pathlib import Path
 
+if sys.platform == "win32":
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+
 # .env.local 로드
 env_file = Path(__file__).parent.parent / ".env.local"
 if env_file.exists():

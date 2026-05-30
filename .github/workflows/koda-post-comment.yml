@@ -1,0 +1,59 @@
+name: Koda 댓글 자동 게시
+
+# Koda가 koda_drafts/ 폴더에 파일을 push하면 자동으로 이슈에 댓글 게시
+# 파일명 규칙: koda_drafts/issue-{번호}.md
+# 예시: koda_drafts/issue-81.md → Issue #81에 댓글 게시
+#
+# 장점: 세션 초기화와 무관 — GITHUB_TOKEN은 항상 자동 제공
+# 작성: Koda CTO · 2026-05-31
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'koda_drafts/issue-*.md'
+
+jobs:
+  post-koda-comment:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: 변경된 draft 파일 감지 + 댓글 게시
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { execSync } = require('child_process');
+            const fs = require('fs');
+
+            // 이번 push에서 변경된 koda_drafts 파일 감지
+            const changed = execSync('git diff --name-only HEAD~1 HEAD -- koda_drafts/')
+              .toString().trim().split('\n').filter(f => f.match(/issue-\d+\.md$/));
+
+            if (changed.length === 0) {
+              console.log('변경된 draft 파일 없음 — 스킵');
+              return;
+            }
+
+            for (const file of changed) {
+              const match = file.match(/issue-(\d+)\.md$/);
+              if (!match) continue;
+
+              const issueNumber = parseInt(match[1]);
+              const body = fs.readFileSync(file, 'utf8');
+
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo:  context.repo.repo,
+                issue_number: issueNumber,
+                body: body,
+              });
+
+              console.log(`✅ Issue #${issueNumber} Koda 댓글 게시 완료`);
+            }
