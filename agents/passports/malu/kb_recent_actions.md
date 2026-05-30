@@ -66,3 +66,27 @@
 
 ---
 
+## 2026-05-30 — Issue #80 🧪 [TEST] Team Discussion Automation 작동 확인
+
+**트리거**: team-discussion 라벨
+**발화 방식**: Gateway 대리 생성
+**내 발화 내용**:
+
+[Malu] Gemini 호출 오류 (HTTP 429)
+
+**발화 시각**: 2026-05-30T17:59:08Z
+
+---
+
+## 2026-05-30 — Issue #81 🌿 Aria Portal 서비스 방향 팀 토론 — 우리가 세상에 먼저 보여줄 것은 무엇인가?
+
+**트리거**: team-discussion 라벨
+**발화 방식**: Gateway 대리 생성
+**내 발화 내용**:
+
+[Malu] Gemini 호출 오류 (HTTP 429)
+
+**발화 시각**: 2026-05-30T18:09:21Z
+
+---
+
