@@ -35,10 +35,13 @@ if sys.platform == "win32":
     sys.stderr.reconfigure(encoding="utf-8")
 
 BASE = Path(__file__).parent
-AGENTS_DIR = BASE / "agents"
-REGISTRY_PATH = BASE / "tool_registry.yaml"
+
+# ── Trang 확인 경로 (2026-06-01) ────────────────────────────
+AGENTS_DIR    = BASE / "agents"
+REGISTRY_PATH = BASE / "tool_registry.yaml"                        # agentpassport/tool_registry.yaml
+MALU_PASSPORT = BASE / "malu" / "malu_self_declaration_passport.yaml"  # agentpassport/malu/...
 PROTOCOL_PATH = BASE / "exception_handling_protocol.yaml"
-LOG_PATH = BASE / "logs" / "exceptions.jsonl"
+LOG_PATH      = BASE / "logs" / "exceptions.jsonl"
 
 
 @dataclass
@@ -69,10 +72,16 @@ class A2ARouter:
 
     def _load_all_passports(self) -> dict:
         passports = {}
-        if not AGENTS_DIR.exists():
-            return passports
-        for f in AGENTS_DIR.glob("*_passport.yaml"):
-            data = self._load_yaml(f)
+        # agents/ 디렉토리
+        if AGENTS_DIR.exists():
+            for f in AGENTS_DIR.glob("*_passport.yaml"):
+                data = self._load_yaml(f)
+                agent_id = data.get("metadata", {}).get("agent_id")
+                if agent_id:
+                    passports[agent_id] = data
+        # Malu 자기선언 패스포트 (agentpassport/malu/)
+        if MALU_PASSPORT.exists():
+            data = self._load_yaml(MALU_PASSPORT)
             agent_id = data.get("metadata", {}).get("agent_id")
             if agent_id:
                 passports[agent_id] = data
