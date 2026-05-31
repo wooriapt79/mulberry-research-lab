@@ -1,0 +1,37 @@
+name: Mulberry 월간 기술 트렌드 리포트
+
+# 매월 1일 09:00 KST (00:00 UTC) 자동 실행
+# 목적: 외부 기술 트렌드 파악 → Mulberry 포지셔닝 점검
+# 흐름: Claude 트렌드 분석 → GitHub 이슈 생성 → 팀 자동 토론
+#
+# 작성: Koda CTO · 2026-05-31
+
+on:
+  schedule:
+    - cron: '0 0 1 * *'    # 매월 1일 00:00 UTC = 09:00 KST
+  workflow_dispatch:        # 수동 실행 (테스트용)
+
+jobs:
+  generate-trend-report:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 월간 기술 트렌드 리포트 생성 + 이슈 등록
+        env:
+          ANTHROPIC_API_KEY: ${{ vars.ANTHROPIC_API_KEY_V3 }}
+          GITHUB_TOKEN:      ${{ secrets.GITHUB_TOKEN }}
+          REPO_FULL:         ${{ github.repository }}
+        run: python scripts/trend_report.py
+
+      - name: 완료 확인
+        run: echo "✅ 월간 트렌드 리포트 이슈 생성 완료 — 팀 자동 토론 시작"
