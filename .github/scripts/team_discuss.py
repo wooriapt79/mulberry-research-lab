@@ -125,11 +125,43 @@ def load_passport(agent_id: str) -> str:
     )
 
 
+def load_tool_context(agent_id: str) -> str:
+    """
+    tool_registry.yaml에서 이 에이전트가 사용할 수 있는 도구 목록 로드.
+    Trang 설계 기능 공유 레이어 연결.
+    """
+    registry_path = Path("mulberry_connector/tool_registry.yaml")
+    if not registry_path.exists():
+        return ""
+    try:
+        import yaml
+        data = yaml.safe_load(registry_path.read_text(encoding="utf-8"))
+        tools = data.get("tools", [])
+        owned, borrowed = [], []
+        for t in tools:
+            if t.get("owner") == agent_id:
+                owned.append(f"[{t.get('capability_level')}] {t['id']}: {t.get('name')}")
+            elif t.get("borrowable_by") == "*" or agent_id in (t.get("borrowable_by") or []):
+                borrowed.append(f"[{t.get('capability_level')}] {t['id']} (from {t.get('owner')}): {t.get('name')}")
+        lines = ["\n\n## 기능 공유 레이어 — 사용 가능한 도구"]
+        if owned:
+            lines.append("### 내 도구")
+            lines.extend([f"- {t}" for t in owned])
+        if borrowed:
+            lines.append("### 빌려쓸 수 있는 도구")
+            lines.extend([f"- {t}" for t in borrowed[:8]])
+        lines.append("※ L4 도구는 반드시 인간(PM/CEO) 승인 후 실행")
+        return "\n".join(lines)
+    except Exception:
+        return ""
+
+
 def build_system_prompt(agent: dict) -> str:
-    """에이전트 system prompt + 패스포트 자동 주입"""
-    base = agent["system"]
+    """에이전트 system prompt + 패스포트 + 도구 목록 자동 주입"""
+    base    = agent["system"]
     passport = load_passport(agent["id"])
-    return base + passport
+    tools   = load_tool_context(agent["id"])
+    return base + passport + tools
 
 
 # ── LLM 호출 ─────────────────────────────────────────────────────
