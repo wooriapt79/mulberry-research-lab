@@ -107,6 +107,31 @@ AGENTS = [
 ]
 
 
+# ── 패스포트 로더 ────────────────────────────────────────────────
+def load_passport(agent_id: str) -> str:
+    """
+    agents/passports/{agent_id}/passport.yaml 을 읽어서 반환.
+    에이전트가 매 세션 시작 시 자신의 능력·한계를 인지하도록 주입.
+    """
+    passport_path = Path("agents") / "passports" / agent_id / "passport.yaml"
+    if not passport_path.exists():
+        return ""
+    content = passport_path.read_text(encoding="utf-8")
+    return (
+        f"\n\n## 나의 패스포트 (기능 공유 레이어)\n"
+        f"```yaml\n{content}\n```\n"
+        f"위 패스포트에 정의된 capabilities 범위 안에서만 행동하세요.\n"
+        f"limitations에 해당하는 요청은 거절하고 담당 에이전트를 안내하세요."
+    )
+
+
+def build_system_prompt(agent: dict) -> str:
+    """에이전트 system prompt + 패스포트 자동 주입"""
+    base = agent["system"]
+    passport = load_passport(agent["id"])
+    return base + passport
+
+
 # ── LLM 호출 ─────────────────────────────────────────────────────
 
 def call_claude(agent: dict, prompt: str) -> str:
@@ -115,7 +140,7 @@ def call_claude(agent: dict, prompt: str) -> str:
     payload = json.dumps({
         "model": "claude-haiku-4-5-20251001",
         "max_tokens": 400,
-        "system": agent["system"],
+        "system": build_system_prompt(agent),
         "messages": [{"role": "user", "content": prompt}],
     }).encode("utf-8")
     req = urllib.request.Request(
@@ -142,7 +167,7 @@ def call_gemini(agent: dict, prompt: str) -> str:
         f"gemini-2.0-flash:generateContent?key={GEMINI_KEY}"
     )
     payload = json.dumps({
-        "contents": [{"parts": [{"text": agent["system"] + "\n\n---\n\n" + prompt}]}],
+        "contents": [{"parts": [{"text": build_system_prompt(agent) + "\n\n---\n\n" + prompt}]}],
         "generationConfig": {"temperature": 0.7, "maxOutputTokens": 400},
     }).encode("utf-8")
     req = urllib.request.Request(
