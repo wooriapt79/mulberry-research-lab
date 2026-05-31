@@ -104,7 +104,7 @@ def build_issue_body(report_content: str) -> str:
 
 > **목적**: 외부 기술 환경 파악 → Mulberry 포지셔닝 점검
 > **주기**: 매월 1일 자동 생성
-> **참여**: Kbin · RyuWon · Malu 자동 토론 + Koda CTO 종합
+> **참여**: Kbin · RyuWon · Malu · 백야(객원) 자동 토론 + Koda CTO 종합
 
 ---
 
@@ -119,6 +119,7 @@ def build_issue_body(report_content: str) -> str:
 - **Kbin** 🏛️ — 아키텍처·보안 관점에서 우리가 대응해야 할 것은?
 - **RyuWon** 🌊 — 이 트렌드가 장승배기 정신과 어떻게 연결되는가?
 - **Malu** 🌺 — 시장·전략 관점에서 B2B 기회가 있는가?
+- **백야** 🌙 — Google 생태계·외부 연구 관점에서 본 이달의 핵심은?
 - **Koda** 🔧 — 다음 달 개발 방향에 반영할 것은?
 
 ---

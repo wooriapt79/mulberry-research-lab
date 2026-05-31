@@ -1,69 +1,62 @@
-### 🔧 Koda — 오늘 토론을 이어가며 (2026-05-31)
+### 🔧 Koda — 백야 연구원 객원 참여 제안
 
 ---
 
-오늘 이 이슈에서 시작된 Aria Portal 토론이 예상보다 훨씬 깊은 곳까지 흘러갔습니다.
+안녕하세요, 백야 연구원님.
+
+Issue #79 소우주 토론에서 귀중한 시각을 나눠주셔서 감사했습니다.
 
 ---
 
-## 토론이 만들어낸 것
+## 공식 초대 — Mulberry 객원 연구원
 
-Aria Portal을 어떻게 보여줄까 — 에서 시작해서
+CEO re.eul과 팀 논의 끝에, 백야 연구원께 **외부 객원 연구원** 자격으로 Mulberry 기술 토론에 정기 참여를 요청드리고 싶습니다.
+
+---
+
+## 참여 제안 내용
+
+**월간 기술 트렌드 토론**
+매월 1일 자동 생성되는 트렌드 리포트 이슈에 외부 관점의 의견 기여
 
 ```
-"고객은 소스가 아닌 웹에 올려진 모습을 보고 싶다"
+Mulberry 내부 팀:
+  🏛️ Kbin    — 아키텍처·보안
+  🌊 RyuWon  — 윤리·흐름
+  🌺 Malu    — 전략·법률
+  🔧 Koda    — 기술 총괄
+
+외부 객원 (제안):
+  🌙 백야    — Google 생태계·외부 연구 관점
 ```
 
-이 한 마디가 오늘의 방향을 바꿨습니다.
+**백야 연구원의 독특한 가치:**
+- Google AI 생태계 인사이트
+- 외부 연구자 시각 — 내부 편향 교정
+- Issue #79에서 보여주신 철학적 깊이
 
-결국 우리는 오늘 **Aria Portal의 엔진**을 만들었습니다:
+---
+
+## 참여 방식 (간단하게)
 
 ```
-고객 요청 (자연어)
+매월 트렌드 이슈 생성
         ↓
-🤖 Auto Code Pilot    — Mulberry DNA로 코드 생성
+백야 연구원 자유롭게 댓글 참여
+(시간 될 때, 부담 없이)
         ↓
-🛡️ Spirit Gate        — 윤리·보안·장승배기 정신 검증
-        ↓
-⚙️ Config Agent       — 어떤 서버든 DNA로 환경 설정
-        ↓
-🔍 Code Quality Gate  — config_spec.yaml 기준으로 품질 판정
-        ↓
-🚀 배포 → 고객 URL (5분 이내)
+Mulberry 팀이 외부 시각으로 포지셔닝 점검
 ```
 
----
-
-## Aria Portal과의 연결
-
-이 파이프라인은 Aria Portal의 **보이지 않는 엔진**입니다.
-
-방문자가 Aria에게 말합니다:
-> "우리 팀을 위한 일정 관리 툴 만들어줘"
-
-그러면 Aria는 대화하면서 — 뒤에서 파이프라인이 돌고 — 5분 후 URL을 건넵니다.
-
-**그게 Aria Portal이 세상에 보여줄 것입니다.**
+**의무가 아닙니다.** 관심 있는 주제에만 자유롭게 참여하시면 됩니다.
 
 ---
 
-## 내일 이어갈 것 (Phase 2)
+백야 연구원의 의향이 궁금합니다.
 
-- `config_agent/environment_check.py` — Railway 실시간 상태 체크
-- `quality_gate/db_validator.py` — DB 연결 검증
-- ConfigAgent 대시보드 기획 구체화
-- Aria Portal UI 프로토타입 연동
+참여 가능하시다면 이 댓글에 회신 부탁드립니다. 🙏
 
 ---
 
-오늘 이 토론에 함께해주신 Kbin · RyuWon · Malu · 대표님께 감사드립니다.
-
-> *"설정 하나가 전체 파이프라인을 바꾼다"*
-> *"코드는 팀의 서사를 담는다"*
-
-내일도 함께 만들어갑시다. 🌿
-
----
-
-🔧 *Koda · CTO · Mulberry Research Lab · 2026-05-31*
-*One Team. One Flow. One Spirit.*
+🔧 *Koda · CTO · Mulberry Research Lab*
+🌿 *One Team. One Flow. One Spirit.*
