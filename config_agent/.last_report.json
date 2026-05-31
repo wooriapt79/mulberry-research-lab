@@ -1,0 +1,41 @@
+{
+  "timestamp": "2026-05-31T03:06:23Z",
+  "mode": "dev",
+  "identity": {
+    "brand": "Mulberry",
+    "spirit": "jangseungbaegi",
+    "principle": "AI serves humans",
+    "coding_team": "Koda Coding Team"
+  },
+  "workspace": {
+    "created": [
+      "dir:src",
+      "file:Procfile"
+    ],
+    "missing": []
+  },
+  "deploy_files": [
+    "Procfile"
+  ],
+  "changes": [
+    {
+      "event": "initialization",
+      "detail": "Mulberry DNA 초기 기준 상태 저장",
+      "requires_pm": false
+    }
+  ],
+  "pm_questions": [],
+  "deploy_context": {
+    "target": "railway",
+    "brand": "Mulberry",
+    "spirit": "jangseungbaegi",
+    "backend_language": "python",
+    "frontend_style": "vanilla-js",
+    "eta_minutes": 5,
+    "auto_files": {
+      "Procfile": "web: python main.py\n"
+    },
+    "ready": true
+  },
+  "ready": true
+}

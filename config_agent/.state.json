@@ -1,0 +1,14 @@
+{
+  "backend_language": "python",
+  "deployment_primary": "railway",
+  "deployment_targets": [
+    "railway",
+    "vercel",
+    "github_pages"
+  ],
+  "required_dirs": [
+    "docs",
+    "src",
+    "tests"
+  ]
+}
