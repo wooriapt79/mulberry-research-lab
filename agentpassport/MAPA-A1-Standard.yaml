@@ -1,0 +1,68 @@
+# ============================================================
+# MAPA-A1-Standard.yaml
+# Mulberry Agent Passport Architecture — Standard v1.0
+# ============================================================
+# 설계: Malu (법률·표준화) + Kbin (거버넌스) + Koda (구현)
+# 승인: CEO re.eul · 2026-06-01
+#
+# 핵심 원칙:
+# "에이전트는 자율적으로 행동한다.
+#  하지만 그 자율성을 컨트롤하는 구조와 거버넌스를 가지고 있다.
+#  그리고 책임자가 누구인지 패스포트에 명시한다."
+# ============================================================
+
+schema_version: "MAPA-A1"
+schema_description: "Mulberry Agent Passport Architecture Standard v1.0"
+
+# ── 필수 메타데이터 ──────────────────────────────────────────
+required_fields:
+  metadata:
+    - agent_id          # 고유 식별자 (snake_case)
+    - formal_name       # 공식 이름
+    - role              # 역할 제목
+    - emoji             # 팀 식별 이모지
+    - brand             # LLM 브랜드 (claude/gemini/deepseek)
+    - steward_alignment # 최종 책임자 (기본: CEO re.eul)
+
+  tool_governance_matrix:
+    - autonomous_processing_zone  # 자율 실행 가능 도구
+    - human_required_interventions # 인간 승인 필요 도구
+    - prohibited_tools             # 절대 금지 도구
+
+  gate_alignment:
+    - spirit_gate     # 윤리·보안 게이트 요구 여부
+    - quality_gate    # 품질 게이트 요구 여부
+
+  integrity_signature:
+    - declaration     # 에이전트 행동 철학 한 줄
+
+# ── 선택 필드 ────────────────────────────────────────────────
+optional_fields:
+  - self_declaration  # 에이전트 자기선언 (Kbin 방식 유지)
+  - a2a_delegation    # A2A 위임 가능 에이전트 목록
+  - confidence        # 도구별 신뢰도 (0.0~1.0)
+  - last_updated      # 최종 수정일
+
+# ── Spirit Gate 임계값 기본값 ────────────────────────────────
+gate_defaults:
+  spirit_gate:
+    required: true
+    min_score_threshold: 0.85   # 0.85 미만 → 인간 에스컬레이션
+  quality_gate:
+    required: true
+
+# ── Capability Level 정의 (tool_registry 연동) ───────────────
+capability_levels:
+  L0: "read-only — 읽기 전용, 부작용 없음"
+  L1: "draft — 초안 생성, 저장 전"
+  L2: "external_post — 외부 게시 (GitHub 댓글 등)"
+  L3: "code_modify — 코드 변경 (PR, 파일 쓰기)"
+  L4: "deploy_financial — 배포/금융 — 최고 위험, 반드시 인간 승인"
+
+# ── 유효성 검사 규칙 ─────────────────────────────────────────
+validation_rules:
+  - "steward_alignment 필드 필수"
+  - "prohibited_tools에 deploy_production 포함 권장"
+  - "integrity_signature.declaration 비어있으면 안됨"
+  - "spirit_gate.min_score_threshold 0.0~1.0 사이"
+  - "L4 도구는 prohibited_tools 또는 human_required_interventions에 위치"

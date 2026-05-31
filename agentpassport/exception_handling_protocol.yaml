@@ -1,0 +1,66 @@
+# ============================================================
+# exception_handling_protocol.yaml
+# A2A 위임 예외 처리 3단계 프로토콜
+# 설계: Malu · 승인: CEO re.eul · 2026-06-01
+# ============================================================
+
+protocol_version: "1.0"
+protocol_name: "Mulberry A2A Exception Handling Protocol"
+
+# ── 3단계 에스컬레이션 ───────────────────────────────────────
+escalation_levels:
+
+  level_1_auto_delegate:
+    trigger: "에이전트 능력 밖 요청"
+    action: "tool_registry에서 master_agent 탐색 → A2A 위임"
+    timeout_seconds: 30
+    example: "Kbin이 deploy 요청 받음 → Config Agent에 위임"
+
+  level_2_team_consult:
+    trigger: "위임 가능 에이전트 없음 OR spirit_gate < 0.85"
+    action: "team-discussion 이슈 자동 생성 → 팀 토론"
+    timeout_seconds: 300
+    example: "미등록 도구 요청 → 이슈 생성 → Kbin·RyuWon 토론"
+
+  level_3_human_escalation:
+    trigger: "L4 도구 요청 OR BLOCK 판정 OR 팀 합의 실패"
+    action: "PM Trang 또는 CEO re.eul 직접 알림"
+    timeout_seconds: 0    # 즉시 알림
+    example: "deploy_production 요청 → CEO re.eul 승인 요청"
+
+# ── 예외 유형별 처리 ─────────────────────────────────────────
+exception_types:
+
+  unauthorized_tool_access:
+    description: "passport prohibited_tools 에 있는 도구 요청"
+    handling: "level_3_human_escalation"
+    log: true
+    notify: ["ceo_reul", "trang_pm"]
+
+  spirit_gate_fail:
+    description: "Spirit Gate 점수 임계값 미달"
+    handling: "level_2_team_consult"
+    retry_allowed: true
+    max_retries: 3
+
+  unknown_tool_request:
+    description: "tool_registry에 없는 도구 요청"
+    handling: "level_2_team_consult"
+    action: "tool_registry 등록 검토 이슈 자동 생성"
+
+  agent_unavailable:
+    description: "위임 대상 에이전트 응답 없음"
+    handling: "level_1_auto_delegate"
+    fallback: "다음 순위 에이전트로 재위임"
+
+# ── 로깅 정책 ────────────────────────────────────────────────
+logging:
+  all_exceptions: true
+  log_path: "agentpassport/logs/exceptions.jsonl"
+  include_fields:
+    - timestamp
+    - requesting_agent
+    - requested_tool
+    - exception_type
+    - escalation_level
+    - resolution

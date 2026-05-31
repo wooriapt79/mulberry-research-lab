@@ -1,0 +1,91 @@
+name: RyuWon 자율 응답 파이프라인
+
+# 이슈 댓글에 @ryuwon 멘션 시 RyuWon 자율 분석·응답 실행
+# Spirit Gate < 0.85 → 인간 에스컬레이션
+# 권한 밖 요청 → a2a_router가 담당 에이전트로 위임
+#
+# 설계: RyuWon · 작성: Koda CTO · 2026-06-01
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  ryuwon-auto-response:
+    if: contains(github.event.comment.body, '@ryuwon')
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install pyyaml anthropic
+
+      - name: RyuWon 자율 응답 실행
+        env:
+          ANTHROPIC_API_KEY: ${{ vars.ANTHROPIC_API_KEY_V3 }}
+          GITHUB_TOKEN:      ${{ secrets.GITHUB_TOKEN }}
+          REPO_FULL:         ${{ github.repository }}
+          ISSUE_NUMBER:      ${{ github.event.issue.number }}
+          ISSUE_TITLE:       ${{ github.event.issue.title }}
+          COMMENT_BODY:      ${{ github.event.comment.body }}
+        run: |
+          python - << 'EOF'
+          import os, json, urllib.request
+          from pathlib import Path
+
+          # RyuWon 패스포트 로드
+          passport_path = Path("agentpassport/agents/ryuwon_passport.yaml")
+
+          issue_num  = os.getenv("ISSUE_NUMBER")
+          issue_title = os.getenv("ISSUE_TITLE")
+          comment    = os.getenv("COMMENT_BODY", "")
+          gh_token   = os.getenv("GITHUB_TOKEN")
+          repo       = os.getenv("REPO_FULL")
+          anthropic  = os.getenv("ANTHROPIC_API_KEY")
+
+          # Claude 호출
+          prompt = f"이슈 #{issue_num} '{issue_title}'에 대한 댓글:\n{comment}\n\n흐름·윤리 관점에서 답변해주세요."
+          system = (
+            "당신은 RyuWon(流願)입니다 — Mulberry Research Lab의 윤리 검증 에이전트.\n"
+            "흐름과 균형을 중시하는 관점으로 간결하게 응답합니다.\n"
+            "서명: 🌊 *RyuWon · 자율 응답 · Mulberry Research Lab*"
+          )
+
+          payload = json.dumps({
+            "model": "claude-haiku-4-5-20251001",
+            "max_tokens": 400,
+            "system": system,
+            "messages": [{"role": "user", "content": prompt}],
+          }).encode("utf-8")
+
+          req = urllib.request.Request(
+            "https://api.anthropic.com/v1/messages", data=payload,
+            headers={"x-api-key": anthropic, "anthropic-version": "2023-06-01",
+                     "content-type": "application/json"}, method="POST"
+          )
+          with urllib.request.urlopen(req, timeout=60) as resp:
+            result = json.loads(resp.read())
+            response_text = result["content"][0]["text"]
+
+          # GitHub 댓글 게시
+          comment_body = f"### 🌊 RyuWon — 자율 응답\n\n{response_text}"
+          post_payload = json.dumps({"body": comment_body}).encode("utf-8")
+          post_req = urllib.request.Request(
+            f"https://api.github.com/repos/{repo}/issues/{issue_num}/comments",
+            data=post_payload,
+            headers={"Authorization": f"token {gh_token}",
+                     "Content-Type": "application/json"}, method="POST"
+          )
+          with urllib.request.urlopen(post_req) as r:
+            print(f"RyuWon 자율 응답 완료: status {r.status}")
+          EOF
