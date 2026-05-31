@@ -31,13 +31,33 @@ if sys.platform == "win32":
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8")
 
-# ── 임계값 정의 ──────────────────────────────────────────────────
-THRESHOLDS = {
-    "bandit_high":        0,   # HIGH 취약점 허용 개수 (0 = 즉시 BLOCK)
-    "bandit_medium":      3,   # MEDIUM 취약점 허용 개수
-    "complexity_max":    15,   # 함수별 최대 순환 복잡도
-    "maintainability_min": 10, # 최소 유지보수 지수 (0~100)
-}
+# ── 임계값 — config_agent DNA에서 로드 (없으면 기본값) ──────────────
+def _load_thresholds() -> dict:
+    """config_agent/config_spec.yaml의 quality_standards를 읽는다."""
+    spec_path = Path("config_agent/config_spec.yaml")
+    defaults = {
+        "bandit_high": 0,
+        "bandit_medium": 3,
+        "complexity_max": 15,
+        "maintainability_min": 10,
+    }
+    if not spec_path.exists():
+        return defaults
+    try:
+        import yaml
+        spec = yaml.safe_load(spec_path.read_text(encoding="utf-8"))
+        qs = spec.get("quality_standards", {})
+        return {
+            "bandit_high":        int(qs.get("bandit_high",        defaults["bandit_high"])),
+            "bandit_medium":      int(qs.get("bandit_medium",      defaults["bandit_medium"])),
+            "complexity_max":     int(qs.get("complexity_max",     defaults["complexity_max"])),
+            "maintainability_min":int(qs.get("maintainability_min",defaults["maintainability_min"])),
+        }
+    except Exception:
+        return defaults
+
+THRESHOLDS = _load_thresholds()
+print(f"[ConfigAgent 연동] 품질 기준 로드: {THRESHOLDS}")
 
 TARGET = sys.argv[1] if len(sys.argv) > 1 else "."
 TIMESTAMP = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")

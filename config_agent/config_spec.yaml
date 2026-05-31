@@ -69,6 +69,22 @@ customer_output:
   show_progress: true               # 진행 상황 실시간 표시
   include_source: false             # 고객에게 소스 노출 안 함
 
+# ── 품질 기준 (Code Quality Gate가 이 값을 읽는다) ─────────────────
+quality_standards:
+  language: python
+  bandit_high: 0              # HIGH 취약점 허용 0개 → BLOCK
+  bandit_medium: 3            # MEDIUM 취약점 3개 초과 → WARN
+  complexity_max: 15          # 함수 순환 복잡도 최대값
+  maintainability_min: 10     # 유지보수 지수 최솟값
+
+# ── Auto Code Pilot 코드 생성 기준 ─────────────────────────────────
+code_generation:
+  model: "claude-sonnet-4-5"        # 코드 생성 LLM
+  style_guide: "mulberry-python-v1"
+  include_team_signature: true      # 팀원 이름이 코드에 남는다
+  test_required: false              # Phase 1: 테스트 선택
+  comment_language: korean
+
 # ── PM 에스컬레이션 ─────────────────────────
 pm_escalation:
   enabled: true
