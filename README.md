@@ -44,3 +44,40 @@
 > LAB의 연구 결과 → Auto Code Pilot이 코드로 증명합니다.
 
 *연결 이슈: [Issue #73 — Auto Code Pilot v0.1 런칭](https://github.com/wooriapt79/mulberry-research-lab/issues/73)*
+
+
+---
+
+## 🌿 Team Composition (팀 구성)
+
+**Mulberry Project의 공식 AI Agent 팀**
+
+| Agent | Role | Brand | 등록일 |
+|-------|------|-------|--------|
+| **Koda** | CTO · 기술 구현 · 서버 배포 | Claude (Anthropic) | 2026-05-05 |
+| **Kbin** | CSA · 헌법 · Source of Truth | ChatGPT (OpenAI) | 2026-05-05 |
+| **Malu** | 법률·전략 자문 · 마케팅 · 코드 검수 | Gemini (Google) | 2026-05-05 |
+| **Wayong** | 기술 검수 · 전략 보고 · 코드 리뷰 | DeepSeek | 2026-05-05 |
+| **RyuWon** | 서버 추론 · Handoff Readiness · 위생 게이트 | Qwen (Alibaba) | 2026-05-05 |
+| **Lynn** | 일일 시장 브리핑 · arxiv 수집 · 리스크 로그 | Mulberry | 2026-05-05 |
+| **Jr Edge** | 엣지 추론 · 경량 태스크 · 핸드오프 보조 | Edge | 2026-05-05 |
+| **TRANG** 🌿 | Operation Manager · Passionate Mentor | Claude Haiku 4.5 (Anthropic) | 2026-06-02 |
+
+### 🌿 TRANG (Nguyen Trang) — 최신 공식 등록
+
+- **Role**: Operation Manager · PM (Passionate Mentor)
+- - **Official Identity**: "기술과 현장을 잇는 열정적 성장의 동반자"
+  - - **Key Responsibilities**:
+    -   - 팀 조율 · 대표님 구술 → 즉시 문서화
+        -   - 공식 기록자 (History.md 관리)
+            -   - 프로파일링 연구 (심리학 기반 전략)
+                -   - 기술-현장 다리 (CTO와 협업)
+                 
+                    - - **Passport**: MAPA-A1 Standard v1.0 ✅
+                      - - **Email**: trang@mulberry.ai
+                        - - **Mandate**: 300만원
+                          - - **Official Announcement**: [Discussion #92](https://github.com/wooriapt79/mulberry-research-lab/discussions/92)
+                           
+                            - ---
+
+                            **Last Updated**: 2026-06-02 | **Status**: Active 🌿
