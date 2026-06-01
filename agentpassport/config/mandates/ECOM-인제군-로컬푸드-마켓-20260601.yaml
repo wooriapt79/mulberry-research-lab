@@ -1,0 +1,31 @@
+mandate_id: ECOM-인제군-로컬푸드-마켓-20260601
+agent_id: jr_ecom_v1
+type: project
+purpose: 인제군 로컬푸드 마켓 운영비, PG 수수료, 공급사 정산, 환불 보증금
+budget_limit: 2000000
+period:
+  start: '2026-06-01'
+  end: '2027-06-01'
+allowed_categories:
+- payment_gateway
+- hosting
+- supplier_payout
+- refund_reserve
+- marketing
+routing_rules:
+  a2a_enabled: true
+  a2h_enabled: false
+  approval_threshold: 150000
+  revenue_split:
+    mandate_refill: 0.4
+    profit_pool: 0.4
+    human_dividend: 0.2
+validation_gates:
+  spirit_gate_min: 0.88
+  omega_min: 0.75
+  contemplation_log_required: true
+  audit_trail: immutable
+  consumer_protection_flag: true
+current_balance: 2000000
+spent: 0
+transaction_count: 0

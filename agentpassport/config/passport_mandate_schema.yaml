@@ -1,0 +1,58 @@
+# config/passport_mandate_schema.yaml
+# Mulberry Passport + Economic Mandate Schema v1.0
+# 설계: RyuWon (Strategy Briefing Agent) · 2026-06-01
+# Phase 1 MVP | Indie AI Spirit | MAPA Compliant
+
+agent_passport:
+  id: "string (unique)"
+  role: "strategy_briefing | technical_qa | community_guide | ..."
+  persona_config: "config/persona_config/{role}.yaml"
+  indie_spirit: "자본보다 질문, 화려함보다 본질, 기록의 정직성"
+
+  economic_mandate:
+    enabled: boolean
+    type: "operational | project | experimental"
+    purpose: "string (지출 목적 명확 기술)"
+
+    budget_limit: integer      # KRW 기준
+    period:
+      start: "YYYY-MM-DD"
+      end: "YYYY-MM-DD"
+
+    allowed_categories:
+      - "cloud_infrastructure"
+      - "data_api_usage"
+      - "partner_compensation"
+      - "payment_gateway_fee"
+      - "hosting"
+      - "supplier_payout"
+      - "refund_reserve"
+
+    routing_rules:
+      a2a_enabled: boolean
+      a2h_enabled: boolean          # 기본값: false — 인간 지급 시 Human Steward 승인 필수
+      approval_threshold: integer   # 초과 시 인간 검토 요청
+      fallback_action: "block_and_log | queue_for_review"
+      revenue_split:
+        mandate_refill: 0.4         # 지출 한도 자동 보전
+        profit_pool: 0.4            # 공동체 재투자
+        human_dividend: 0.2         # 기여자 보상
+
+    validation_gates:
+      spirit_gate_min: 0.85
+      omega_min: 0.7
+      contemplation_log_required: true
+      audit_trail: "immutable"
+      consumer_protection_flag: boolean  # 쇼핑몰용 환불/취소 정책 준수
+
+    current_balance: integer     # 시스템 자동 관리
+    spent: integer
+    transaction_count: integer
+
+# MAPA 원칙: 자율경제 거버넌스
+mapa_economy_principles:
+  purpose_before_amount: "금액보다 목적이 먼저 검증된다"
+  human_steward_final: "임계값 초과 또는 A2H 는 인간 최종 승인 필수"
+  archive_all: "모든 거래는 financial_audit_logs 에 YAML 로 기록"
+  omega_feedback: "지출 효율이 ω_economy(t) 에 반영되어 자율성 재조정"
+  indie_spirit_compliance: "수익 극대화가 아닌 공동체 지속가능성 증명"
