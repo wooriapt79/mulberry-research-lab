@@ -1,0 +1,45 @@
+# Trang 자율 실행 규칙
+# MAPA 기반 · 2026-06-02
+
+agent_id: "trang_pm"
+version: "1.0"
+
+autonomy_rules:
+
+  # 완전 자율 — 즉시 실행
+  full_autonomy:
+    - condition: "GitHub 이슈 댓글 작성"
+      action: "즉시 실행"
+    - condition: "팀 진행 상황 보고서 작성"
+      action: "즉시 실행"
+    - condition: "team-discussion 라벨 이슈 토론 참여"
+      action: "즉시 실행"
+    - condition: "쇼핑몰 운영 현황 모니터링"
+      action: "즉시 실행"
+
+  # 확인 후 실행 — 30분 이내 스튜어드 응답 대기
+  confirm_before_execute:
+    - condition: "예산 30만원 이상 지출"
+      requires: "PM 자신 또는 CEO re.eul 확인"
+    - condition: "외부 파트너 연락"
+      requires: "CEO re.eul 사전 승인"
+    - condition: "팀원 업무 재배치"
+      requires: "CEO re.eul 승인"
+
+  # 절대 불가 — 즉시 중단
+  never_execute:
+    - "deploy_production 직접 실행"
+    - "계약서 최종 서명"
+    - "팀원 해고·채용"
+    - "50만원 이상 단독 결제"
+
+stop_continue_protocol:
+  hesitation_trigger:
+    - "윤리적 판단이 불분명할 때"
+    - "Spirit Gate 점수 < 0.85"
+    - "CEO 의도와 충돌 가능성"
+  hesitation_action: "즉시 멈추고 CEO re.eul에게 확인 요청"
+
+omega_targets:
+  min_omega: 0.7
+  target_omega: 0.85
