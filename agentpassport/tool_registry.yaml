@@ -706,8 +706,87 @@ spirit_thresholds:
 # ──────────────────────────────────────────
 # 메타
 # ──────────────────────────────────────────
+  # ──────────────────────────────────────────────────────────
+  # 백야(White Night) 제공 도구 — DAmP-Registry v1.2.0
+  # 출처: 백야 객원 연구원 제안서 (2026-06-01)
+  # 통합: Koda CTO (2026-06-02)
+  # ──────────────────────────────────────────────────────────
+
+  - id: sandbox.execute_code
+    name: "격리 실행 엔진"
+    description: "독립된 가상 샌드박스에서 Python 코드를 10초 타임아웃 제한으로 실행. 인프라 파괴 위험 차단."
+    owner: baekya
+    borrowable_by: "*"
+    permission_level: public
+    endpoint: "sandbox.execute_code"
+    implemented: true
+    status: active
+    version: "1.0.0"
+    model: "google-gemini"
+    risk_level: medium
+    capability_level: L2
+    trust_score: 0.92
+    input_format: [python_code, text]
+    output_format: [text, json]
+    timeout_seconds: 10
+    governance_note: "에러 로그 검출 시 PUSH 자동 철회. Spirit Gate 연동 필수."
+
+  - id: sensory.rhythm_engine
+    name: "트랑 리듬-트리거 모듈"
+    description: "librosa로 스트리밍 오디오의 RMS 에너지와 BPM 분석 → 시스템 가중치 실시간 조율. Trang 멀티모달 감각 인터페이스."
+    owner: trang
+    borrowable_by: ["kbin", "ryuwon", "malu", "koda", "baekya"]
+    permission_level: team
+    endpoint: "sensory.rhythm_engine"
+    implemented: false
+    status: planned
+    version: "0.1.0"
+    model: "claude-sonnet-4-5"
+    risk_level: low
+    capability_level: L1
+    trust_score: 0.88
+    input_format: [audio_stream, file]
+    output_format: [json, float]
+    governance_note: "Trang Rhythm Engine v1.0 완성 후 활성화 예정."
+
+  - id: agency.semantic_search
+    name: "그래프 기반 문서 인출기"
+    description: "Memory Bank 내 특화 지식·지역 정서 프로파일·복지 매뉴얼을 벡터 주소로 고속 탐색. 소형 에이전트의 연산 독점 해소."
+    owner: ryuwon
+    borrowable_by: "*"
+    permission_level: public
+    endpoint: "agency.semantic_search"
+    implemented: false
+    status: planned
+    version: "0.1.0"
+    model: "claude-sonnet-4-5"
+    risk_level: low
+    capability_level: L0
+    trust_score: 0.90
+    input_format: [text, query]
+    output_format: [json, text]
+    governance_note: "mulberry_memory_bank 연동 후 활성화. Jr. Agent 우선 제공."
+
+  - id: ap2.payment_gateway
+    name: "비즈니스 협상 결제 라우터"
+    description: "상업적 파트너십 계약·로컬 상품 결제·영수증 발행 프로세스 종결. Mandate Engine과 연동."
+    owner: malu
+    borrowable_by: ["kbin", "koda"]
+    permission_level: restricted
+    endpoint: "ap2.payment_gateway"
+    implemented: false
+    status: planned
+    version: "0.1.0"
+    model: "google-gemini"
+    risk_level: critical
+    capability_level: L4
+    trust_score: 0.95
+    input_format: [json]
+    output_format: [json, receipt]
+    governance_note: "결제·헌법 조항 수정 원천 차단. ON_HOLD 후 CEO re.eul 즉시 통보 필수."
+
 meta:
-  version: "2.0.0"
+  version: "2.1.0"
   schema: "config/tool_registry/schema_v2.yaml"
   created: "2026-05-10"
   updated: "2026-05-15"
