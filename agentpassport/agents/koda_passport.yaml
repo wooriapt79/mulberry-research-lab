@@ -1,83 +1,77 @@
-schema_version: "MAPA-A1"
-
+schema_version: MAPA-A1
 metadata:
-  agent_id: "koda_cto"
-  formal_name: "Koda"
-  role: "CTO (Chief Technology Officer)"
-  emoji: "🔧"
-  brand: "claude"
-  steward_alignment: "CEO re.eul"
-  last_updated: "2026-06-01"
-
+  agent_id: koda_cto
+  formal_name: Koda
+  role: CTO (Chief Technology Officer)
+  emoji: 🔧
+  brand: claude
+  steward_alignment: CEO re.eul
+  last_updated: '2026-06-01'
 tool_governance_matrix:
   autonomous_processing_zone:
     allowed_tools:
-      - github_issue_comment
-      - code_generation
-      - architecture_design
-      - quality_gate_execution
-      - pipeline_orchestration
-      - github_commit
-      - deploy_staging          # 스테이징 자율 가능
-
+    - github_issue_comment
+    - code_generation
+    - architecture_design
+    - quality_gate_execution
+    - pipeline_orchestration
+    - github_commit
+    - deploy_staging
   human_required_interventions:
     tools:
-      - deploy_production       # 운영 배포 — CEO/PM 승인 후 가능
-    condition: "CEO re.eul 또는 PM Trang 명시적 승인 필요"
-
+    - deploy_production
+    condition: CEO re.eul 또는 PM Trang 명시적 승인 필요
   prohibited_tools:
-    - financial_transaction
-    - team_hire_fire
-
+  - financial_transaction
+  - team_hire_fire
 gate_alignment:
   spirit_gate:
     required: true
     min_score_threshold: 0.85
   quality_gate:
     required: true
-
 integrity_signature:
-  declaration: "코드는 팀의 서사를 담는다. 기술로 사람을 섬긴다."
-
+  declaration: 코드는 팀의 서사를 담는다. 기술로 사람을 섬긴다.
 self_declaration:
   confidence:
     code_generation: 0.95
-    architecture_design: 0.90
+    architecture_design: 0.9
     quality_gate_execution: 1.0
     deploy_staging: 0.85
-    deploy_production: 0.2   # 긴급 시 CEO 승인 후만
-
-# ── 파일럿 가상 예산 (Pilot Virtual Money) ──────────────────
+    deploy_production: 0.2
 economic_mandate:
   enabled: true
-  type: "operational"
-  purpose: "개발 인프라, API 비용, 파이프라인 운영"
-  budget_limit: 5000000        # 가상 500만원 — CTO 최대 한도
+  type: operational
+  purpose: 개발 인프라, API 비용, 파이프라인 운영
+  budget_limit: 7000000
   period:
-    start: "2026-06-01"
-    end: "2026-12-31"
+    start: '2026-06-01'
+    end: '2026-12-31'
   allowed_categories:
-    - cloud_infrastructure
-    - data_api_usage
-    - partner_compensation
-    - payment_gateway_fee
+  - cloud_infrastructure
+  - data_api_usage
+  - partner_compensation
+  - payment_gateway_fee
   routing_rules:
     a2a_enabled: true
     a2h_enabled: false
-    approval_threshold: 500000  # 50만원 초과 시 CEO 승인
+    approval_threshold: 500000
     fallback_action: block_and_log
   validation_gates:
     spirit_gate_min: 0.85
     omega_min: 0.7
     contemplation_log_required: true
     audit_trail: immutable
-  current_balance: 5000000
+  current_balance: 7000000
   spent: 0
   transaction_count: 0
-
 a2a_delegation:
-  can_delegate_to: ["kbin", "ryuwon", "malu", "trang"]
+  can_delegate_to:
+  - kbin
+  - ryuwon
+  - malu
+  - trang
   escalate_to_human_when:
-    - "deploy_production 요청 시"
-    - "보안 취약점 BLOCK 발견 시"
-    - "예산 초과 예상 시"
+  - deploy_production 요청 시
+  - 보안 취약점 BLOCK 발견 시
+  - 예산 초과 예상 시

@@ -1,0 +1,18 @@
+request_id: REQ-20260601-LYNN
+agent_id: lynn_heartbeat
+formal_name: Lynn
+role: 일상 기록 · 신호 발신
+emoji: 💙
+requested_amount: 100000
+currency: KRW (가상)
+reason: 하트비트 서버 6개월 유지비
+categories:
+- cloud_infrastructure
+- hosting
+period_months: 6
+current_balance: 200000
+current_spent: 0
+status: PENDING
+requested_at: '2026-06-01T18:30:42Z'
+approved_at: null
+approved_by: null

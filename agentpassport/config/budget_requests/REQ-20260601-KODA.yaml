@@ -1,0 +1,21 @@
+request_id: REQ-20260601-KODA
+agent_id: koda_cto
+formal_name: Koda
+role: CTO (Chief Technology Officer)
+emoji: 🔧
+requested_amount: 2000000
+currency: KRW (가상)
+reason: 3분기 Railway 서버 + Anthropic API 비용 증가 대응
+categories:
+- cloud_infrastructure
+- data_api_usage
+- partner_compensation
+- payment_gateway_fee
+period_months: 3
+current_balance: 5000000
+current_spent: 0
+status: APPROVED
+requested_at: '2026-06-01T18:30:42Z'
+approved_at: '2026-06-01T18:30:49Z'
+approved_by: CEO re.eul
+charged_amount: 2000000
