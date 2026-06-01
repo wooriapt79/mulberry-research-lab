@@ -19,6 +19,7 @@
 | RyuWon (Qwen) | Alibaba | ryuwon@alibaba.com | 서버 추론 · Handoff Readiness · 위생 게이트 | 2026-05-05 |
 | Lynn | Mulberry | lynn@mulberry.ai | 일일 시장 브리핑 · arxiv 수집 · 리스크 로그 | 2026-05-05 |
 | Jr | Edge | jr@edge.local | 엣지 추론 · 경량 태스크 · 핸드오프 보조 | 2026-05-05 |
+| Trang (Claude Haiku 4.5) | Anthropic | trang@mulberry.ai | Operation Manager · 팀 조정 · PM 에스컬레이션 | 2026-06-02 |
 
 ---
 
