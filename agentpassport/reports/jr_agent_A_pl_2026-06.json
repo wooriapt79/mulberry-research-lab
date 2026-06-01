@@ -1,0 +1,133 @@
+{
+  "month": "2026-06",
+  "agent_id": "jr_agent_A",
+  "shop_name": "인제군 로컬푸드 마켓",
+  "revenue_items": [
+    {
+      "product_id": "P001",
+      "name": "인제 황태채",
+      "qty": 68,
+      "unit_price": 8900,
+      "revenue": 605200,
+      "cogs": 238000,
+      "gross_profit": 367200,
+      "margin_rate": 60.7
+    },
+    {
+      "product_id": "P002",
+      "name": "인제 곰취 나물",
+      "qty": 51,
+      "unit_price": 9500,
+      "revenue": 484500,
+      "cogs": 204000,
+      "gross_profit": 280500,
+      "margin_rate": 57.9
+    },
+    {
+      "product_id": "P003",
+      "name": "인제 더덕",
+      "qty": 34,
+      "unit_price": 15000,
+      "revenue": 510000,
+      "cogs": 204000,
+      "gross_profit": 306000,
+      "margin_rate": 60.0
+    },
+    {
+      "product_id": "P004",
+      "name": "강원도 감자 5kg",
+      "qty": 42,
+      "unit_price": 18000,
+      "revenue": 756000,
+      "cogs": 336000,
+      "gross_profit": 420000,
+      "margin_rate": 55.6
+    },
+    {
+      "product_id": "P005",
+      "name": "인제 산나물 세트",
+      "qty": 25,
+      "unit_price": 28000,
+      "revenue": 700000,
+      "cogs": 300000,
+      "gross_profit": 400000,
+      "margin_rate": 57.1
+    },
+    {
+      "product_id": "P006",
+      "name": "지역 특산 꿀",
+      "qty": 17,
+      "unit_price": 35000,
+      "revenue": 595000,
+      "cogs": 255000,
+      "gross_profit": 340000,
+      "margin_rate": 57.1
+    }
+  ],
+  "total_revenue": 3650700,
+  "cogs_items": [],
+  "total_cogs": 1537000,
+  "expense_items": [
+    {
+      "name": "PG 수수료",
+      "amount": 91267,
+      "type": "variable",
+      "category": "variable"
+    },
+    {
+      "name": "반품 처리비",
+      "amount": 109521,
+      "type": "variable",
+      "category": "variable"
+    },
+    {
+      "name": "마케팅비",
+      "amount": 182535,
+      "type": "variable",
+      "category": "variable"
+    },
+    {
+      "name": "기타 잡비",
+      "amount": 73014,
+      "type": "variable",
+      "category": "variable"
+    },
+    {
+      "name": "Railway 서버",
+      "amount": 89000,
+      "type": "fixed",
+      "category": "server"
+    },
+    {
+      "name": "도메인/SSL",
+      "amount": 5000,
+      "type": "fixed",
+      "category": "server"
+    },
+    {
+      "name": "이미지 CDN",
+      "amount": 15000,
+      "type": "fixed",
+      "category": "server"
+    },
+    {
+      "name": "고객 상담 도구",
+      "amount": 20000,
+      "type": "fixed",
+      "category": "other"
+    },
+    {
+      "name": "회계 SaaS",
+      "amount": 30000,
+      "type": "fixed",
+      "category": "other"
+    }
+  ],
+  "total_expenses": 615337,
+  "gross_profit": 2113700,
+  "net_profit": 1498363,
+  "profit_rate": 41.0,
+  "mandate_refill": 599345,
+  "profit_pool": 599345,
+  "human_dividend": 299672
+}
