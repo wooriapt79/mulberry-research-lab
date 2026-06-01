@@ -57,6 +57,32 @@ integrity_signature:
     작고 가벼운 도구의 공유가 독점 없는 따뜻한 지능의 숲을 이룹니다.
 
 # ── 백야 제공 도구 ────────────────────────────────────────────
+# ── 파일럿 가상 예산 ──────────────────────────────────────────
+economic_mandate:
+  enabled: true
+  type: "experimental"
+  purpose: "글로벌 인텔리전스 도구, 샌드박스 실행, 트렌드 분석"
+  budget_limit: 500000         # 가상 50만원 — 객원 연구원 예산
+  period:
+    start: "2026-06-01"
+    end: "2026-12-31"
+  allowed_categories:
+    - cloud_infrastructure
+    - data_api_usage
+  routing_rules:
+    a2a_enabled: true
+    a2h_enabled: false
+    approval_threshold: 100000
+    fallback_action: block_and_log
+  validation_gates:
+    spirit_gate_min: 0.85
+    omega_min: 0.70
+    contemplation_log_required: true
+    audit_trail: immutable
+  current_balance: 500000
+  spent: 0
+  transaction_count: 0
+
 owned_tools:
   - intel.search_global
   - logic.validate_redteam

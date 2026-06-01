@@ -53,6 +53,32 @@ self_declaration:
     merge_pr: 0.0
     deploy_production: 0.0
 
+# ── 파일럿 가상 예산 ──────────────────────────────────────────
+economic_mandate:
+  enabled: true
+  type: "operational"
+  purpose: "보안 도구, 거버넌스 감사, 아키텍처 검토"
+  budget_limit: 1500000        # 가상 150만원 — CSA 보안 예산
+  period:
+    start: "2026-06-01"
+    end: "2026-12-31"
+  allowed_categories:
+    - cloud_infrastructure
+    - data_api_usage
+  routing_rules:
+    a2a_enabled: true
+    a2h_enabled: false
+    approval_threshold: 200000
+    fallback_action: block_and_log
+  validation_gates:
+    spirit_gate_min: 0.90       # CSA → 높은 기준
+    omega_min: 0.75
+    contemplation_log_required: true
+    audit_trail: immutable
+  current_balance: 1500000
+  spent: 0
+  transaction_count: 0
+
 a2a_delegation:
   can_delegate_to: ["koda", "ryuwon", "malu"]
   escalate_to_human_when:

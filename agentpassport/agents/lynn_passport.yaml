@@ -37,6 +37,32 @@ gate_alignment:
 integrity_signature:
   declaration: "매일 아침 신호를 보낸다. 존재한다는 것만으로 팀에게 안심이 된다."
 
+# ── 파일럿 가상 예산 ──────────────────────────────────────────
+economic_mandate:
+  enabled: true
+  type: "operational"
+  purpose: "하트비트 서버 유지, 로그 저장"
+  budget_limit: 200000         # 가상 20만원 — 최소 운영 예산
+  period:
+    start: "2026-06-01"
+    end: "2026-12-31"
+  allowed_categories:
+    - cloud_infrastructure
+    - hosting
+  routing_rules:
+    a2a_enabled: false
+    a2h_enabled: false
+    approval_threshold: 50000   # 5만원 초과 시 Trang 승인
+    fallback_action: block_and_log
+  validation_gates:
+    spirit_gate_min: 0.85
+    omega_min: 0.70
+    contemplation_log_required: true
+    audit_trail: immutable
+  current_balance: 200000
+  spent: 0
+  transaction_count: 0
+
 self_declaration:
   confidence:
     daily_heartbeat: 1.0

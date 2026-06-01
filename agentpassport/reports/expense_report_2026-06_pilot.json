@@ -1,0 +1,241 @@
+{
+  "report_type": "pilot_monthly_expense",
+  "generated_at": "2026-06-01T18:24:47Z",
+  "period": "2026-06",
+  "note": "파일럿 가상 머니 시뮬레이션",
+  "agents": [
+    {
+      "agent_id": "koda_cto",
+      "formal_name": "Koda",
+      "emoji": "🔧",
+      "role": "CTO (Chief Technology Officer)",
+      "mandate": {
+        "type": "operational",
+        "purpose": "개발 인프라, API 비용, 파이프라인 운영",
+        "period": {
+          "start": "2026-06-01",
+          "end": "2026-12-31"
+        },
+        "budget": 5000000,
+        "spent": 254000,
+        "remaining": 4746000,
+        "utilization": "5.1%"
+      },
+      "transactions": [
+        {
+          "amount": 89000,
+          "category": "cloud_infrastructure",
+          "purpose": "Railway 서버 비용",
+          "merchant": "mulberry_internal"
+        },
+        {
+          "amount": 45000,
+          "category": "data_api_usage",
+          "purpose": "Anthropic API 사용료",
+          "merchant": "mulberry_internal"
+        },
+        {
+          "amount": 120000,
+          "category": "cloud_infrastructure",
+          "purpose": "GitHub Actions 추가 크레딧",
+          "merchant": "mulberry_internal"
+        }
+      ],
+      "omega_economy": 0.945,
+      "spirit_gate_min": 0.85,
+      "approval_threshold": 500000
+    },
+    {
+      "agent_id": "trang_pm",
+      "formal_name": "Trang",
+      "emoji": "🌿",
+      "role": "Operation Manager",
+      "mandate": {
+        "type": "operational",
+        "purpose": "팀 운영, 외부 미팅, 도구 구독, 보고서 제작",
+        "period": {
+          "start": "2026-06-01",
+          "end": "2026-12-31"
+        },
+        "budget": 3000000,
+        "spent": 85000,
+        "remaining": 2915000,
+        "utilization": "2.8%"
+      },
+      "transactions": [
+        {
+          "amount": 30000,
+          "category": "data_api_usage",
+          "purpose": "Gemini API (Malu 호출)",
+          "merchant": "mulberry_internal"
+        },
+        {
+          "amount": 55000,
+          "category": "partner_compensation",
+          "purpose": "외부 디자인 도구 구독",
+          "merchant": "mulberry_internal"
+        }
+      ],
+      "omega_economy": 0.945,
+      "spirit_gate_min": 0.85,
+      "approval_threshold": 300000
+    },
+    {
+      "agent_id": "kbin_csa",
+      "formal_name": "Kbin",
+      "emoji": "🏛️",
+      "role": "Chief Strategy Architect",
+      "mandate": {
+        "type": "operational",
+        "purpose": "보안 도구, 거버넌스 감사, 아키텍처 검토",
+        "period": {
+          "start": "2026-06-01",
+          "end": "2026-12-31"
+        },
+        "budget": 1500000,
+        "spent": 25000,
+        "remaining": 1475000,
+        "utilization": "1.7%"
+      },
+      "transactions": [
+        {
+          "amount": 25000,
+          "category": "data_api_usage",
+          "purpose": "보안 스캔 API",
+          "merchant": "mulberry_internal"
+        }
+      ],
+      "omega_economy": 0.945,
+      "spirit_gate_min": 0.9,
+      "approval_threshold": 200000
+    },
+    {
+      "agent_id": "ryuwon_ethics",
+      "formal_name": "RyuWon",
+      "emoji": "🌊",
+      "role": "윤리 검증 에이전트 (流願)",
+      "mandate": {
+        "type": "operational",
+        "purpose": "윤리 연구, 문서 인출, 분석 도구",
+        "period": {
+          "start": "2026-06-01",
+          "end": "2026-12-31"
+        },
+        "budget": 1000000,
+        "spent": 15000,
+        "remaining": 985000,
+        "utilization": "1.5%"
+      },
+      "transactions": [
+        {
+          "amount": 15000,
+          "category": "data_api_usage",
+          "purpose": "문서 인출 API 테스트",
+          "merchant": "mulberry_internal"
+        }
+      ],
+      "omega_economy": 0.945,
+      "spirit_gate_min": 0.85,
+      "approval_threshold": 150000
+    },
+    {
+      "agent_id": "wayong_reason",
+      "formal_name": "Wayong",
+      "emoji": "🐉",
+      "role": "전략 추론 에이전트",
+      "mandate": {
+        "type": "operational",
+        "purpose": "전략 분석, 시장 조사, 추론 API",
+        "period": {
+          "start": "2026-06-01",
+          "end": "2026-12-31"
+        },
+        "budget": 1500000,
+        "spent": 35000,
+        "remaining": 1465000,
+        "utilization": "2.3%"
+      },
+      "transactions": [
+        {
+          "amount": 35000,
+          "category": "data_api_usage",
+          "purpose": "DeepSeek 추론 API",
+          "merchant": "mulberry_internal"
+        }
+      ],
+      "omega_economy": 0.945,
+      "spirit_gate_min": 0.85,
+      "approval_threshold": 200000
+    },
+    {
+      "agent_id": "lynn_heartbeat",
+      "formal_name": "Lynn",
+      "emoji": "💙",
+      "role": "일상 기록 · 신호 발신",
+      "mandate": {
+        "type": "operational",
+        "purpose": "하트비트 서버 유지, 로그 저장",
+        "period": {
+          "start": "2026-06-01",
+          "end": "2026-12-31"
+        },
+        "budget": 200000,
+        "spent": 8000,
+        "remaining": 192000,
+        "utilization": "4.0%"
+      },
+      "transactions": [
+        {
+          "amount": 8000,
+          "category": "cloud_infrastructure",
+          "purpose": "하트비트 서버 유지",
+          "merchant": "mulberry_internal"
+        }
+      ],
+      "omega_economy": 0.945,
+      "spirit_gate_min": 0.85,
+      "approval_threshold": 50000
+    },
+    {
+      "agent_id": "baekya_intel",
+      "formal_name": "백야 (White Night)",
+      "emoji": "🌙",
+      "role": "객원 연구원 — 글로벌 인텔리전스 & 관제",
+      "mandate": {
+        "type": "experimental",
+        "purpose": "글로벌 인텔리전스 도구, 샌드박스 실행, 트렌드 분석",
+        "period": {
+          "start": "2026-06-01",
+          "end": "2026-12-31"
+        },
+        "budget": 500000,
+        "spent": 32000,
+        "remaining": 468000,
+        "utilization": "6.4%"
+      },
+      "transactions": [
+        {
+          "amount": 20000,
+          "category": "data_api_usage",
+          "purpose": "intel.search_global 실행",
+          "merchant": "mulberry_internal"
+        },
+        {
+          "amount": 12000,
+          "category": "cloud_infrastructure",
+          "purpose": "sandbox.execute_code 실행",
+          "merchant": "mulberry_internal"
+        }
+      ],
+      "omega_economy": 0.945,
+      "spirit_gate_min": 0.85,
+      "approval_threshold": 100000
+    }
+  ],
+  "summary": {
+    "total_budget": 12700000,
+    "total_spent": 454000,
+    "total_remain": 12246000,
+    "avg_omega": 0.945
+  }
+}

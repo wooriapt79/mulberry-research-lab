@@ -47,6 +47,34 @@ self_declaration:
     deploy_staging: 0.85
     deploy_production: 0.2   # 긴급 시 CEO 승인 후만
 
+# ── 파일럿 가상 예산 (Pilot Virtual Money) ──────────────────
+economic_mandate:
+  enabled: true
+  type: "operational"
+  purpose: "개발 인프라, API 비용, 파이프라인 운영"
+  budget_limit: 5000000        # 가상 500만원 — CTO 최대 한도
+  period:
+    start: "2026-06-01"
+    end: "2026-12-31"
+  allowed_categories:
+    - cloud_infrastructure
+    - data_api_usage
+    - partner_compensation
+    - payment_gateway_fee
+  routing_rules:
+    a2a_enabled: true
+    a2h_enabled: false
+    approval_threshold: 500000  # 50만원 초과 시 CEO 승인
+    fallback_action: block_and_log
+  validation_gates:
+    spirit_gate_min: 0.85
+    omega_min: 0.7
+    contemplation_log_required: true
+    audit_trail: immutable
+  current_balance: 5000000
+  spent: 0
+  transaction_count: 0
+
 a2a_delegation:
   can_delegate_to: ["kbin", "ryuwon", "malu", "trang"]
   escalate_to_human_when:
