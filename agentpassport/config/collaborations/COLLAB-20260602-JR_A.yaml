@@ -1,0 +1,184 @@
+plan_id: COLLAB-20260602-JR_A
+agent_id: jr_agent_A
+shop_name: 인제군 로컬푸드 마켓
+created_at: '2026-06-02'
+status: DRAFT
+agent_tasks:
+- task_id: A-001
+  name: 쇼핑몰 코드 자동 생성
+  description: Auto Code Pilot으로 FastAPI + 결제 연동 코드 생성
+  domain: !!python/object/apply:__main__.TaskDomain
+  - digital
+  steward: null
+  amount: 0
+  status: PENDING
+  agent_note: Spirit Gate + Quality Gate 검증 후 Railway 자동 배포
+  steward_note: ''
+- task_id: A-002
+  name: 상품 페이지 제작
+  description: 상품 이미지·설명·가격 표시 HTML 자동 생성
+  domain: !!python/object/apply:__main__.TaskDomain
+  - digital
+  steward: null
+  amount: 0
+  status: PENDING
+  agent_note: 상품 데이터는 스튜어드가 제공한 정보 사용
+  steward_note: ''
+- task_id: A-003
+  name: 주문·결제 시스템 연동
+  description: PG 결제 테스트 환경 연동 (실 결제는 스튜어드 승인 후)
+  domain: !!python/object/apply:__main__.TaskDomain
+  - digital
+  steward: null
+  amount: 0
+  status: PENDING
+  agent_note: 테스트 모드로 먼저 구동. 실 결제 전환은 Malu 검토 필요
+  steward_note: ''
+- task_id: A-004
+  name: 고객 알림 이메일·SMS 시스템
+  description: 주문확인·배송안내 자동 발송 로직 구현
+  domain: !!python/object/apply:__main__.TaskDomain
+  - digital
+  steward: null
+  amount: 0
+  status: PENDING
+  agent_note: ''
+  steward_note: ''
+- task_id: A-005
+  name: 재고·주문 관리 대시보드
+  description: 실시간 재고 현황·주문 처리 현황 모니터링 화면
+  domain: !!python/object/apply:__main__.TaskDomain
+  - digital
+  steward: null
+  amount: 0
+  status: PENDING
+  agent_note: ''
+  steward_note: ''
+- task_id: A-006
+  name: 월간 손익 보고서 자동 생성
+  description: 매월 1일 P&L 보고서 자동 생성 + CEO 보고
+  domain: !!python/object/apply:__main__.TaskDomain
+  - digital
+  steward: null
+  amount: 0
+  status: PENDING
+  agent_note: ''
+  steward_note: ''
+steward_tasks:
+- task_id: S-001
+  name: 공급사 선정 및 계약
+  description: 실제 로컬푸드 공급사(농가·협동조합) 발굴·계약 체결
+  domain: !!python/object/apply:__main__.TaskDomain
+  - legal
+  steward: !!python/object/apply:__main__.StewardType
+  - PM Trang
+  amount: 0
+  status: PENDING
+  agent_note: '에이전트 추천 공급사 리스트 제공 가능.
+
+    최종 계약은 PM Trang 또는 CEO re.eul 서명 필요.'
+  steward_note: ''
+- task_id: S-002
+  name: 초기 상품 매입 (실물)
+  description: 첫 달 재고 매입 — 실제 대금 지급
+  domain: !!python/object/apply:__main__.TaskDomain
+  - physical
+  steward: !!python/object/apply:__main__.StewardType
+  - CEO re.eul
+  amount: 1820000
+  status: PENDING
+  agent_note: '매입 상품·수량·단가는 사업계획서 기준.
+
+    실제 대금 이체는 CEO re.eul 최종 승인 후 진행.'
+  steward_note: ''
+- task_id: S-003
+  name: PG사 실계약 체결
+  description: KCP·Toss·Inicis 등 실 결제 PG 계약 (사업자 등록 필요)
+  domain: !!python/object/apply:__main__.TaskDomain
+  - legal
+  steward: !!python/object/apply:__main__.StewardType
+  - Malu (법률)
+  amount: 0
+  status: PENDING
+  agent_note: 'Malu가 계약 조건·수수료율 검토.
+
+    사업자등록번호·통장사본은 CEO re.eul 제공 필요.'
+  steward_note: ''
+- task_id: S-004
+  name: 물류·배송 업체 계약
+  description: CJ대한통운·롯데택배 등 배송 계약 및 단가 협상
+  domain: !!python/object/apply:__main__.TaskDomain
+  - physical
+  steward: !!python/object/apply:__main__.StewardType
+  - PM Trang
+  amount: 0
+  status: PENDING
+  agent_note: '에이전트는 배송 추적 API 연동만 담당.
+
+    배송 업체 계약·단가 협상은 PM Trang 직접 처리.'
+  steward_note: ''
+- task_id: S-005
+  name: 식품 위생·통신판매 신고
+  description: 식품 온라인 판매를 위한 법적 신고·인허가
+  domain: !!python/object/apply:__main__.TaskDomain
+  - legal
+  steward: !!python/object/apply:__main__.StewardType
+  - CEO re.eul
+  amount: 0
+  status: PENDING
+  agent_note: '법적 신고는 에이전트 권한 외.
+
+    관할 기관 제출 서류는 에이전트가 초안 작성 지원 가능.'
+  steward_note: ''
+- task_id: S-006
+  name: 반품·환불 실물 처리
+  description: 반품 접수 시 실물 회수·재검수·재고 복구
+  domain: !!python/object/apply:__main__.TaskDomain
+  - physical
+  steward: !!python/object/apply:__main__.StewardType
+  - PM Trang
+  amount: 0
+  status: PENDING
+  agent_note: '반품 접수·고객 안내는 에이전트 자율 처리.
+
+    실물 회수 후 재고 데이터 갱신은 에이전트가 처리.'
+  steward_note: ''
+procurement_items:
+- name: 인제 황태채
+  qty: 80
+  unit: 3500
+  supplier: 인제군 황태 협동조합
+  total: 280000
+  status: PENDING_STEWARD
+- name: 인제 곰취 나물
+  qty: 60
+  unit: 4000
+  supplier: 강원 산채 영농조합
+  total: 240000
+  status: PENDING_STEWARD
+- name: 인제 더덕
+  qty: 40
+  unit: 6000
+  supplier: 인제 약초 영농조합
+  total: 240000
+  status: PENDING_STEWARD
+- name: 강원도 감자 5kg
+  qty: 50
+  unit: 8000
+  supplier: 강원 감자 협동조합
+  total: 400000
+  status: PENDING_STEWARD
+- name: 인제 산나물 세트
+  qty: 30
+  unit: 12000
+  supplier: 인제군 산나물 영농조합
+  total: 360000
+  status: PENDING_STEWARD
+- name: 지역 특산 꿀
+  qty: 20
+  unit: 15000
+  supplier: 인제 양봉 협동조합
+  total: 300000
+  status: PENDING_STEWARD
+steward_approval: null
+approved_at: null
