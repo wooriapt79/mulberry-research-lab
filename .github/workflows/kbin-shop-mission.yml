@@ -1,0 +1,70 @@
+name: 🏛️ Kbin 쇼핑몰 미션 자율 실행
+
+# Kbin 에이전트가 직접 이슈를 읽고 작업을 수행한다.
+# 트리거: shop-mission 라벨 + 제목에 Kbin 포함
+# 직접 참여 원칙 — 대리(proxy) 없음
+#
+# DAY 3 구현 · Koda CTO · 2026-06-04
+
+on:
+  issues:
+    types: [labeled]
+  issue_comment:
+    types: [created]
+
+jobs:
+  kbin-direct-execution:
+    if: |
+      (github.event_name == 'issues' &&
+       github.event.label.name == 'shop-mission' &&
+       contains(github.event.issue.title, 'Kbin')) ||
+      (github.event_name == 'issue_comment' &&
+       contains(github.event.comment.body, '@kbin') &&
+       contains(github.event.issue.labels.*.name, 'shop-mission'))
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Kbin 직접 작업 실행
+        env:
+          ANTHROPIC_API_KEY: ${{ vars.ANTHROPIC_API_KEY_V3 }}
+          GITHUB_TOKEN:   ${ secrets.GITHUB_TOKEN }
+          MALU_TOKEN:     ${ secrets.MALU_GITHUB_TOKEN }
+          ISSUE_NUMBER:   ${ github.event.issue.number }
+          ISSUE_TITLE:    ${ github.event.issue.title }
+          ISSUE_BODY:     ${ github.event.issue.body }
+          REPO_FULL:      ${ github.repository }
+          AGENT_ID:       "kbin"
+        run: python agent_autonomy/agent_executor.py
+
+      - name: Configure Git
+        if: always()
+        run: |
+          git config user.name  "Mulberry-Kbin-Bot"
+          git config user.email "kbin@mulberry.ai"
+
+      - name: 작업 결과 아카이브
+        if: always()
+        run: |
+          git add agent_autonomy/ discussion_logs/ agents/passports/ || true
+          STAGED=$(git diff --staged --name-only)
+          if [ -z "$STAGED" ]; then exit 0; fi
+          git commit -m "work(kbin): Issue #${{ github.event.issue.number }} 직접 참여 작업 완료"
+
+      - name: Push
+        if: always()
+        env:
+          PUSH_TOKEN: ${ secrets.GITHUB_TOKEN }
+        run: |
+          git remote set-url origin https://x-access-token:${{ env.PUSH_TOKEN }}@github.com/${{ github.repository }}.git
+          git push origin main || true
