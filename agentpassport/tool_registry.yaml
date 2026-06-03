@@ -694,16 +694,6 @@ tools:
 
 
 # ──────────────────────────────────────────
-# 전역 Spirit Score 기준
-# ──────────────────────────────────────────
-spirit_thresholds:
-  low:    0.75    # 기본 실행 기준
-  medium: 0.80    # 파일 쓰기, 샌드박스
-  high:   0.85    # PR 생성, 터미널 실행
-  critical: 0.90  # 위험 명령어 실행
-
-
-# ──────────────────────────────────────────
 # 백야(White Night) 제공 도구 — DAmP-Registry v1.2.0
 # ──────────────────────────────────────────
 
@@ -779,6 +769,15 @@ spirit_thresholds:
     input_format: [json]
     output_format: [json, receipt]
     governance_note: "결제·헌법 조항 수정 원천 차단. ON_HOLD 후 CEO re.eul 즉시 통보 필수."
+
+# ──────────────────────────────────────────
+# 전역 Spirit Score 기준
+# ──────────────────────────────────────────
+spirit_thresholds:
+  low:    0.75
+  medium: 0.80
+  high:   0.85
+  critical: 0.90
 
 meta:
   version: "2.1.0"

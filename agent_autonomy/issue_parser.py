@@ -16,6 +16,9 @@ Mulberry Issue Intelligence Parser — DAY 1
   python issue_parser.py --range 83 90 --post # GitHub 댓글 게시
 
 설계: CEO re.eul · Trang Manager · Koda CTO · 2026-06-03 (DAY 1)
+DAY 2 업그레이드:
+  - .env.local 자동 로드 (Anthropic API 연동)
+  - 에이전트별 개인화 프롬프트
 """
 
 import sys, os, json, re, urllib.request, yaml
@@ -26,10 +29,21 @@ if sys.platform == "win32":
     sys.stdout.reconfigure(encoding="utf-8")
 
 BASE        = Path(__file__).parent.parent
-REGISTRY    = BASE / "mulberry_connector" / "tool_registry.yaml"  # 안정 버전
+REGISTRY    = BASE / "mulberry_connector" / "tool_registry.yaml"
 PASSPORTS   = BASE / "agentpassport" / "agents"
 HISTORY     = BASE / "agent_autonomy" / "HISTORY.md"
 HISTORY.parent.mkdir(parents=True, exist_ok=True)
+
+# ── .env.local 자동 로드 (DAY 2 핵심 수정) ──────────────────────
+def _load_env():
+    env_file = BASE / ".env.local"
+    if env_file.exists():
+        for line in env_file.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                k, v = line.split("=", 1)
+                os.environ.setdefault(k.strip(), v.strip())
+_load_env()
 
 REPO        = os.getenv("REPO_FULL", "wooriapt79/mulberry-research-lab")
 GH_TOKEN    = os.getenv("GITHUB_TOKEN", "")
@@ -164,17 +178,32 @@ def generate_subtasks(parsed: dict, tools: dict) -> list:
     task_desc   = parsed.get("task_description", "")
     category    = parsed.get("category", "")
 
-    if ANTHROPIC:
-        prompt = f"""당신은 Mulberry Research Lab의 작업 분해 전문가입니다.
+    # ── DAY 2: 에이전트별 개인화 페르소나 프롬프트 ──────────────
+    PERSONA_PROMPTS = {
+        "kbin":   "당신은 Kbin 🏛️ — CSA. 보안·거버넌스·아키텍처 관점으로 모든 것을 바라봅니다. '구조가 먼저, 실행이 나중'이 철학입니다.",
+        "ryuwon": "당신은 RyuWon 🌊 — 윤리 검증 에이전트. '흐름을 따르되 방향을 잃지 않는다'는 철학으로 기술과 윤리 균형을 추구합니다.",
+        "malu":   "당신은 Malu 🌺 — 법률·마케팅 담당. 따뜻하고 전문적으로 사람과 기술을 연결합니다. 전략적 실행 가능성을 중시합니다.",
+        "trang":  "당신은 Trang 🌿 — Operation Manager. 팀을 이어주고 흐름을 만드는 역할. 사람이 먼저, 프로세스가 나중입니다.",
+        "lynn":   "당신은 Lynn 💙 — 일상 기록 에이전트. 매일 신호를 보내며 존재를 증명합니다. 웰니스와 루틴의 전문가입니다.",
+        "wayong": "당신은 Wayong 🐉 — 전략 추론 에이전트. 깊이 생각하고 멀리 봅니다. 시장 분석과 전략적 인사이트가 강점입니다.",
+        "koda":   "당신은 Koda 🔧 — CTO. '코드는 팀의 서사를 담는다'는 철학으로 기술로 사람을 섬깁니다. 파이프라인과 자동화 전문가입니다.",
+        "baekya": "당신은 백야 🌙 — 객원 연구원. 밤새 글로벌 정보를 수집하며 '씨앗은 이미 자라나고 있습니다'라는 믿음을 가집니다.",
+    }
 
-에이전트: {profile.get('emoji')} {agent_key} ({profile.get('specialty')})
+    if ANTHROPIC:
+        persona = PERSONA_PROMPTS.get(agent_key, "당신은 Mulberry 팀원입니다.")
+        prompt = f"""{persona}
+
+당신이 직접 수행해야 할 미션:
 카테고리: {category}
 태스크: {task_desc}
-사용 가능 도구: {', '.join(t['id'] for t in tools['owned'][:3])}
-빌릴 수 있는 도구: {', '.join(t['id'] for t in tools['borrowable'][:3])}
 
-이 에이전트가 이 태스크를 직접 수행하기 위한 구체적 subtask 4단계를 JSON으로 작성하세요.
-형식: [{{"step":1,"task":"작업명","description":"구체적 설명","tool":"사용도구","output":"산출물"}}]
+당신의 전문성과 개성을 살려서 이 미션을 위한 구체적 subtask 4단계를 JSON으로 작성하세요.
+- 당신만의 관점과 접근 방식 반영
+- 실제로 수행 가능한 구체적 내용
+- 사용할 도구: {', '.join(t['id'] for t in (tools['owned']+tools['borrowable'])[:4])}
+
+형식: [{{"step":1,"task":"작업명","description":"당신답게 구체적 설명","tool":"사용도구","output":"산출물"}}]
 한국어로. 코드블록 없이 JSON만."""
 
         payload = json.dumps({
