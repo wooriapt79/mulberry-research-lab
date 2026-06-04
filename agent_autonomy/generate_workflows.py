@@ -23,11 +23,15 @@ if sys.platform == "win32":
 BASE         = Path(__file__).parent.parent
 WORKFLOWS    = BASE / ".github" / "workflows"
 
+# Option B: 에이전트별 개별 스크립트 + 라벨 기반 트리거
+# 새 미션 추가 시: AGENT_CONFIG의 labels에 추가 + {agent}_mission.py에 추가
+
 AGENT_CONFIG = {
     "kbin": {
         "emoji": "🏛️", "formal": "Kbin", "role": "CSA",
         "brand": "claude", "specialty": "보안·거버넌스·아키텍처",
         "trigger_keyword": "Kbin",
+        "labels": ["CSA", "shop-mission"],      # 이 라벨들로 트리거
         "system_prompt": (
             "당신은 Kbin 🏛️ — Mulberry Research Lab의 CSA입니다. "
             "'구조가 먼저, 실행이 나중.' "
@@ -168,9 +172,11 @@ jobs:
           ISSUE_NUMBER:   ${{ github.event.issue.number }}
           ISSUE_TITLE:    ${{ github.event.issue.title }}
           ISSUE_BODY:     ${{ github.event.issue.body }}
+          ISSUE_LABEL:    ${{ github.event.label.name }}
           REPO_FULL:      ${{ github.repository }}
-          AGENT_ID:       "{agent_key}"
-        run: python agent_autonomy/agent_executor.py
+        run: |
+          pip install pyyaml -q
+          python agent_autonomy/scripts/{agent_key}_mission.py
 
       - name: Configure Git
         if: always()

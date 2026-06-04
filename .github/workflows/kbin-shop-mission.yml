@@ -43,9 +43,11 @@ jobs:
           ISSUE_NUMBER:   ${ github.event.issue.number }
           ISSUE_TITLE:    ${ github.event.issue.title }
           ISSUE_BODY:     ${ github.event.issue.body }
+          ISSUE_LABEL:    ${ github.event.label.name }
           REPO_FULL:      ${ github.repository }
-          AGENT_ID:       "kbin"
-        run: python agent_autonomy/agent_executor.py
+        run: |
+          pip install pyyaml -q
+          python agent_autonomy/scripts/kbin_mission.py
 
       - name: Configure Git
         if: always()
