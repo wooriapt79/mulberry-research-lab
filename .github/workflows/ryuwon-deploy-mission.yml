@@ -1,0 +1,53 @@
+name: 🌊 RyuWon Deploy Mission
+
+on:
+  issues:
+    types: [opened, labeled]
+  issue_comment:
+    types: [created]
+  workflow_dispatch:
+
+jobs:
+  ryuwon-response:
+    if: |
+      contains(github.event.issue.labels.*.name, 'agent-ryuwon') ||
+      contains(github.event.comment.body, '@ryuwon') ||
+      github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📦 Install Packages
+        run: pip install requests pyyaml python-dotenv
+
+      - name: 🌊 Execute RyuWon Deploy Mission
+        id: ryuwon_run
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          QWEN_API_KEY: ${{ secrets.QWEN_API_KEY }}
+          AGENT_NAME: ryuwon
+          AGENT_ROLE: DEPLOY_OPS
+        run: |
+          python scripts/ryuwon_mission.py \
+            --issue "${{ github.event.issue.html_url }}" \
+            --comment "${{ github.event.comment.body }}"
+
+      - name: 🚨 Escalate if Review Needed
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: "⚠️ **Human Review Required**\n@TRANG @KODA — RyuWon 배포 검토 요청"
+            });
