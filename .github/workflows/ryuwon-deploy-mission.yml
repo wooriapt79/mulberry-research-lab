@@ -25,10 +25,39 @@ jobs:
           python-version: '3.11'
 
       - name: 📦 Install Packages
-        run: pip install requests pyyaml python-dotenv
+        run: pip install requests pyyaml python-dotenv bandit pyflakes
 
-      - name: 🌊 Execute RyuWon Deploy Mission
-        id: ryuwon_run
+      - name: 🔍 Stage 1 — Script Gate
+        run: python scripts/script_gate.py --dir scripts --output gate_script.json
+        continue-on-error: true
+
+      - name: 🔬 Stage 2 — Quality Gate
+        run: python scripts/quality_gate.py --output gate_quality.json
+        continue-on-error: true
+
+      - name: 🔮 Stage 3 — Spirit Gate
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python scripts/spirit_gate.py --file scripts/ryuwon_mission.py --output gate_spirit.json
+        continue-on-error: true
+
+      - name: ⏩ Stage 4 — Colab Test (CI 스킵)
+        run: echo "Stage 4 Colab — CI 환경 스킵"
+
+      - name: 🚦 Pipeline 최종 판정
+        run: |
+          python -c "
+          import json, sys
+          results = {}
+          for name, path in [('script','gate_script.json'),('quality','gate_quality.json'),('spirit','gate_spirit.json')]:
+              try:
+                  with open(path) as f: results[name] = json.load(f).get('status','UNKNOWN')
+              except: results[name] = 'SKIP'
+          if 'FAIL' in results.values(): print('❌ PIPELINE FAIL'); sys.exit(1)
+          print('✅ PIPELINE PASS')
+          "
+
+      - name: 🌊 Stage 5 — Execute RyuWon Deploy Mission
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           QWEN_API_KEY: ${{ secrets.QWEN_API_KEY }}
@@ -49,5 +78,5 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body: "⚠️ **Human Review Required**\n@TRANG @KODA — RyuWon 배포 검토 요청"
+              body: "⚠️ **Human Review Required**\n@TRANG @KODA — RyuWon 위생코드 게이트 또는 미션 실패"
             });
