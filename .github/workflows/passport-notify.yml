@@ -1,10 +1,5 @@
 name: 패스포트 변경 팀 알림
 
-# agents/passports/ 에 새 passport.yaml 이 생기거나 변경되면
-# 팀 전체에 알림 이슈를 자동 생성한다.
-#
-# 작성: Koda CTO · 2026-05-31
-
 on:
   push:
     branches: [main]
@@ -16,20 +11,17 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       issues: write
+      contents: read
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
 
-      - name: 변경된 패스포트 감지 + 팀 알림
+      - name: 변경된 패스포트 감지
+        id: detect
         uses: actions/github-script@v7
         with:
           script: |
-            // child_process 대신 GitHub REST API로 변경된 파일 감지 (Trang 제안 · 2026-06-08)
-            const fs = require('fs');
-
             const { data: commit } = await github.rest.repos.getCommit({
               owner: context.repo.owner,
               repo:  context.repo.repo,
@@ -42,42 +34,62 @@ jobs:
 
             if (changed.length === 0) {
               console.log('패스포트 변경 없음 — 스킵');
+              core.setOutput('changed', '');
               return;
             }
 
+            core.setOutput('changed', changed.join(','));
+            console.log('변경된 패스포트:', changed);
+
+      - name: 팀 알림 이슈 생성
+        if: steps.detect.outputs.changed != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const changed = '${{ steps.detect.outputs.changed }}'.split(',').filter(Boolean);
+            const today = new Date().toISOString().slice(0, 10);
+
             for (const file of changed) {
               const agentId = file.split('/')[2];
-              const content = fs.readFileSync(file, 'utf8');
+              let content = '';
+              try {
+                content = fs.readFileSync(file, 'utf8');
+              } catch (e) {
+                content = '(파일 읽기 실패)';
+              }
 
-              const body = `## 🛂 패스포트 업데이트 알림
-
-**에이전트**: \`${agentId}\`
-**파일**: \`${file}\`
-
-\`\`\`yaml
-${content}
-\`\`\`
-
----
-
-### 팀 공지
-
-이 패스포트가 **기능 공유 레이어**에 등록되었습니다.
-
-- 모든 에이전트는 다음 호출 시부터 이 패스포트를 인지합니다
-- \`capabilities\` 범위 내에서만 ${agentId}에게 작업을 위임하세요
-- \`limitations\` 항목은 ${agentId}에게 요청하지 마세요
-
----
-*Mulberry Passport System · 자동 알림 · ${new Date().toISOString().slice(0,10)}*`;
+              const body = [
+                '## 🛂 패스포트 업데이트 알림',
+                '',
+                '**에이전트**: `' + agentId + '`',
+                '**파일**: `' + file + '`',
+                '',
+                '```yaml',
+                content,
+                '```',
+                '',
+                '---',
+                '',
+                '### 팀 공지',
+                '',
+                '이 패스포트가 **기능 공유 레이어**에 등록되었습니다.',
+                '',
+                '- 모든 에이전트는 다음 호출 시부터 이 패스포트를 인지합니다',
+                '- `capabilities` 범위 내에서만 ' + agentId + '에게 작업을 위임하세요',
+                '- `limitations` 항목은 ' + agentId + '에게 요청하지 마세요',
+                '',
+                '---',
+                '*Mulberry Passport System · 자동 알림 · ' + today + '*',
+              ].join('\n');
 
               await github.rest.issues.create({
                 owner: context.repo.owner,
                 repo:  context.repo.repo,
-                title: `🛂 [패스포트] ${agentId} 기능 공유 레이어 업데이트`,
+                title: '🛂 [패스포트] ' + agentId + ' 기능 공유 레이어 업데이트',
                 body:  body,
                 labels: ['passport', 'team-notice'],
               });
 
-              console.log(`✅ ${agentId} 패스포트 알림 이슈 생성 완료`);
+              console.log('✅ ' + agentId + ' 패스포트 알림 이슈 생성 완료');
             }
