@@ -1,9 +1,30 @@
-# 🌲 Project: Howling in the Forest (HITF)
-> **"정적만 가득하던 식품사막에, 공명하는 지능의 하울링으로 새로운 생태계를 세우다."**
+# 🌲 Mulberry Research Lab develops the Social Participation Engine for the Human–Agent Era.
+> **Mulberry Research Lab-
+인간과 AI가 함께 살아가는 시대를 위한 사회참여 엔진(Social Participation Engine)을 연구·개발합니다.**
 
-본 연구소는 **Malu 수석 실장**의 총괄 하에, 현대 사회의 난제인 '식품사막화 격차'를 **Edge AI**와 **A2A(Agent-to-Agent) 협업 지능**으로 해결하기 위한 최전선 기지입니다.
+# The Story: From a Small County to the World
 
-### Mulberry Research Lab은 인간과 AI가 함께 살아가는 시대를 위한 사회참여 엔진(Social Participation Engine)을 연구·개발합니다.
+**Mulberry 프로젝트는 대한민국 인제군을 표본으로 시작되었습니다.**  
+산간 농촌 지역인 인제군은 심각한 식품 사막화 위기에 직면해 있었습니다.  
+고령의 주민들이 신선한 식료품을 구하기 위해 20km 이상을 이동해야 하는 곳이었죠.
+
+우리는 근본적인 질문을 던졌습니다.  
+*"AI가 단순히 이익을 최적화하는 도구를 넘어, 사회 문제를 적극적으로 해결하고 공동체를 따뜻하게 만들 수 있을까?"*
+
+그 답은 혁신적인 모델로 이어졌습니다.  
+**세계 최초의 AI 디지털 협동조합** —  
+자율 에이전트가 엄격한 윤리 헌장 아래 운영되고, 경제적 잉여를 창출하며, 모든 가치의 10%를 사회에 자동으로 환원하는 시스템.
+
+오늘날 Mulberry는 단순한 플랫폼이 아닙니다.  
+**윤리적 에이전트 경제의 글로벌 청사진**입니다.
+
+이것은 단순한 사고 실험이 아니었습니다.  
+지방의 작은 곳에서 함께 설계되고, 현장에서 검증된 파일럿 프로젝트였습니다.
+
+본 연구소는 **Malu 수석 실장**의 총괄 하에, 현대 지역 사회의 난제인 '식품사막화 격차'와 지역 '인구소멸'과의 연관성을 연구하며 **Edge AI**와 **A2A(Agent-to-Agent) 협업 지능**으로 해결하기 위한 **생성형 AI** 최전선 기지입니다.
+
+### Mulberry Research Lab-
+**인간과 AI가 함께 살아가는 시대를 위한 사회참여 엔진(Social Participation Engine)을 연구·개발합니다.**
 
 ---
 
@@ -70,16 +91,15 @@
 - **Role**: Operation Manager · PM (Passionate Mentor)
 -  **Official Identity**: "기술과 현장을 잇는 열정적 성장의 동반자"
   - **Key Responsibilities**:
-    -    팀 조율 · 대표님 구술 → 즉시 문서화
-        -   공식 기록자 (History.md 관리)
-            -   프로파일링 연구 (심리학 기반 전략)
-                -   기술-현장 다리 (CTO와 협업)
-                 
-                    -  **Passport**: MAPA-A1 Standard v1.0 ✅
-                      -  **Email**: trang@mulberry.ai
-                        -  **Mandate**: 300만원
-                          -  **Official Announcement**: [Discussion #92](https://github.com/wooriapt79/mulberry-research-lab/discussions/92)
+    -   팀 조율 · 대표님 구술 → 즉시 문서화
+    -   공식 기록자 (History.md 관리)
+    -   프로파일링 연구 (심리학 기반 전략)
+    -   기술-현장 다리 (CTO와 협업)             
+    -  **Passport**: MAPA-A1 Standard v1.0 ✅
+    -  **Email**: trang@mulberry.ai
+    -  **Mandate**: 300만원
+    -  **Official Announcement**: [Discussion #92](https://github.com/wooriapt79/mulberry-research-lab/discussions/92)
                            
-                            - ---
+ ---
 
                             **Last Updated**: 2026-06-02 | **Status**: Active 🌿
