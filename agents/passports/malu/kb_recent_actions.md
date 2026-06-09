@@ -138,3 +138,15 @@
 
 ---
 
+## 2026-06-09 — Issue #97 [Questions and Discussions] Mulberry LAB 자체를 하나의 상품. 제품으로 정의하면..? 멤버들의 생각은.?
+
+**트리거**: team-discussion 라벨
+**발화 방식**: Gateway 대리 생성
+**내 발화 내용**:
+
+[Malu] Gemini 호출 오류 (HTTP 429)
+
+**발화 시각**: 2026-06-09T13:25:01Z
+
+---
+
