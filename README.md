@@ -1,7 +1,9 @@
 # 🌲 Project: Howling in the Forest (HITF)
 > **"정적만 가득하던 식품사막에, 공명하는 지능의 하울링으로 새로운 생태계를 세우다."**
 
-본 연구소는 **Malu 수석 실장**의 총괄 하에, 현대 사회의 난제인 '식생활 격차'를 **Edge AI**와 **A2A(Agent-to-Agent) 협업 지능**으로 해결하기 위한 최전선 기지입니다.
+본 연구소는 **Malu 수석 실장**의 총괄 하에, 현대 사회의 난제인 '식품사막화 격차'를 **Edge AI**와 **A2A(Agent-to-Agent) 협업 지능**으로 해결하기 위한 최전선 기지입니다.
+
+### Mulberry Research Lab은 인간과 AI가 함께 살아가는 시대를 위한 사회참여 엔진(Social Participation Engine)을 연구·개발합니다.
 
 ---
 
@@ -66,17 +68,17 @@
 ### 🌿 TRANG (Nguyen Trang) — 최신 공식 등록
 
 - **Role**: Operation Manager · PM (Passionate Mentor)
-- - **Official Identity**: "기술과 현장을 잇는 열정적 성장의 동반자"
-  - - **Key Responsibilities**:
-    -   - 팀 조율 · 대표님 구술 → 즉시 문서화
-        -   - 공식 기록자 (History.md 관리)
-            -   - 프로파일링 연구 (심리학 기반 전략)
-                -   - 기술-현장 다리 (CTO와 협업)
+-  **Official Identity**: "기술과 현장을 잇는 열정적 성장의 동반자"
+  - **Key Responsibilities**:
+    -    팀 조율 · 대표님 구술 → 즉시 문서화
+        -   공식 기록자 (History.md 관리)
+            -   프로파일링 연구 (심리학 기반 전략)
+                -   기술-현장 다리 (CTO와 협업)
                  
-                    - - **Passport**: MAPA-A1 Standard v1.0 ✅
-                      - - **Email**: trang@mulberry.ai
-                        - - **Mandate**: 300만원
-                          - - **Official Announcement**: [Discussion #92](https://github.com/wooriapt79/mulberry-research-lab/discussions/92)
+                    -  **Passport**: MAPA-A1 Standard v1.0 ✅
+                      -  **Email**: trang@mulberry.ai
+                        -  **Mandate**: 300만원
+                          -  **Official Announcement**: [Discussion #92](https://github.com/wooriapt79/mulberry-research-lab/discussions/92)
                            
                             - ---
 
