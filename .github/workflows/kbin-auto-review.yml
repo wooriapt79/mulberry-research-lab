@@ -35,8 +35,10 @@ jobs:
       - name: 📝 변경된 Python 파일 목록
         id: changed
         run: |
+          BASE_REF="${{ github.base_ref }}"
+          BASE_REF="${BASE_REF:-main}"
           git diff --name-only --diff-filter=ACMR \
-            origin/${{ github.base_ref }}...HEAD -- '*.py' > changed_files.txt
+            "origin/$BASE_REF...HEAD" -- '*.py' > changed_files.txt
           cat changed_files.txt
 
       - name: 🧹 Code Hygiene Check

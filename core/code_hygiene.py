@@ -40,7 +40,7 @@ def find_korean_comments(source: str) -> list[dict]:
         for tok in tokens:
             if tok.type == tokenize.COMMENT and KOREAN_TEXT_RE.search(tok.string):
                 findings.append({"line": tok.start[0], "text": tok.string.strip()})
-    except (tokenize.TokenizeError, IndentationError, SyntaxError):
+    except (tokenize.TokenError, IndentationError, SyntaxError):
         pass
     return findings
 
@@ -62,7 +62,7 @@ def check_indentation(source: str) -> dict:
                     uses_tabs = True
                 if " " in tok.string:
                     uses_spaces = True
-    except (tokenize.TokenizeError, IndentationError, SyntaxError):
+    except (tokenize.TokenError, IndentationError, SyntaxError):
         pass
 
     return {

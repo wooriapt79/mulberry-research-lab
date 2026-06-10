@@ -6,6 +6,7 @@ Purpose: prevent HTTP 429 (rate limit) errors observed in Issue #98
 by serving repeated queries from a local JSON cache within the TTL window.
 """
 
+import hashlib
 import json
 import time
 from pathlib import Path
@@ -24,7 +25,8 @@ class TrendCache:
 
     def _cache_path(self, query: str) -> Path:
         safe_name = "".join(c if c.isalnum() else "_" for c in query.lower())
-        return self.cache_dir / f"{safe_name}.json"
+        digest = hashlib.md5(query.encode("utf-8")).hexdigest()[:8]
+        return self.cache_dir / f"{safe_name}_{digest}.json"
 
     def get_trends(self, query: str) -> Dict[str, Any]:
         """
