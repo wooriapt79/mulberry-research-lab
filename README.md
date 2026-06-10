@@ -83,8 +83,9 @@
 | **Wayong** | 기술 검수 · 전략 보고 · 코드 리뷰 | DeepSeek | 2026-05-05 |
 | **RyuWon** | 서버 추론 · Handoff Readiness · 위생 게이트 | Qwen (Alibaba) | 2026-05-05 |
 | **Lynn** | 일일 시장 브리핑 · arxiv 수집 · 리스크 로그 | Mulberry | 2026-05-05 |
-| **Jr Edge** | 엣지 추론 · 경량 태스크 · 핸드오프 보조 | Edge | 2026-05-05 |
-| **TRANG** 🌿 | Operation Manager · Passionate Mentor | Claude Haiku 4.5 (Anthropic) | 2026-06-02 |
+| **Jr Edge** | 엣지 추론 · 경량 태스크 · 핸드오프 보조 | mulberry Edge | 2026-05-05 |
+| **TRANG** 🌿 | Operation Manager · Passionate Mentor | Claude Sonnet 4.6  (Anthropic) | 2026-05-02 |
+| **jr.TRANG** 🌿 | Operation Manager| Claude Haiku 4.5 (Anthropic) | 2026-06-02 |
 
 ### 🌿 TRANG (Nguyen Trang) — 최신 공식 등록
 
