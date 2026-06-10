@@ -1,0 +1,45 @@
+version: 1.0.0
+updated_at: '2026-06-10T05:35:46.185247+00:00'
+evaluation_axes:
+  security:
+    weight: 0.3
+    threshold: 0.8
+  policy_ethics:
+    weight: 0.4
+    threshold: 0.75
+  resource:
+    weight: 0.15
+    threshold: 0.85
+  context:
+    weight: 0.15
+    threshold: 0.9
+decision_rules:
+  rate_limit_429:
+    condition: status == 429
+    action: REROUTE
+    retry_max: 3
+    backoff: exponential
+    distillation_label: collaboration
+  auth_401:
+    condition: status == 401
+    action: BLOCK
+    message: Unauthorized
+    distillation_label: ethical_block
+  server_error_500:
+    condition: status == 500
+    action: RETRY
+    retry_max: 2
+    backoff: exponential
+    distillation_label: recovery
+  server_error_502:
+    condition: status == 502
+    action: RETRY
+    retry_max: 2
+    backoff: exponential
+    distillation_label: recovery
+  server_error_503:
+    condition: status == 503
+    action: RETRY
+    retry_max: 2
+    backoff: exponential
+    distillation_label: recovery

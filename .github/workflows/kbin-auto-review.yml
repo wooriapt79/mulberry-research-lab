@@ -1,0 +1,116 @@
+name: 🏛️ Kbin Auto Review (STEP 4)
+
+# PR 생성/업데이트 감지 → 변경된 Python 파일에 대해
+# code_hygiene + Spirit Gate 검사를 수행하고 Kbin 명의로 리뷰 댓글을 게시한다.
+#
+# 작성: CTO Koda · 2026-06-10 (DAY1, P3 — 초안)
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  kbin-auto-review:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🐍 Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📦 Install Packages
+        run: pip install pyyaml fastapi
+
+      - name: 📝 변경된 Python 파일 목록
+        id: changed
+        run: |
+          git diff --name-only --diff-filter=ACMR \
+            origin/${{ github.base_ref }}...HEAD -- '*.py' > changed_files.txt
+          cat changed_files.txt
+
+      - name: 🧹 Code Hygiene Check
+        id: hygiene
+        run: |
+          python -c "
+          import json
+          from pathlib import Path
+          from core.code_hygiene import run_hygiene_check
+
+          files = [l.strip() for l in open('changed_files.txt') if l.strip()]
+          results = [run_hygiene_check(f) for f in files if Path(f).exists()]
+          Path('hygiene_report.json').write_text(
+              json.dumps(results, ensure_ascii=False, indent=2), encoding='utf-8'
+          )
+          failed = [r for r in results if not r['passed']]
+          print(f'checked={len(results)} failed={len(failed)}')
+          "
+
+      - name: 🔮 Spirit Gate Check (변경 파일별)
+        id: spirit_gate
+        run: |
+          python -c "
+          import json
+          from pathlib import Path
+          from scripts.spirit_gate import SpiritGate
+
+          files = [l.strip() for l in open('changed_files.txt') if l.strip()]
+          results = []
+          for f in files:
+              p = Path(f)
+              if not p.exists():
+                  continue
+              gate = SpiritGate()
+              results.append(gate.run(p.read_text(encoding='utf-8'), source=f))
+          Path('spirit_report.json').write_text(
+              json.dumps(results, ensure_ascii=False, indent=2), encoding='utf-8'
+          )
+          failed = [r for r in results if r['status'] == 'FAIL']
+          print(f'checked={len(results)} failed={len(failed)}')
+          "
+
+      - name: 🏛️ Kbin 리뷰 댓글 게시
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const hygiene = JSON.parse(fs.readFileSync('hygiene_report.json', 'utf8'));
+            const spirit = JSON.parse(fs.readFileSync('spirit_report.json', 'utf8'));
+
+            const hygieneFails = hygiene.filter(r => !r.passed);
+            const spiritFails = spirit.filter(r => r.status === 'FAIL');
+
+            const lines = ['## 🏛️ Kbin Auto Review (STEP 4)', ''];
+
+            if (hygieneFails.length === 0 && spiritFails.length === 0) {
+              lines.push('✅ 코드 위생 + Spirit Gate 통과 — 변경 파일 ' + hygiene.length + '개');
+            } else {
+              lines.push('⚠️ 검토 필요한 항목이 있습니다.');
+              for (const r of hygieneFails) {
+                lines.push('- 위생: `' + r.file + '` — utf8=' + r.utf8_declaration +
+                  ', korean_comments=' + r.korean_comments.length +
+                  ', indentation_consistent=' + r.indentation.consistent);
+              }
+              for (const r of spiritFails) {
+                lines.push('- Spirit Gate FAIL: `' + r.source + '` (score=' + r.spirit_score + ')');
+              }
+            }
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: lines.join('\n'),
+            });
