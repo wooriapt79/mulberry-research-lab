@@ -24,8 +24,8 @@ class TrendCache:
         self._misses = 0
 
     def _cache_path(self, query: str) -> Path:
-        safe_name = "".join(c if c.isalnum() else "_" for c in query.lower())
-        digest = hashlib.md5(query.encode("utf-8")).hexdigest()[:8]
+        safe_name = "".join(c if c.isalnum() else "_" for c in query.lower())[:50]
+        digest = hashlib.md5(query.encode("utf-8"), usedforsecurity=False).hexdigest()[:8]
         return self.cache_dir / f"{safe_name}_{digest}.json"
 
     def get_trends(self, query: str) -> Dict[str, Any]:
@@ -69,7 +69,11 @@ class TrendCache:
             timeout=10,
         )
         response.raise_for_status()
-        return response.json()
+        # Google Trends prefixes JSON responses with ")]}'" to prevent JSON hijacking.
+        text = response.text
+        if text.startswith(")]}'"):
+            text = text[len(")]}'"):]
+        return json.loads(text)
 
     def cache_hit_ratio(self) -> float:
         """Return hits / (hits + misses), or 0.0 if no requests yet."""
