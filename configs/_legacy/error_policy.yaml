@@ -1,0 +1,23 @@
+# Legacy error policy — superseded by configs/steward_decision_engine.yaml
+# Kept here as the migration source for scripts/migrate_error_policy_to_steward.py
+
+rules:
+  429:
+    retry_count: 3
+    backoff_factor: 2
+    timeout: 30
+  401:
+    action: block
+    message: "Unauthorized"
+  500:
+    retry_count: 2
+    backoff_factor: 2
+    timeout: 60
+  502:
+    retry_count: 2
+    backoff_factor: 2
+    timeout: 60
+  503:
+    retry_count: 2
+    backoff_factor: 2
+    timeout: 60

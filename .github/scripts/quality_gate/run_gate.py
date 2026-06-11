@@ -59,11 +59,23 @@ def _load_thresholds() -> dict:
 THRESHOLDS = _load_thresholds()
 print(f"[ConfigAgent 연동] 품질 기준 로드: {THRESHOLDS}")
 
-TARGET = sys.argv[1] if len(sys.argv) > 1 else "."
+def _load_files_from(list_path: str) -> list:
+    """--files-from <list_path>: 줄바꿈으로 구분된 .py 파일 목록을 읽어 존재하는 파일만 반환."""
+    lines = Path(list_path).read_text(encoding="utf-8").splitlines()
+    return [l.strip() for l in lines if l.strip().endswith(".py") and Path(l.strip()).is_file()]
+
+
+if len(sys.argv) > 2 and sys.argv[1] == "--files-from":
+    TARGET = sys.argv[2]
+    FILES = _load_files_from(TARGET)
+else:
+    TARGET = sys.argv[1] if len(sys.argv) > 1 else "."
+    FILES = None  # None이면 TARGET(파일/폴더)을 그대로 검사
+
 TIMESTAMP = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 results = {
-    "target": TARGET,
+    "target": FILES if FILES is not None else TARGET,
     "timestamp": TIMESTAMP,
     "checks": {},
     "verdict": "PASS",   # PASS / WARN / BLOCK
@@ -83,8 +95,11 @@ def run_cmd(cmd: list) -> tuple[int, str]:
 def check_syntax():
     print("🔍 [1/4] 문법 분석 (ast + pyflakes)...")
     errors = []
-    py_files = list(Path(TARGET).rglob("*.py")) if Path(TARGET).is_dir() else [Path(TARGET)]
-    py_files = [f for f in py_files if ".git" not in str(f) and "quality_gate" not in str(f)]
+    if FILES is not None:
+        py_files = [Path(f) for f in FILES]
+    else:
+        py_files = list(Path(TARGET).rglob("*.py")) if Path(TARGET).is_dir() else [Path(TARGET)]
+        py_files = [f for f in py_files if ".git" not in str(f) and "quality_gate" not in str(f)]
 
     for f in py_files:
         try:
@@ -93,7 +108,13 @@ def check_syntax():
             errors.append(f"{f}: SyntaxError — {e}")
 
     # pyflakes
-    _, flakes_out = run_cmd([sys.executable, "-m", "pyflakes", TARGET])
+    if FILES is not None:
+        if FILES:
+            _, flakes_out = run_cmd([sys.executable, "-m", "pyflakes", *FILES])
+        else:
+            flakes_out = ""
+    else:
+        _, flakes_out = run_cmd([sys.executable, "-m", "pyflakes", TARGET])
     flake_lines = [l for l in flakes_out.strip().splitlines() if l.strip()]
 
     results["checks"]["syntax"] = {
@@ -114,11 +135,17 @@ def check_syntax():
 
 def check_security():
     print("🔍 [2/4] 보안 취약점 (bandit)...")
-    _, out = run_cmd([
-        sys.executable, "-m", "bandit", "-r", TARGET,
-        "-f", "json", "-q",
-        "--exclude", ".git,quality_gate"
-    ])
+    if FILES is not None:
+        if FILES:
+            _, out = run_cmd([sys.executable, "-m", "bandit", *FILES, "-f", "json", "-q"])
+        else:
+            out = '{"results": [], "metrics": {"_totals": {}}}'
+    else:
+        _, out = run_cmd([
+            sys.executable, "-m", "bandit", "-r", TARGET,
+            "-f", "json", "-q",
+            "--exclude", ".git,quality_gate"
+        ])
 
     try:
         data = json.loads(out)
@@ -156,7 +183,13 @@ def check_security():
 
 def check_complexity():
     print("🔍 [3/4] 순환 복잡도 (radon CC)...")
-    _, out = run_cmd([sys.executable, "-m", "radon", "cc", TARGET, "-j", "-a"])
+    if FILES is not None:
+        if FILES:
+            _, out = run_cmd([sys.executable, "-m", "radon", "cc", *FILES, "-j", "-a"])
+        else:
+            out = "{}"
+    else:
+        _, out = run_cmd([sys.executable, "-m", "radon", "cc", TARGET, "-j", "-a"])
 
     try:
         data = json.loads(out)
@@ -195,7 +228,13 @@ def check_complexity():
 
 def check_maintainability():
     print("🔍 [4/4] 유지보수 지수 (radon MI)...")
-    _, out = run_cmd([sys.executable, "-m", "radon", "mi", TARGET, "-j"])
+    if FILES is not None:
+        if FILES:
+            _, out = run_cmd([sys.executable, "-m", "radon", "mi", *FILES, "-j"])
+        else:
+            out = "{}"
+    else:
+        _, out = run_cmd([sys.executable, "-m", "radon", "mi", TARGET, "-j"])
 
     try:
         data = json.loads(out)
@@ -228,10 +267,12 @@ def generate_report():
     verdict = results["verdict"]
     emoji = {"PASS": "✅", "WARN": "⚠️", "BLOCK": "❌"}[verdict]
 
+    target_display = f"변경 파일 {len(FILES)}개" if FILES is not None else TARGET
+
     lines = [
         f"## {emoji} Mulberry Code Quality Gate — {verdict}",
         f"",
-        f"**대상**: `{TARGET}`  ",
+        f"**대상**: `{target_display}`  ",
         f"**시각**: {TIMESTAMP}  ",
         f"**판정**: **{verdict}**",
         f"",

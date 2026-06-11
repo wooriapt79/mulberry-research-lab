@@ -26,6 +26,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -36,11 +38,24 @@ jobs:
         run: |
           pip install bandit radon pyflakes
 
+      - name: 변경된 Python 파일 목록
+        if: github.event_name == 'pull_request'
+        run: |
+          BASE_REF="${{ github.base_ref }}"
+          BASE_REF="${BASE_REF:-main}"
+          git diff --name-only --diff-filter=ACMR \
+            "origin/$BASE_REF...HEAD" -- '*.py' > changed_files.txt
+          cat changed_files.txt
+
       - name: Run Code Quality Gate
         id: gate
         run: |
-          TARGET="${{ github.event.inputs.target || '.' }}"
-          python .github/scripts/quality_gate/run_gate.py "$TARGET"
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            python .github/scripts/quality_gate/run_gate.py --files-from changed_files.txt
+          else
+            TARGET="${{ github.event.inputs.target || '.' }}"
+            python .github/scripts/quality_gate/run_gate.py "$TARGET"
+          fi
         continue-on-error: true
 
       - name: Post Quality Report to PR
