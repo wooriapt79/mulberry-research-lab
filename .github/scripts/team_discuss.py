@@ -91,7 +91,7 @@ AGENTS = [
         "id":    "baekya",
         "name":  "백야",
         "emoji": "🌙",
-        "brand": "gemini",
+        "brand": "claude",
         "role":  "객원 연구원 (Google 생태계)",
         "perspective": "외부 연구·Google AI 생태계 관점",
         "system": (
