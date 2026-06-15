@@ -49,7 +49,10 @@ jobs:
       - name: 🔍 치명적 위험 체크 (실패 조건)
         run: |
           # 하드코딩 시크릿 발견 시 실패
-          if grep -q "ghp_\|sk-\|Bearer.*=.*['\"]" hygiene_report.txt 2>/dev/null; then
+          # 주의: 단순 "sk-"/"ghp_" 문자열은 placeholder 예시 코드
+          # (예: "sk-여기에_새_키를_넣으세요")에도 등장하므로, 실제 키
+          # 형태(영숫자 20자 이상)만 치명적 위험으로 판단한다.
+          if grep -qE "ghp_[a-zA-Z0-9]{36}|sk-[a-zA-Z0-9]{20,}|Bearer [a-zA-Z0-9._-]{20,}" hygiene_report.txt 2>/dev/null; then
             echo "❌ 치명적 위험: 하드코딩 시크릿 발견"
             exit 1
           fi
