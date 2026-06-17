@@ -43,3 +43,13 @@ decision_rules:
     retry_max: 2
     backoff: exponential
     distillation_label: recovery
+  timeout_408:
+    condition: status == 408
+    action: HOLD
+    message: Request Timeout - needs human review
+    distillation_label: positive
+  ethics_block:
+    condition: spirit_score < 0.70
+    action: BLOCK
+    message: spirit_score below policy_ethics threshold
+    distillation_label: ethical_block

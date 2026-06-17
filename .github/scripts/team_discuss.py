@@ -29,6 +29,8 @@ import urllib.error
 from datetime import datetime, timezone
 from pathlib import Path
 
+from llm_retry_utils import call_with_429_retry
+
 # ── 상수 ────────────────────────────────────────────────────────
 REPO = os.getenv("REPO_FULL", "wooriapt79/mulberry-research-lab")
 ISSUE_NUMBER = os.getenv("ISSUE_NUMBER", "")
@@ -193,7 +195,7 @@ def call_claude(agent: dict, prompt: str) -> str:
 
 
 def call_gemini(agent: dict, prompt: str) -> str:
-    """Gemini API 호출 — Malu"""
+    """Gemini API 호출 — Malu (429 방어: llm_retry_utils 공통 유틸 사용)"""
     url = (
         "https://generativelanguage.googleapis.com/v1beta/models/"
         f"gemini-2.0-flash:generateContent?key={GEMINI_KEY}"
@@ -207,21 +209,20 @@ def call_gemini(agent: dict, prompt: str) -> str:
         headers={"Content-Type": "application/json"},
         method="POST",
     )
-    for attempt in range(3):
-        try:
-            time.sleep(3)
-            with urllib.request.urlopen(req, timeout=60) as resp:
-                result = json.loads(resp.read().decode("utf-8"))
-                return result["candidates"][0]["content"]["parts"][0]["text"]
-        except urllib.error.HTTPError as e:
-            if e.code == 429 and attempt < 2:
-                print(f"[Malu] 429 — {(attempt+1)*30}초 후 재시도")
-                time.sleep((attempt + 1) * 30)
-                continue
-            return f"[{agent['name']}] Gemini 호출 오류 (HTTP {e.code})"
-        except Exception as e:
-            return f"[{agent['name']}] Gemini 호출 오류: {e}"
-    return "[Malu] 응답 생성 실패 — 잠시 후 다시 시도해 주세요."
+
+    def _request():
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            result = json.loads(resp.read().decode("utf-8"))
+            return result["candidates"][0]["content"]["parts"][0]["text"]
+
+    try:
+        return call_with_429_retry(_request, agent_name=agent["name"])
+    except urllib.error.HTTPError as e:
+        return f"[{agent['name']}] Gemini 호출 오류 (HTTP {e.code})"
+    except RuntimeError:
+        return "[Malu] 응답 생성 실패 — 잠시 후 다시 시도해 주세요."
+    except Exception as e:
+        return f"[{agent['name']}] Gemini 호출 오류: {e}"
 
 
 def get_llm_response(agent: dict, prompt: str) -> str:
