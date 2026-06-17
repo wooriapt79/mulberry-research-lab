@@ -12,7 +12,7 @@ Spirit Gate(spirit_score >= 0.70)를 통과한 결과만 종합한다.
   3. Spirit Gate 필터링 (spirit_score >= SPIRIT_FILTER_THRESHOLD)
   4. 결과 종합 → SearchResult 반환
 
-CTO Koda · DAY4 · 2026-06-17
+CTO Koda · DAY4~5 · 2026-06-17
 """
 from __future__ import annotations
 
@@ -24,6 +24,14 @@ from typing import Any
 from core.agents.domain_agent_base import AgentResult, DomainAgentBase
 from core.agents.domain_agents.agricultural_price_agent import AgriculturalPriceAgent
 from core.agents.domain_agents.local_supply_agent import LocalSupplyAgent
+from core.agents.domain_agents.regional_characteristic_agent import RegionalCharacteristicAgent
+from core.agents.domain_agents.elderly_consumer_agent import ElderlyConsumerAgent
+from core.agents.domain_agents.group_buy_timing_agent import GroupBuyTimingAgent
+from core.agents.domain_agents.competitor_alternative_agent import CompetitorAlternativeAgent
+from core.agents.domain_agents.logistics_delivery_agent import LogisticsDeliveryAgent
+from core.agents.domain_agents.weather_seasonal_agent import WeatherSeasonalAgent
+from core.agents.domain_agents.nutrition_quality_agent import NutritionQualityAgent
+from core.agents.domain_agents.consumer_review_agent import ConsumerReviewAgent
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +56,7 @@ class MulberrySearchOrchestrator:
 
     Usage:
         orchestrator = MulberrySearchOrchestrator()
-        result = await orchestrator.search("경기 지역 사과 시세 알려줘")
+        result = await orchestrator.search("인제군 어르신 배추 공동구매 최적 시기는?")
     """
 
     def __init__(
@@ -148,8 +156,16 @@ class MulberrySearchOrchestrator:
 
 
 def _default_agents() -> list[DomainAgentBase]:
-    """기본 도메인 에이전트 목록 (DAY4 기준: 2개)."""
+    """기본 도메인 에이전트 목록 (DAY5 기준: 10개)."""
     return [
-        AgriculturalPriceAgent(),
-        LocalSupplyAgent(),
+        AgriculturalPriceAgent(),       # 01: 글로벌 농산물 시세
+        LocalSupplyAgent(),             # 02: 국내 수급 상황
+        RegionalCharacteristicAgent(),  # 03: 지역 특성 분석
+        ElderlyConsumerAgent(),         # 04: 어르신 소비 패턴
+        GroupBuyTimingAgent(),          # 05: 공동구매 타이밍
+        CompetitorAlternativeAgent(),   # 06: 경쟁 플랫폼 & 대안
+        LogisticsDeliveryAgent(),       # 07: 물류·배송 조건
+        WeatherSeasonalAgent(),         # 08: 계절·날씨
+        NutritionQualityAgent(),        # 09: 영양·품질
+        ConsumerReviewAgent(),          # 10: 소비자 리뷰
     ]
