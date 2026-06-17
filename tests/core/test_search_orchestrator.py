@@ -125,9 +125,9 @@ async def test_mock_gateway_is_healthy():
 
 @pytest.mark.anyio
 async def test_default_orchestrator_search_end_to_end():
-    """기본 에이전트 2개 포함 실 경로 통합 테스트."""
+    """기본 에이전트(현재 10개) 실 경로 통합 테스트."""
     orch = MulberrySearchOrchestrator()
     result = await orch.search("부산 지역 감자 시세와 수급 현황")
-    assert result.total_agents == 2
-    assert result.passed_agents == 2
+    assert result.total_agents == 10   # DAY5: 10개 에이전트로 확장
+    assert result.passed_agents == 10
     assert len(result.answer) > 0
