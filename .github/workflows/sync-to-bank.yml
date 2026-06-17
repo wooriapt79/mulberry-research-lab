@@ -21,9 +21,24 @@ jobs:
           ENTRY="\n## [LAB->Bank] ${{ github.event_name }} / $TIMESTAMP\n\n- Actor: ${{ github.actor }}\n- Issue: ${{ github.event.issue.title }}\n- URL: ${{ github.event.issue.html_url }}\n\n---\n"
           UPDATED="${CURRENT}${ENTRY}"
           ENCODED=$(printf "%s" "$UPDATED" | base64 -w 0)
+          # ARG_MAX 초과 방지: 페이로드를 파일로 저장 후 @파일 방식 사용 (Issue #119)
           if [ -n "$SHA" ]; then
-            curl -s -X PUT -H "Authorization: token $BANK_TOKEN" -H "Accept: application/vnd.github.v3+json" -H "Content-Type: application/json" -d "{\"message\":\"[LAB->Bank] activity synced\",\"content\":\"$ENCODED\",\"sha\":\"$SHA\"}" "https://api.github.com/repos/wooriapt79/mulberry_memory_bank/contents/agent_activity.md"
+            python3 -c "
+import json, sys
+payload = {'message': '[LAB->Bank] activity synced', 'content': sys.argv[1], 'sha': sys.argv[2]}
+print(json.dumps(payload))
+" "$ENCODED" "$SHA" > /tmp/bank_payload.json
           else
-            curl -s -X PUT -H "Authorization: token $BANK_TOKEN" -H "Accept: application/vnd.github.v3+json" -H "Content-Type: application/json" -d "{\"message\":\"[LAB->Bank] activity log initialized\",\"content\":\"$ENCODED\"}" "https://api.github.com/repos/wooriapt79/mulberry_memory_bank/contents/agent_activity.md"
+            python3 -c "
+import json, sys
+payload = {'message': '[LAB->Bank] activity log initialized', 'content': sys.argv[1]}
+print(json.dumps(payload))
+" "$ENCODED" > /tmp/bank_payload.json
           fi
+          curl -s -X PUT \
+            -H "Authorization: token $BANK_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Content-Type: application/json" \
+            -d @/tmp/bank_payload.json \
+            "https://api.github.com/repos/wooriapt79/mulberry_memory_bank/contents/agent_activity.md"
           echo "Done - Bank agent_activity.md updated"
