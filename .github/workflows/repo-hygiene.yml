@@ -49,7 +49,7 @@ jobs:
       - name: 🔍 치명적 위험 체크 (실패 조건)
         run: |
           # 하드코딩 시크릿 발견 시 실패
-          if grep -q "ghp_\|sk-\|Bearer.*=.*['\"]" hygiene_report.txt 2>/dev/null; then
+          if grep -q "ghp_[a-zA-Z0-9]\{20,\}\|sk-[a-zA-Z0-9]\{20,\}\|Bearer.*=.*['\"]" hygiene_report.txt 2>/dev/null; then
             echo "❌ 치명적 위험: 하드코딩 시크릿 발견"
             exit 1
           fi

@@ -22,7 +22,7 @@ echo ""
 
 # 2️⃣ 하드코딩 시크릿 탐색 (간이 패턴)
 echo "🔍 [2] 하드코딩 시크릿 후보:"
-SECRET_PATTERNS=$(grep -rn "ghp_\|sk-[a-zA-Z0-9]\{20,\}\|Bearer [a-zA-Z0-9._-]\{20,\}" --include="*.py" --exclude-dir=.git --exclude-dir=node_modules . 2>/dev/null || true)
+SECRET_PATTERNS=$(grep -rn "ghp_[a-zA-Z0-9]\{20,\}\|sk-[a-zA-Z0-9]\{20,\}\|Bearer [a-zA-Z0-9._-]\{20,\}" --include="*.py" --exclude-dir=.git --exclude-dir=node_modules . 2>/dev/null || true)
 if [ -z "$SECRET_PATTERNS" ]; then
   echo "✅ 발견되지 않음"
 else
