@@ -13,12 +13,17 @@ jobs:
       - name: Sync LAB activity to Bank
         env:
           BANK_TOKEN: ${{ secrets.BANK_SYNC_TOKEN }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          GH_ACTOR: ${{ github.actor }}
+          GH_EVENT_NAME: ${{ github.event_name }}
         run: |
           TIMESTAMP=$(date -u "+%Y-%m-%d %H:%M UTC")
           RESPONSE=$(curl -s -H "Authorization: token $BANK_TOKEN" -H "Accept: application/vnd.github.v3+json" "https://api.github.com/repos/wooriapt79/mulberry_memory_bank/contents/agent_activity.md")
           SHA=$(echo "$RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin).get('sha',''))" 2>/dev/null || echo "")
           CURRENT=$(echo "$RESPONSE" | python3 -c "import sys,json,base64; print(base64.b64decode(json.load(sys.stdin)['content']).decode())" 2>/dev/null || echo "# Mulberry Agent Activity Log\n\n")
-          ENTRY="\n## [LAB->Bank] ${{ github.event_name }} / $TIMESTAMP\n\n- Actor: ${{ github.actor }}\n- Issue: ${{ github.event.issue.title }}\n- URL: ${{ github.event.issue.html_url }}\n\n---\n"
+          ENTRY=$(printf '\n## [LAB->Bank] %s / %s\n\n- Actor: %s\n- Issue: %s\n- URL: %s\n\n---\n' \
+            "$GH_EVENT_NAME" "$TIMESTAMP" "$GH_ACTOR" "$ISSUE_TITLE" "$ISSUE_URL")
           UPDATED="${CURRENT}${ENTRY}"
           # ARG_MAX 근본 해결 (Issue #119): $ENCODED를 파일로 저장 → python3이 파일에서 읽기
           # execve() 인자로 대용량 base64 전달 자체를 차단
