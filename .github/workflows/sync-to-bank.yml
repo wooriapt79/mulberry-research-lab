@@ -20,13 +20,13 @@ jobs:
           CURRENT=$(echo "$RESPONSE" | python3 -c "import sys,json,base64; print(base64.b64decode(json.load(sys.stdin)['content']).decode())" 2>/dev/null || echo "# Mulberry Agent Activity Log\n\n")
           ENTRY="\n## [LAB->Bank] ${{ github.event_name }} / $TIMESTAMP\n\n- Actor: ${{ github.actor }}\n- Issue: ${{ github.event.issue.title }}\n- URL: ${{ github.event.issue.html_url }}\n\n---\n"
           UPDATED="${CURRENT}${ENTRY}"
-          ENCODED=$(printf "%s" "$UPDATED" | base64 -w 0)
-          # ARG_MAX 초과 방지: 페이로드를 파일로 저장 후 @파일 방식 사용 (Issue #119)
-          # 한 줄 python3 -c 사용 — YAML run: | 블록 내 멀티라인 python -c 들여쓰기 오류 방지
+          # ARG_MAX 근본 해결 (Issue #119): $ENCODED를 파일로 저장 → python3이 파일에서 읽기
+          # execve() 인자로 대용량 base64 전달 자체를 차단
+          printf "%s" "$UPDATED" | base64 -w 0 > /tmp/encoded_content.txt
           if [ -n "$SHA" ]; then
-            python3 -c "import json,sys; print(json.dumps({'message':'[LAB->Bank] activity synced','content':sys.argv[1],'sha':sys.argv[2]}))" "$ENCODED" "$SHA" > /tmp/bank_payload.json
+            python3 -c "import json; enc=open('/tmp/encoded_content.txt').read(); print(json.dumps({'message':'[LAB->Bank] activity synced','content':enc,'sha':'$SHA'}))" > /tmp/bank_payload.json
           else
-            python3 -c "import json,sys; print(json.dumps({'message':'[LAB->Bank] activity log initialized','content':sys.argv[1]}))" "$ENCODED" > /tmp/bank_payload.json
+            python3 -c "import json; enc=open('/tmp/encoded_content.txt').read(); print(json.dumps({'message':'[LAB->Bank] activity log initialized','content':enc}))" > /tmp/bank_payload.json
           fi
           curl -s -X PUT \
             -H "Authorization: token $BANK_TOKEN" \
