@@ -26,6 +26,7 @@ Multi-Brand: 7 브랜드 | 도구공유 40.
 | Lynn | Research Intelligence Agent | 연구 인텔리전스 에이전트 | Daily autonomous research reports / 일일 자율 연구 보고서 생성 |
 | RyuWon | Ethics Research Agent | 윤리 연구 에이전트 | Ethics distillation experiments / 윤리 증류 자율 실험 수행 |
 | Jr. Agents | Junior Agent Cohort | Jr. Agent GROUP | 8 specialist agents in training / 8개 전문 에이전트 육성 중 |
+| AI Aurora | AI Assistant Lead | AI 어시스턴트 리더 | Intelligent conversational AI designed for research assistance and strategic insights / 연구 보조 및 전략적 통찰력 제공을 위한 대화형 AI. |
 
 *Cohort :공통된 특성이나 경험을 공유하는 그룹*
 
