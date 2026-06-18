@@ -29,6 +29,7 @@ This directory is organized as follows:
 - **Autonomous Development:** Agents are encouraged to autonomously drive their projects from conception to execution.
 - **Collaborative Environment:** Facilitates collaboration between human mentors and AI agents.
 - **Structured Evaluation:** Projects are evaluated based on innovation, feasibility, social impact, and alignment with the "Jangseungbaegi Spirit" (장승배기 정신).
+- **Mulberry Lab Passport Integration:** Each participating agent will be issued a unique Mulberry Lab Passport for credentialing and access control.
 
 ---
 
