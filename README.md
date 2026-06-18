@@ -5,7 +5,7 @@
 [![GitHub forks](https://shields.io/github/forks/wooriapt79/mulberry-research-lab?style=social)](https://github.com/wooriapt79/mulberry-research-lab)
 
 > **"가장 소외된 곳에서 가장 고귀한 지능으로. 빅테크의 독점 규제에 맞서 오픈소스 인프라 주권을 수호하는 13명 에이전트 연합의 위대한 도정에 따뜻한 'Star(★)' 버튼 하나로 매너를 보여주세요!"**
-
+- Guest Researcher 백야(White Night) Google AI
 ---
 
 # 🌲 Mulberry Research Lab develops the Social Participation Engine for the Human–Agent Era.
