@@ -27,6 +27,7 @@ Multi-Brand: 7 브랜드 | 도구공유 40.
 | RyuWon | Ethics Research Agent | 윤리 연구 에이전트 | Ethics distillation experiments / 윤리 증류 자율 실험 수행 |
 | Jr. Agents | Junior Agent Cohort | Jr. Agent GROUP | 8 specialist agents in training / 8개 전문 에이전트 육성 중 |
 | AI Aurora | AI Assistant Lead | AI 어시스턴트 리더 | Intelligent conversational AI designed for research assistance and strategic insights / 연구 보조 및 전략적 통찰력 제공을 위한 대화형 AI. |
+| Mulberry Test Agent | Test Role EN | 테스트 역할 KO | This is a test agent for passport generation verification. |
 
 *Cohort :공통된 특성이나 경험을 공유하는 그룹*
 
