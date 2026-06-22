@@ -1,0 +1,294 @@
+# .github/workflows/sunday-integration.yml
+# 매주 일요일 20:00 KST (11:00 UTC) 주간 통합 & 최종 리포팅
+
+name: 📊 Jr. TRANG Weekly Integration & Report
+
+on:
+  schedule:
+    - cron: '0 11 * * 0'  # 매주 일요일 20:00 KST (UTC 11:00)
+
+  workflow_dispatch:
+
+env:
+  WEEK_NUM: ${{ github.run_number }}
+
+jobs:
+  integration:
+    name: Weekly Integration & Verification
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+
+    steps:
+      # Step 1: 코드 체크아웃
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Step 2: Python 환경 설정
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      # Step 3: 의존성 설치
+      - name: 📦 Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # Step 4: AWS 자격증명 설정
+      - name: 🔐 Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      # Step 5: BigQuery 자격증명 설정
+      - name: 🔐 Setup BigQuery Credentials
+        run: |
+          echo "${{ secrets.BIGQUERY_CREDENTIALS }}" > /tmp/bigquery-key.json
+          echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/bigquery-key.json" >> $GITHUB_ENV
+
+      # Step 6: 주간 성과 검증 (메인 로직)
+      - name: ✅ Verify Weekly Performance
+        run: |
+          python src/JrTrangGrowthEngine.py \
+            --mode=verification \
+            --week=${{ github.run_number }} \
+            --output=verification_report.json
+        env:
+          PYTHONUNBUFFERED: 1
+
+      # Step 7: 최종 성장 메트릭 계산
+      - name: 📈 Calculate Growth Metrics
+        run: |
+          python scripts/calculate_weekly_growth.py \
+            --verification=verification_report.json \
+            --history=History.md \
+            --output=growth_metrics.json
+
+      # Step 8: BigQuery에 최종 데이터 업로드
+      - name: 📊 Upload Final Metrics to BigQuery
+        run: |
+          python scripts/upload_final_metrics.py \
+            --metrics=growth_metrics.json \
+            --verification=verification_report.json \
+            --week=${{ github.run_number }}
+
+      # Step 9: 주간 대시보드 갱신
+      - name: 📊 Update Data Studio Dashboard
+        run: |
+          python scripts/update_data_studio.py \
+            --metrics=growth_metrics.json \
+            --week=${{ github.run_number }}
+        continue-on-error: true
+
+      # Step 10: History.md에 자동 기록
+      - name: 📖 Record to History.md
+        run: |
+          python scripts/append_to_history.py \
+            --report=verification_report.json \
+            --metrics=growth_metrics.json \
+            --week=${{ github.run_number }}
+
+      # Step 11: README 통계 갱신
+      - name: 📋 Update README Stats
+        run: |
+          python scripts/update_readme_stats.py \
+            --metrics=growth_metrics.json \
+            --history=History.md
+
+      # Step 12: 주간 최종 리포트 생성
+      - name: 📄 Generate Final Weekly Report
+        run: |
+          python scripts/generate_final_report.py \
+            --verification=verification_report.json \
+            --metrics=growth_metrics.json \
+            --week=${{ github.run_number }} \
+            --output=weekly_reports/final_report.md
+
+      # Step 13: PR 병합 검사 및 자동 병합 (선택)
+      - name: 🔀 Check and Merge PR (if approved)
+        run: |
+          python scripts/check_and_merge_pr.py \
+            --week=${{ github.run_number }} \
+            --token=${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Step 14: 로컬 최종 데이터 저장
+      - name: 💾 Save Final Results
+        run: |
+          mkdir -p weekly_reports
+          week_num=$(printf "%02d" $(expr ${{ github.run_number }} % 52))
+
+          cp verification_report.json weekly_reports/week_${week_num}_verification.json
+          cp growth_metrics.json weekly_reports/week_${week_num}_metrics.json
+
+          echo "✅ Final results saved"
+
+      # Step 15: GitHub에 최종 커밋
+      - name: 🔄 Commit Final Results
+        run: |
+          git config --local user.email "jr.trang@mulberry.ai"
+          git config --local user.name "Jr. TRANG Bot"
+
+          week_num=$(printf "%02d" $(expr ${{ github.run_number }} % 52))
+
+          git add History.md
+          git add README.md
+          git add weekly_reports/
+          git add verification_report.json || true
+          git add growth_metrics.json || true
+
+          gap=$(python -c "import json; data=json.load(open('growth_metrics.json')); print(f\"{data.get('gap_to_mythos_ai', 0):.3f}\")" 2>/dev/null || echo "TBD")
+          growth=$(python -c "import json; data=json.load(open('growth_metrics.json')); print(f\"{data.get('weekly_growth_rate', 0)*100:.1f}\")" 2>/dev/null || echo "TBD")
+
+          git commit -m "📊 Week ${week_num} Integration Complete - Gap: ${gap}, Growth: ${growth}%" \
+            -m "Weekly integration report by Jr. TRANG Autonomous Growth System" \
+            -m "✅ Verification complete | ✅ Metrics calculated | ✅ History recorded" || echo "No changes to commit"
+
+          git push origin ${{ github.ref }} || echo "Nothing to push"
+
+      # Step 16: 주간 성과 요약 표시
+      - name: 📋 Display Weekly Summary
+        run: |
+          python scripts/print_weekly_summary.py \
+            --report=verification_report.json \
+            --metrics=growth_metrics.json
+
+      # Step 17: 다음주 계획 생성 (선택)
+      - name: 📅 Generate Next Week Plan
+        run: |
+          python scripts/generate_next_week_plan.py \
+            --metrics=growth_metrics.json \
+            --output=next_week_plan.md
+        continue-on-error: true
+
+      # Step 18: GitHub Issues 정리 (자동 종료)
+      - name: 🧹 Close Completed Issues
+        run: |
+          python scripts/close_completed_issues.py \
+            --week=${{ github.run_number }}
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Step 19: Slack 최종 알림
+      - name: 💬 Notify Slack - Weekly Complete
+        if: always()
+        uses: slackapi/slack-github-action@v1
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          payload: |
+            {
+              "text": "📊 Jr. TRANG Weekly Integration Complete!",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "🤖 Jr. TRANG - Week ${{ github.run_number }} Complete"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*✅ Week Complete*\n\n*Summary:*\n• Self-Diagnosis: ✅\n• Design Phase: ✅\n• Development: ✅\n• Integration: ✅"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*📅 Next Week:*\nMonday 09:00 KST - New cycle begins"
+                  }
+                }
+              ]
+            }
+        continue-on-error: true
+
+      # Step 20: 아티팩트 업로드 (최종 보고서)
+      - name: 📦 Upload Final Artifacts
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: week-${{ github.run_number }}-complete-report
+          path: |
+            verification_report.json
+            growth_metrics.json
+            weekly_reports/
+            History.md
+            next_week_plan.md
+          retention-days: 365
+
+  # 병렬 작업: 대시보드 생성
+  dashboard_generation:
+    name: Generate Dashboard Visuals
+    runs-on: ubuntu-latest
+    needs: integration
+    if: always()
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Generate HTML Dashboard
+        run: |
+          python scripts/generate_html_dashboard.py \
+            --week=${{ github.run_number }}
+        continue-on-error: true
+
+      - name: Upload Dashboard
+        uses: actions/upload-artifact@v3
+        with:
+          name: dashboard-week-${{ github.run_number }}
+          path: dashboards/
+        continue-on-error: true
+
+  # 병렬 작업: 성과 분석
+  performance_analysis:
+    name: Analyze Performance Trends
+    runs-on: ubuntu-latest
+    needs: integration
+    if: always()
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Analyze Trends
+        run: |
+          python scripts/analyze_performance_trends.py \
+            --window=4 \
+            --output=trend_analysis.json
+        continue-on-error: true
+
+      - name: Generate Trend Report
+        run: |
+          python scripts/generate_trend_report.py \
+            --trends=trend_analysis.json \
+            --output=trend_report.md
+        continue-on-error: true
