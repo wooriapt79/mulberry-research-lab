@@ -1,0 +1,217 @@
+# .github/workflows/wednesday-design.yml
+# 매주 수요일 14:00 KST (05:00 UTC) 로직 설계 실행
+
+name: 🎨 Jr. TRANG Design Phase
+
+on:
+  schedule:
+    - cron: '0 5 * * 3'  # 매주 수요일 14:00 KST (UTC 05:00)
+
+  workflow_dispatch:
+    inputs:
+      diagnosis_week:
+        description: 'Diagnosis week number (default: latest)'
+        required: false
+        default: 'latest'
+
+env:
+  WEEK_NUM: ${{ github.run_number }}
+
+jobs:
+  design_improvements:
+    name: Design Improvement Phase
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    permissions:
+      contents: write
+      issues: write
+
+    steps:
+      # Step 1: 코드 체크아웃
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Step 2: Python 환경 설정
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      # Step 3: 의존성 설치
+      - name: 📦 Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # Step 4: AWS 자격증명 설정
+      - name: 🔐 Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      # Step 5: BigQuery 자격증명 설정
+      - name: 🔐 Setup BigQuery Credentials
+        run: |
+          echo "${{ secrets.BIGQUERY_CREDENTIALS }}" > /tmp/bigquery-key.json
+          echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/bigquery-key.json" >> $GITHUB_ENV
+
+      # Step 6: 최신 자가진단 리포트 다운로드
+      - name: 📥 Download Latest Diagnosis Report
+        run: |
+          # 최신 주간 리포트 찾기
+          latest_report=$(ls -t weekly_reports/week_*_diagnosis.json 2>/dev/null | head -1)
+
+          if [ -z "$latest_report" ]; then
+            echo "⚠️ No diagnosis report found, using default"
+            touch diagnosis_report.json
+          else
+            cp $latest_report diagnosis_report.json
+            echo "✅ Loaded: $latest_report"
+          fi
+
+      # Step 7: 설계 로직 실행 (메인 로직)
+      - name: 🧬 Generate Improvement Design
+        run: |
+          python src/SelfAnalysisCode.py \
+            --mode=design \
+            --diagnosis=diagnosis_report.json \
+            --output=design_report.json \
+            --week=${{ github.run_number }}
+        env:
+          PYTHONUNBUFFERED: 1
+
+      # Step 8: S3에 설계안 저장
+      - name: ☁️ Backup Design to AWS S3
+        run: |
+          week_num=$(printf "%02d" $(expr ${{ github.run_number }} % 52))
+
+          aws s3 cp design_report.json \
+            s3://jr-trang-self-improvement/designs/week_${week_num}/design_report.json
+
+          echo "✅ Design saved to S3"
+
+      # Step 9: 설계 문서 생성 (마크다운)
+      - name: 📄 Generate Design Document
+        run: |
+          python scripts/generate_design_document.py \
+            --report=design_report.json \
+            --output=design_specs/current_design.md
+
+      # Step 10: GitHub Issues로 자동 생성 (개선 사항별)
+      - name: 🏷️ Create Design Issues
+        run: |
+          python scripts/create_design_issues.py \
+            --design=design_report.json \
+            --week=${{ github.run_number }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Step 11: 설계안을 GitHub Discussions에 공유 (선택)
+      - name: 💬 Post to Discussions (Optional)
+        run: |
+          python scripts/post_to_discussions.py \
+            --design=design_report.json \
+            --category="Jr. TRANG Growth"
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Step 12: 설계안 요약 표시
+      - name: 📋 Display Design Summary
+        run: |
+          python scripts/print_design_summary.py \
+            --report=design_report.json
+
+      # Step 13: 로컬 파일에 저장
+      - name: 💾 Save Design Specs
+        run: |
+          mkdir -p design_specs
+          week_num=$(printf "%02d" $(expr ${{ github.run_number }} % 52))
+
+          cp design_report.json design_specs/week_${week_num}_design.json
+
+          echo "📄 Design specs saved to: design_specs/week_${week_num}_design.json"
+
+      # Step 14: GitHub에 커밋
+      - name: 🔄 Commit Design to Repository
+        run: |
+          git config --local user.email "jr.trang@mulberry.ai"
+          git config --local user.name "Jr. TRANG Bot"
+
+          week_num=$(printf "%02d" $(expr ${{ github.run_number }} % 52))
+          git add design_specs/ design_report.json || true
+          git add design_specs/current_design.md || true
+
+          improvements=$(python -c "import json; data=json.load(open('design_report.json')); print(data.get('improvements_count', 0))")
+
+          git commit -m "🎨 Week ${week_num} Design Phase - ${improvements} improvements identified" \
+            -m "Auto-generated design specifications by Jr. TRANG Design Engine" || echo "No changes to commit"
+
+          git push origin ${{ github.ref }} || echo "Nothing to push"
+
+      # Step 15: BigQuery에 설계 메타데이터 저장
+      - name: 📊 Store Design in BigQuery
+        run: |
+          python scripts/upload_design_to_bigquery.py \
+            --design=design_report.json \
+            --week=${{ github.run_number }}
+
+      # Step 16: 코드 스켈레톤 생성 (선택)
+      - name: 🏗️ Generate Code Skeleton
+        run: |
+          python scripts/generate_code_skeleton.py \
+            --design=design_report.json \
+            --output=src/auto_generated_skeleton.py
+        continue-on-error: true
+
+      # Step 17: Slack 알림
+      - name: 💬 Notify Slack
+        if: always()
+        uses: slackapi/slack-github-action@v1
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          payload: |
+            {
+              "text": "🎨 Jr. TRANG Design Phase Complete!",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "🤖 Jr. TRANG - Week ${{ github.run_number }} Design"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Status*: ✅ Complete\n*Time*: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*📋 Design Issues Created*\nReview them in GitHub Issues tab\n\n*Next Step:* Development phase on Friday"
+                  }
+                }
+              ]
+            }
+        continue-on-error: true
+
+      # Step 18: 아티팩트 업로드
+      - name: 📦 Upload Artifacts
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: design-report-week-${{ github.run_number }}
+          path: |
+            design_report.json
+            design_specs/
+          retention-days: 90
