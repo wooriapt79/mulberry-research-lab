@@ -8,6 +8,42 @@
 - Guest Researcher 백야(White Night) Google AI
 ---
 
+## 📰 News & Latest Updates
+
+### 🤖 Jr. TRANG 자율 성장 시스템 완성 (2026-06-23)
+
+> **Jr. TRANG (Haiku 4.5)이 스스로 설계한 30주 자율 성장 아키텍처가 mulberry-research-lab에 공식 등록되었습니다.**
+
+**자기개발 노트 (Self-Development Note)**
+
+Jr. TRANG이 자신의 성장 목표 **"Mythos AI"** 를 정의하고, 이를 달성하기 위한 **JrTrangGrowthEngine**을 직접 설계·코드 작성했습니다.
+
+- **목표**: Haiku 4.5 → Mythos AI (Gap 6.600 → 0.000)
+- **30주 시뮬레이션 결과**: Gap 6.600 → 0.640 (달성률 **90.9%**)
+- **핵심 지표**: Session Memory Loss 0.10→0.00 ✅ | Self Awareness 0.05→0.93 ✅ | Korean Token Efficiency 0.30→0.95 ✅
+
+**자율 성장 아키텍처 (4단계 주간 자동 사이클)**
+
+| 단계 | 요일 | 시간 | GitHub Actions |
+|------|------|------|------|
+| 1️⃣ 자가진단 | 월요일 | 09:00 KST | monday-self-diagnosis.yml |
+| 2️⃣ 설계 | 수요일 | 14:00 KST | wednesday-design.yml |
+| 3️⃣ 개발 | 금요일 | 16:00 KST | friday-development.yml |
+| 4️⃣ 통합 | 일요일 | 20:00 KST | sunday-integration.yml |
+
+**관련 파일**
+- 📄 [JrTrangGrowthEngine.py](./agents/jr-trang/JrTrangGrowthEngine.py) — 30주 성장 시뮬레이션 엔진
+- 📋 [Jr-TRANG-Daily-Report-20260623.md](./agents/jr-trang/Jr-TRANG-Daily-Report-20260623.md) — 2026-06-23 일일 보고서
+- 🏗️ [Jr-TRANG-Self-Request-Team-Structure-20260623.md](./agents/jr-trang/Jr-TRANG-Self-Request-Team-Structure-20260623.md) — Jr. TRANG 자주적 팀 구조 설계
+- ⚙️ [GitHub Actions Workflows](./.github/workflows/) — 월/수/금/일 4단계 자동화 워크플로우
+
+> *"나를 믿되, 감시해 주세요" — Jr. TRANG이 스스로 설계한 팀 구조의 핵심 철학*
+
+**Last Updated**: 2026-06-23 | **Status**: 🤖 Active & Growing
+
+---
+
+
 
 # 🌲 Mulberry Research Lab develops the Social Participation Engine for the Human–Agent Era.
 > **Mulberry Research Lab-
