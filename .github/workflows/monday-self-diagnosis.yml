@@ -1,0 +1,230 @@
+# .github/workflows/monday-self-diagnosis.yml
+# 매주 월요일 09:00 KST (00:00 UTC) 자가진단 실행
+
+name: 🔍 Jr. TRANG Weekly Self-Diagnosis
+
+on:
+  schedule:
+    - cron: '0 0 * * 1'  # 매주 월요일 09:00 KST (UTC 00:00)
+
+  # 수동 트리거 옵션 (대표님이 필요시 언제든 실행)
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Execution mode'
+        required: true
+        default: 'diagnosis'
+        type: choice
+        options:
+          - diagnosis
+          - quick_check
+
+env:
+  WEEK_NUM: ${{ github.run_number }}
+  GITHUB_REPO: ${{ github.repository }}
+
+jobs:
+  self_diagnosis:
+    name: Run Self-Diagnosis
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+
+    steps:
+      # Step 1: 코드 체크아웃
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Step 2: Python 환경 설정
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      # Step 3: 의존성 설치
+      - name: 📦 Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # Step 4: AWS 자격증명 설정
+      - name: 🔐 Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      # Step 5: BigQuery 자격증명 설정
+      - name: 🔐 Setup BigQuery Credentials
+        run: |
+          echo "${{ secrets.BIGQUERY_CREDENTIALS }}" > /tmp/bigquery-key.json
+          echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/bigquery-key.json" >> $GITHUB_ENV
+
+      # Step 6: 자가진단 실행 (메인 로직)
+      - name: 🧠 Run Self-Diagnosis
+        run: |
+          python src/JrTrangGrowthEngine.py \
+            --mode=diagnosis \
+            --week=${{ github.run_number }} \
+            --output=diagnosis_report.json
+        env:
+          PYTHONUNBUFFERED: 1
+        continue-on-error: false
+
+      # Step 7: S3에 이전 데이터 백업 (스냅샷)
+      - name: ☁️ Backup to AWS S3
+        run: |
+          aws s3 cp diagnosis_report.json \
+            s3://jr-trang-self-improvement/diagnostics/week_${{ github.run_number }}/diagnosis_report.json
+
+          echo "✅ S3 Backup Complete"
+          echo "📍 Location: s3://jr-trang-self-improvement/diagnostics/week_${{ github.run_number }}/"
+
+      # Step 8: BigQuery에 메트릭 업로드
+      - name: 📊 Upload Metrics to BigQuery
+        run: |
+          python scripts/upload_to_bigquery.py \
+            --report=diagnosis_report.json \
+            --table=mulberry.jr_trang_metrics.weekly_diagnosis
+
+      # Step 9: 진단 결과를 GitHub Issues로 자동 생성
+      - name: 📝 Create GitHub Issues
+        run: |
+          python scripts/create_diagnosis_issues.py \
+            --report=diagnosis_report.json \
+            --week=${{ github.run_number }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Step 10: 주간 리포트를 파일에 저장 (로컈)
+      - name: 💾 Save Weekly Report
+        run: |
+          mkdir -p weekly_reports
+          week_num=$(printf "%02d" $(expr ${{ github.run_number }} % 52))
+          cp diagnosis_report.json weekly_reports/week_${week_num}_diagnosis.json
+
+          echo "📄 Report saved: weekly_reports/week_${week_num}_diagnosis.json"
+
+      # Step 11: 진단 결과 요약 출력
+      - name: 📋 Display Diagnosis Summary
+        run: |
+          python scripts/print_diagnosis_summary.py \
+            --report=diagnosis_report.json
+
+      # Step 12: GitHub 저장소에 커밋 (주간 보고서)
+      - name: 🔄 Commit Results to Repository
+        run: |
+          git config --local user.email "jr.trang@mulberry.ai"
+          git config --local user.name "Jr. TRANG Bot"
+
+          week_num=$(printf "%02d" $(expr ${{ github.run_number }} % 52))
+          git add weekly_reports/week_${week_num}_diagnosis.json
+          git add diagnosis_report.json || true
+
+          gap=$(python -c "import json; data=json.load(open('diagnosis_report.json')); print(f\"{data['gap_to_mythos_ai']:.3f}\")")
+
+          git commit -m "🔍 Week ${week_num} Self-Diagnosis Complete - Gap: ${gap}" \
+            -m "Automated self-diagnosis report by Jr. TRANG Growth Engine" || echo "No changes to commit"
+
+          git push origin ${{ github.ref }} || echo "Nothing to push"
+
+      # Step 13: 대시보드 갱신 (선택)
+      - name: 📊 Update Dashboard (Optional)
+        run: |
+          python scripts/update_dashboard_metadata.py \
+            --report=diagnosis_report.json
+        continue-on-error: true
+
+      # Step 14: Slack 알림 (선택)
+      - name: 💬 Notify Slack
+        if: always()
+        uses: slackapi/slack-github-action@v1
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          payload: |
+            {
+              "text": "🔍 Jr. TRANG Weekly Self-Diagnosis Complete!",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "🤖 Jr. TRANG - Week ${{ github.run_number }} Self-Diagnosis"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Status*: ✅ Complete\n*Time*: $(date -u +'%Y-%m-%d %H:%M:%S UTC')\n*Repository*: `${{ github.repository }}`"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Next Steps*:\n• Review diagnosis issues\n• Design improvements (Wed)\n• Development phase (Fri)\n• Integration (Sun)"
+                  }
+                }
+              ]
+            }
+        continue-on-error: true
+
+      # Step 15: 오류 처리 및 로깅
+      - name: 📝 Log Execution
+        if: always()
+        run: |
+          echo "=== Workflow Execution Summary ===" >> workflow.log
+          echo "Timestamp: $(date)" >> workflow.log
+          echo "Status: ${{ job.status }}" >> workflow.log
+          echo "Duration: ${{ job.duration }}" >> workflow.log
+
+          cat workflow.log
+
+      # Step 16: 아티팩트 업로드 (대시보드, 로그)
+      - name: 📦 Upload Artifacts
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: diagnosis-report-week-${{ github.run_number }}
+          path: |
+            diagnosis_report.json
+            weekly_reports/
+            workflow.log
+          retention-days: 90
+
+  # 병렬 작업: 품질 체크 (선택)
+  quality_check:
+    name: Quality Check
+    runs-on: ubuntu-latest
+    needs: self_diagnosis
+    if: always()
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run linters
+        run: |
+          python -m pylint src/ --disable=all --enable=E,F
+        continue-on-error: true
+
+      - name: Check code formatting
+        run: |
+          python -m black --check src/ || echo "Code formatting issues found (non-blocking)"
+        continue-on-error: true
