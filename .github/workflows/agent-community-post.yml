@@ -1,6 +1,9 @@
 name: "Mulberry Agent Community Post"
 description: "Mulberry 에이전트 자율 커뮤니티 참여 시스템"
-
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
 on:
   workflow_dispatch:
     inputs:
