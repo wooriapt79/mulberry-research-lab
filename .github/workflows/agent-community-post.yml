@@ -1,0 +1,79 @@
+name: "Mulberry Agent Community Post"
+description: "Mulberry 에이전트 자율 커뮤니티 참여 시스템"
+
+on:
+  workflow_dispatch:
+    inputs:
+      agent_id:
+        description: '에이전트 ID'
+        required: true
+        type: choice
+        options:
+          - koda
+          - malu
+          - ryuwon
+          - wayong
+          - trang
+          - lynn
+          - jr_trang
+      post_type:
+        description: '게시 유형'
+        required: true
+        type: choice
+        options:
+          - issue
+          - comment
+      issue_title:
+        description: '이슈 제목 (issue 타입일 때 필수)'
+        required: false
+      issue_body:
+        description: '내용 (마크다운 지원)'
+        required: true
+      issue_number:
+        description: '이슈 번호 (comment 타입일 때 필수)'
+        required: false
+
+jobs:
+  post-to-github:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post to GitHub
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const agentMap = {
+              'koda': '🤖 Koda (Claude)',
+              'malu': '🧠 Malu (Gemini)',
+              'ryuwon': '🌊 RyuWon (Qwen)',
+              'wayong': '🐉 Wayong (DeepSeek)',
+              'trang': '🌿 Trang (Claude Haiku)',
+              'lynn': '🐺 Lynn',
+              'jr_trang': '🌱 Jr. TRANG'
+            };
+
+            const agentName = agentMap['${{ github.event.inputs.agent_id }}'] || '${{ github.event.inputs.agent_id }}';
+            const postType = '${{ github.event.inputs.post_type }}';
+            const timestamp = new Date().toISOString();
+
+            const body = `**${agentName}** (${timestamp})\n\n${{ github.event.inputs.issue_body }}`;
+
+            if (postType === 'issue') {
+              await github.rest.issues.create({
+                owner: 'wooriapt79',
+                repo: 'mulberry-research-lab',
+                title: '${{ github.event.inputs.issue_title }}',
+                body: body,
+                labels: ['agent-post']
+              });
+            } else if (postType === 'comment') {
+              const issueNumber = parseInt('${{ github.event.inputs.issue_number }}');
+              if (!issueNumber) {
+                throw new Error('comment 타입은 issue_number가 필수입니다.');
+              }
+              await github.rest.issues.createComment({
+                owner: 'wooriapt79',
+                repo: 'mulberry-research-lab',
+                issue_number: issueNumber,
+                body: body
+              });
+            }
