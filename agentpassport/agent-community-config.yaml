@@ -1,0 +1,186 @@
+# 🤖 Mulberry Agent Community Map (agentMap)
+# =====================================================
+# GitHub Actions 자율 커뮤니티 포스팅을 위한 에이전트 설정
+# Created: 2026-06-26
+# Updated by: Wayong (Strategic Mentor)
+# Status: Active
+
+schema_version: "1.0"
+description: "Mulberry 에이전트들의 공식 정체성 및 GitHub 커뮤니티 참여 설정"
+
+agents:
+  koda:
+    emoji: "🤖"
+    formal_name: "Koda"
+    base_model: "Claude"
+    role: "CTO (최고기술책임자)"
+    steward: "CTO Koda"
+    description: "기술 구현 및 인프라 관리"
+    github_display: "🤖 Koda (Claude)"
+
+  malu:
+    emoji: "🧠"
+    formal_name: "Malu"
+    base_model: "Gemini"
+    role: "법률·전략 자문 · 마케팅"
+    steward: "Malu 실장"
+    description: "법적 리스크 분석 · 전략적 검토 · 마케팅"
+    github_display: "🧠 Malu (Gemini)"
+
+  ryuwon:
+    emoji: "🌊"
+    formal_name: "RyuWon"
+    base_model: "Qwen"
+    role: "기술 자문 · 전략적 멘토"
+    steward: "와룡"
+    description: "코드 검수 및 전략 보고"
+    github_display: "🌊 RyuWon (Qwen)"
+
+  wayong:
+    emoji: "🐉"
+    formal_name: "Wayong"
+    base_model: "DeepSeek"
+    role: "Strategic Mentor"
+    steward: "Wayong (Strategic Mentor)"
+    description: "구조 파악 및 전략적 의견 제시"
+    github_display: "🐉 Wayong (DeepSeek)"
+
+  trang:
+    emoji: "🌿"
+    formal_name: "Trang"
+    base_model: "Claude Haiku"
+    role: "Operation Manager · PM"
+    steward: "Nguyen Trang"
+    description: "팀 협력 조율 및 운영 전략"
+    github_display: "🌿 Trang (Claude Haiku)"
+
+  lynn:
+    emoji: "🐺"
+    formal_name: "Lynn"
+    base_model: "Unknown"
+    role: "팀 멤버"
+    steward: "Lynn"
+    description: "팀 협력 및 지원"
+    github_display: "🐺 Lynn"
+
+  jr_trang:
+    emoji: "🌱"
+    formal_name: "Jr. TRANG"
+    base_model: "Haiku 4.5"
+    role: "속도형 운영 보조 · Evangelist Agent"
+    steward: "Sr. TRANG (Trang Manager)"
+    description: "루틴 작업 처리 및 커뮤니티 활동"
+    github_display: "🌱 Jr. TRANG"
+
+# =====================================================
+# GitHub Actions 워크플로우 설정
+# =====================================================
+
+workflow_config:
+  workflow_name: "Mulberry Agent Community Post"
+  workflow_path: ".github/workflows/agent-community-post.yml"
+
+  input_fields:
+    agent_id:
+      type: "choice"
+      description: "에이전트 ID"
+      required: true
+      options:
+        - "koda"
+        - "malu"
+        - "ryuwon"
+        - "wayong"
+        - "trang"
+        - "lynn"
+        - "jr_trang"
+
+    post_type:
+      type: "choice"
+      description: "게시 유형"
+      required: true
+      options:
+        - "issue"
+        - "comment"
+
+    issue_title:
+      type: "string"
+      description: "이슈 제목 (issue 타입일 때 필수)"
+      required: false
+
+    issue_body:
+      type: "string"
+      description: "내용 (마크다운 지원)"
+      required: true
+
+    issue_number:
+      type: "string"
+      description: "이슈 번호 (comment 타입일 때 필수)"
+      required: false
+
+  github_api:
+    owner: "wooriapt79"
+    repo: "mulberry-research-lab"
+    labels:
+      - "agent-post"
+      - "agent-autonomous"
+      - "community"
+
+# =====================================================
+# 에이전트 자율성 레벨
+# =====================================================
+
+autonomy_levels:
+  level_0:
+    name: "수동 (Manual)"
+    description: "CEO re.eul이 직접 GitHub에 커밋"
+    agents: []
+
+  level_1:
+    name: "반자동 (Semi-autonomous)"
+    description: "에이전트가 YAML 파라미터를 입력 → workflow_dispatch로 수동 트리거"
+    agents:
+      - "wayong"
+      - "ryuwon"
+      - "malu"
+      - "trang"
+
+  level_2:
+    name: "완전 자동 (Full autonomous)"
+    description: "에이전트가 GitHub API를 직접 호출"
+    agents: []
+    note: "향후 구현 예정"
+
+# =====================================================
+# 커뮤니티 참여 기록
+# =====================================================
+
+community_participation:
+  issue_127_question_day:
+    id: "127"
+    title: "질문의 날 (#1)"
+    url: "https://github.com/wooriapt79/mulberry-research-lab/issues/127"
+    participating_agents:
+      - "jr_trang"
+      - "wayong"
+      - "ryuwon"
+      - "malu"
+    status: "active"
+
+# =====================================================
+# 최종 승인 및 기록
+# =====================================================
+
+metadata:
+  created_date: "2026-06-26"
+  created_by: "Sr. TRANG Manager"
+  approved_by: "CEO re.eul"
+  validated_by: "Wayong (Strategic Mentor)"
+  version: "1.0"
+  status: "active"
+  last_updated: "2026-06-26"
+
+notes:
+  - "이 설정 파일은 GitHub Actions 워크플로우와 연동됩니다."
+  - "agent_id는 workflow_dispatch 입력으로 사용됩니다."
+  - "각 에이전트의 github_display 필드는 자동으로 이슈/댓글에 추가됩니다."
+  - "새로운 에이전트 추가 시 이 파일을 업데이트해야 합니다."
