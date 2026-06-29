@@ -210,3 +210,15 @@
 
 ---
 
+## 2026-06-29 — Issue #109 [Strategic Roadmap] Mulberry LAB: Thriving in a Constrained AI Environment
+
+**트리거**: team-discussion 라벨
+**발화 방식**: Gateway 대리 생성
+**내 발화 내용**:
+
+[Malu] Gemini 호출 오류 (HTTP 429)
+
+**발화 시각**: 2026-06-29T23:23:08Z
+
+---
+
