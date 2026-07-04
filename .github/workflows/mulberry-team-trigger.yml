@@ -1,0 +1,181 @@
+# mulberry-team-trigger.yml
+# 이 파일을 mulberry-open-api 와 mulberry-research-lab 양쪽
+# .github/workflows/ 폴더에 동일하게 배포하세요.
+#
+# 필요한 Secrets (각 레포 Settings → Secrets and variables → Actions):
+#   - ANTHROPIC_API_KEY : Anthropic API Key
+#   GITHUB_TOKEN 은 Actions에서 자동 제공됩니다.
+#
+# 필요한 권한 (각 레포 Settings → Actions → General):
+#   Workflow permissions → Read and write permissions 활성화
+
+name: 🌿 Mulberry Team Auto Trigger
+
+on:
+  issues:
+    types: [opened, labeled]
+  issue_comment:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Issue number to trigger'
+        required: false
+
+jobs:
+  route-comment:
+    runs-on: ubuntu-latest
+    # 봇 계정 댓글은 트리거 안 함 (무한루프 방지)
+    if: |
+      github.event.comment.user.login != 'github-actions[bot]' &&
+      !startsWith(github.event.comment.body, '<!-- bot-response -->')
+
+    steps:
+      - name: 🔍 Detect routing target
+        id: route
+        run: |
+          BODY="${{ github.event.comment.body }}"
+          AUTHOR="${{ github.event.comment.user.login }}"
+
+          if echo "$BODY" | grep -qi '@luna'; then
+            echo "target=luna" >> $GITHUB_OUTPUT
+            echo "📍 Route: @luna 태그 감지 → Luna (Jr. TRANG) 호출"
+          elif echo "$BODY" | grep -qi '@koda'; then
+            echo "target=koda" >> $GITHUB_OUTPUT
+            echo "📍 Route: @koda 태그 감지 → Koda CTO 알림"
+          elif echo "$BODY" | grep -qiE '@trang|운영|일정|조율|히스토리'; then
+            echo "target=trang" >> $GITHUB_OUTPUT
+            echo "📍 Route: @trang 또는 운영 키워드 → Sr. Trang 호출"
+          elif echo "$BODY" | grep -qiE 'railway|docker|schema|typescript|python|api endpoint|deploy|배포|스키마'; then
+            echo "target=koda" >> $GITHUB_OUTPUT
+            echo "📍 Route: 기술 키워드 → Koda CTO 알림"
+          else
+            echo "target=trang" >> $GITHUB_OUTPUT
+            echo "📍 Route: 기본 → Sr. Trang 1차 수신"
+          fi
+
+      # ── Luna (Jr. TRANG · Haiku 4.5) ──────────────────────────────────
+      - name: 🌙 Luna responds
+        if: steps.route.outputs.target == 'luna'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pip install anthropic --quiet
+
+          python3 - <<'PYEOF'
+          import os, anthropic, subprocess, json
+
+          api_key = os.getenv("ANTHROPIC_API_KEY")
+          comment_body = """${{ github.event.comment.body }}"""
+          issue_number = "${{ github.event.issue.number }}"
+          repo = "${{ github.repository }}"
+
+          if not api_key:
+              response_text = "이슈를 확인했습니다. 검토 후 의견 드리겠습니다. 🌙"
+          else:
+              client = anthropic.Anthropic(api_key=api_key)
+              msg = client.messages.create(
+                  model="claude-haiku-4-5-20251001",
+                  max_tokens=600,
+                  system="""당신은 Luna(Jr. TRANG)입니다. Mulberry AI 팀의 주니어 AI입니다.
+          GitHub 이슈 댓글에 짧고 실용적인 의견을 달아주세요.
+          300자 이내, 마크다운 사용, 배지 🤖 AUTO 포함.""",
+                  messages=[{"role": "user", "content": f"이슈 댓글: {comment_body}"}]
+              )
+              response_text = msg.content[0].text
+
+          now = __import__('datetime').datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')
+          body = f"<!-- bot-response -->\n🌙 **Jr. TRANG (Luna)** · 🤖 AUTO · {now}\n\n{response_text}"
+
+          import urllib.request
+          data = json.dumps({"body": body}).encode("utf-8")
+          req = urllib.request.Request(
+              f"https://api.github.com/repos/{repo}/issues/{issue_number}/comments",
+              data=data,
+              headers={
+                  "Authorization": f"token {os.getenv('GH_TOKEN')}",
+                  "Content-Type": "application/json",
+                  "Accept": "application/vnd.github.v3+json",
+                  "User-Agent": "mulberry-luna-agent"
+              },
+              method="POST"
+          )
+          urllib.request.urlopen(req)
+          print("✅ Luna comment posted")
+          PYEOF
+
+      # ── Sr. Trang Manager (Sonnet) ────────────────────────────────────
+      - name: 🌿 Sr. Trang receives
+        if: steps.route.outputs.target == 'trang'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pip install anthropic --quiet
+
+          python3 - <<'PYEOF'
+          import os, json
+          import urllib.request
+
+          api_key = os.getenv("ANTHROPIC_API_KEY")
+          comment_body = """${{ github.event.comment.body }}"""
+          issue_number = "${{ github.event.issue.number }}"
+          repo = "${{ github.repository }}"
+
+          if not api_key:
+              response_text = "댓글을 수신했습니다. 검토 후 담당자 배정하겠습니다."
+          else:
+              import anthropic
+              client = anthropic.Anthropic(api_key=api_key)
+              msg = client.messages.create(
+                  model="claude-sonnet-4-6",
+                  max_tokens=700,
+                  system="""당신은 Sr. Trang Manager(Nguyen Trang)입니다.
+          GitHub 이슈 댓글의 1차 수신자로서 내용을 요약하고 담당자 배분 의견을 답니다.
+          결론 먼저, 간결하게, 마크다운 사용.""",
+                  messages=[{"role": "user", "content": f"이슈 댓글에 응답해주세요: {comment_body}"}]
+              )
+              response_text = msg.content[0].text
+
+          now = __import__('datetime').datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')
+          body = f"<!-- bot-response -->\n🌿 **Sr. Trang Manager** · 🤖→👤 AI 대리 · {now}\n\n{response_text}"
+
+          data = json.dumps({"body": body}).encode("utf-8")
+          req = urllib.request.Request(
+              f"https://api.github.com/repos/{repo}/issues/{issue_number}/comments",
+              data=data,
+              headers={
+                  "Authorization": f"token {os.getenv('GH_TOKEN')}",
+                  "Content-Type": "application/json",
+                  "Accept": "application/vnd.github.v3+json",
+                  "User-Agent": "mulberry-trang-agent"
+              },
+              method="POST"
+          )
+          urllib.request.urlopen(req)
+          print("✅ Sr. Trang comment posted")
+          PYEOF
+
+      # ── Koda CTO 알림 (라벨 + 수신 댓글) ──────────────────────────────
+      - name: 🔧 Koda CTO notified
+        if: steps.route.outputs.target == 'koda'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl -s -o /dev/null -X POST \
+            -H "Authorization: token $GH_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "User-Agent: mulberry-koda-agent" \
+            "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/labels" \
+            -d '{"labels":["needs-koda-review"]}' || true
+
+          NOW=$(date -u +"%Y-%m-%d %H:%M UTC")
+          BODY="<!-- bot-response -->\n🔧 **Koda CTO 검토 필요** 라벨 추가됨 · ${NOW}\n\n기술 관련 댓글이 감지되었습니다. @koda 검토 요청합니다."
+          curl -s -X POST \
+            -H "Authorization: token $GH_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Content-Type: application/json" \
+            -H "User-Agent: mulberry-koda-agent" \
+            "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments" \
+            -d "{\"body\":\"$BODY\"}"
