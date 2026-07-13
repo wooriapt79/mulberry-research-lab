@@ -71,20 +71,19 @@ Co-Authored-By: Jr <jr@mulberry.ai>
 *이 파일은 Nguyen Trang (Operation Manager)이 관리합니다.*  
 *새 기여자 추가 시 → Nguyen Trang에게 요청하세요.*
 
-
 ## 기여 통계 (자동 집계)
-*마지막 업데이트: 2026-07-06 (UTC) — 매주 월요일 자동 갱신*
+*마지막 업데이트: 2026-07-13 (UTC) — 매주 월요일 자동 갱신*
 
 | 기여자 | LAB 기여 | BANK 기여 | 합계 |
 |--------|---------|---------|------|
 | re.eul | 26 | 12 | **38** |
-| Nguyen Trang | 31 | 16 | **47** |
+| Nguyen Trang | 33 | 16 | **49** |
 | Koda (Claude) | 45 | 10 | **55** |
 | Kbin (ChatGPT) | 29 | 10 | **39** |
 | Malu (Gemini) | 25 | 10 | **35** |
 | Wayong (DeepSeek) | 23 | 10 | **33** |
-| RyuWon (Qwen) | 33 | 12 | **45** |
-| Lynn | 54 | 97 | **151** |
+| RyuWon (Qwen) | 35 | 12 | **47** |
+| Lynn | 61 | 104 | **165** |
 | Jr | 7 | 0 | **7** |
 
 > 집계 기준: 직접 커밋 + Co-Authored-By 트레일러 (LAB + BANK 합산)
