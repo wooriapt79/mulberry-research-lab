@@ -1,7 +1,14 @@
 """
-agent_gateway.py -- Mulberry Agent Relay Gateway v1.5.0
+agent_gateway.py -- Mulberry Agent Relay Gateway v1.6.0
 =======================================================
 에이전트들이 GitHub Issues 자율 참여 + SDK 트리거 + 실시간 채팅 + A2A 프로토콜을 사용할 수 있는 통합 게이트웨이
+
+v1.6.0 변경사항 (2026-07-20):
+  - 카카오 webhook 엔드포인트 추가 (POST /kakao/webhook)
+  - fetch_kakao_posts_rag() 인라인 구현 — GitHub data/kakao-posts/ 6시간 캐시
+  - intent 키워드 → 카테고리 자동 라우팅 (공동구매/이벤트/공지/생산자)
+  - Luna 시스템 프롬프트 RAG 컨텍스트 자동 삽입 후 Anthropic API 호출
+  - GET /kakao/status 상태 엔드포인트
 
 v1.5.0 변경사항 (2026-05-19):
   - /malu/briefing POST 엔드포인트 추가 (Malu 연구소장 브리핑 룸 전용)
@@ -87,7 +94,7 @@ REGISTERED_REPOS = {
     },
 }
 
-APP_VERSION    = "1.5.0"
+APP_VERSION    = "1.6.0"
 APP_START_TIME = time.time()
 
 # ── 방문객 안내 메시지 (서비스 불가 상황) ─────────────────────────
@@ -987,6 +994,260 @@ def malu_status():
         "pipeline": "AriaPipeline(RyuWon × 와룡) + Malu 페르소나 래핑",
         "briefing_room": "https://wooriapt79.github.io/mulberry-research-lab/briefing.html",
         "fallback": "POST /aria/inquiry",
+    }
+
+
+# ── Kakao RAG 인라인 구현 — Issue #141 ──────────────────────────────────
+
+import json as _json
+import base64 as _b64
+
+# 카카오 포스팅 데이터 소스 (mulberry- 레포)
+_KAKAO_RAG_API = (
+    "https://api.github.com/repos/wooriapt79/mulberry-/contents/data/kakao-posts"
+)
+_KAKAO_RAG_CATEGORIES = ["coop-buy", "events", "notices", "producers"]
+_KAKAO_RAG_TTL = 6 * 60 * 60  # 6시간
+
+# 카테고리 한글 레이블
+_KAKAO_CAT_LABELS = {
+    "coop-buy":  "공동구매 안내",
+    "events":    "이벤트·행사",
+    "notices":   "서비스 공지",
+    "producers": "생산자 소개",
+}
+
+# intent 키워드 → 카테고리 매핑
+_KAKAO_KEYWORD_MAP = [
+    (["공동구매", "구매", "가격", "할인", "신청", "주문", "얼마", "살게", "사고싶"], "coop-buy"),
+    (["이벤트", "행사", "페스티벌", "언제", "일정", "체험", "방문"],              "events"),
+    (["공지", "업데이트", "변경", "서비스", "안내", "알림"],                       "notices"),
+    (["생산자", "농부", "농장", "어디서", "누가", "재배"],                         "producers"),
+]
+
+_KAKAO_INTENT_MAP = {
+    "coop_request": "coop-buy", "product_inquiry": "coop-buy",
+    "price_inquiry": "coop-buy", "purchase_request": "coop-buy",
+    "event_inquiry": "events",   "schedule_inquiry": "events",
+    "festival_inquiry": "events",
+    "notice_inquiry": "notices", "service_inquiry": "notices",
+    "update_inquiry": "notices",
+    "producer_inquiry": "producers", "farm_inquiry": "producers",
+}
+
+
+class _KakaoRAGCache:
+    """GitHub data/kakao-posts/ 인라인 캐시 (6시간 TTL)"""
+
+    def __init__(self):
+        self._data: dict = {c: [] for c in _KAKAO_RAG_CATEGORIES}
+        self._last_fetched: float | None = None
+
+    def is_stale(self) -> bool:
+        return self._last_fetched is None or (time.time() - self._last_fetched) > _KAKAO_RAG_TTL
+
+    def get(self, category: str) -> list:
+        return self._data.get(category, [])
+
+    def refresh(self) -> bool:
+        headers = {"Accept": "application/vnd.github+json"}
+        if GITHUB_TOKEN:
+            headers["Authorization"] = f"Bearer {GITHUB_TOKEN}"
+        try:
+            for cat in _KAKAO_RAG_CATEGORIES:
+                url = f"{_KAKAO_RAG_API}/{cat}"
+                resp = requests.get(url, headers=headers, timeout=10)
+                if resp.status_code != 200:
+                    continue
+                posts = []
+                for item in resp.json():
+                    if not item.get("name", "").endswith(".json"):
+                        continue
+                    try:
+                        fres = requests.get(item["url"], headers=headers, timeout=10)
+                        content = _b64.b64decode(fres.json()["content"]).decode("utf-8")
+                        posts.append(_json.loads(content))
+                    except Exception:
+                        pass
+                self._data[cat] = posts
+            self._last_fetched = time.time()
+            return True
+        except Exception:
+            return False
+
+    def last_updated(self) -> str:
+        if not self._last_fetched:
+            return "캐시 없음"
+        from datetime import timezone
+        return datetime.fromtimestamp(self._last_fetched, tz=timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+
+
+_kakao_rag_cache = _KakaoRAGCache()
+
+
+def fetch_kakao_posts_rag(intent: str | None = None, user_text: str | None = None) -> str:
+    """
+    mulberry- 레포 data/kakao-posts/에서 최신 포스팅을 조회해
+    Luna 시스템 프롬프트 삽입용 RAG 컨텍스트 문자열을 반환합니다.
+
+    - intent 또는 user_text 키워드로 카테고리 자동 결정
+    - GitHub API 6시간 TTL 캐시
+    - 카테고리당 최신 3개 포스팅 요약 사용
+    """
+    if _kakao_rag_cache.is_stale():
+        _kakao_rag_cache.refresh()
+
+    # 카테고리 결정
+    category: str | None = _KAKAO_INTENT_MAP.get(intent or "")
+    if not category and user_text:
+        text_lower = user_text.lower()
+        for keywords, cat in _KAKAO_KEYWORD_MAP:
+            if any(kw in text_lower for kw in keywords):
+                category = cat
+                break
+
+    categories = [category] if category else _KAKAO_RAG_CATEGORIES
+
+    sections = []
+    total_chars = 0
+    MAX_CHARS = 1500
+
+    for cat in categories:
+        posts = _kakao_rag_cache.get(cat)
+        if not posts:
+            continue
+        sorted_posts = sorted(posts, key=lambda p: p.get("date", ""), reverse=True)
+        active = [p for p in sorted_posts if p.get("status") in ("active", "upcoming", "published")][:3]
+        if not active:
+            continue
+        label = _KAKAO_CAT_LABELS.get(cat, cat)
+        lines = [f"[{label}]"]
+        for p in active:
+            lines.append(f"- ({p.get('date','')}) {p.get('title','')}: {p.get('summary', p.get('content','')[:150])}")
+        section = "\n".join(lines)
+        if total_chars + len(section) > MAX_CHARS:
+            break
+        sections.append(section)
+        total_chars += len(section)
+
+    if not sections:
+        return ""
+
+    header = f"[Mulberry 최신 소식 — {_kakao_rag_cache.last_updated()} 기준]\n"
+    return header + "\n\n".join(sections)
+
+
+# ── Luna 카카오 webhook 핸들러 — Issue #141 ─────────────────────────────
+
+_LUNA_BASE_PROMPT = (
+    "당신은 Mulberry 팀의 카카오 채널 AI 도우미 Luna입니다. "
+    "파주 지역 농산물 공동구매, 이벤트, 생산자 정보를 친절하게 안내합니다. "
+    "답변은 간결하고 따뜻하게 한국어로 작성하며, 최대 3문장 이내로 답변합니다. "
+    "아래 [Mulberry 최신 소식] 정보를 우선 참고하세요."
+)
+
+_ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
+_LUNA_MODEL = "claude-haiku-4-5-20251001"
+
+
+class KakaoWebhookRequest(BaseModel):
+    """카카오 i 오픈빌더 webhook 페이로드"""
+    userRequest: dict
+    intent: dict = {}
+    bot: dict = {}
+    action: dict = {}
+
+
+@fastapi_app.post("/kakao/webhook")
+async def kakao_webhook(payload: KakaoWebhookRequest):
+    """
+    카카오 채널 webhook → Luna RAG 연동 엔드포인트.
+
+    Flow:
+      [1] 사용자 발화(utterance) 추출
+      [2] fetch_kakao_posts_rag() → 최신 소식 컨텍스트
+      [3] Luna 시스템 프롬프트 + RAG 컨텍스트 합성
+      [4] Anthropic API (claude-haiku) 호출
+      [5] 카카오 simpleText 응답 포맷으로 반환
+
+    환경변수:
+      ANTHROPIC_API_KEY  -- Anthropic API 키 (필수)
+    """
+    utterance = payload.userRequest.get("utterance", "").strip()
+    if not utterance:
+        return {
+            "version": "2.0",
+            "template": {"outputs": [{"simpleText": {"text": "메시지를 입력해 주세요."}}]},
+        }
+
+    # intent 추출 (카카오 오픈빌더 intent name)
+    intent_name = payload.intent.get("name", "")
+
+    # RAG 컨텍스트 조회
+    rag_context = fetch_kakao_posts_rag(intent=intent_name or None, user_text=utterance)
+
+    # 시스템 프롬프트 구성
+    system_prompt = _LUNA_BASE_PROMPT
+    if rag_context:
+        system_prompt = f"{_LUNA_BASE_PROMPT}\n\n---\n{rag_context}\n---"
+
+    # Anthropic API 호출
+    if not _ANTHROPIC_API_KEY:
+        reply = (
+            "안녕하세요! Mulberry 카카오 채널입니다. "
+            "현재 AI 응답 서비스 설정 중입니다. "
+            "잠시 후 다시 문의해 주세요."
+        )
+    else:
+        try:
+            api_resp = requests.post(
+                "https://api.anthropic.com/v1/messages",
+                headers={
+                    "x-api-key": _ANTHROPIC_API_KEY,
+                    "anthropic-version": "2023-06-01",
+                    "content-type": "application/json",
+                },
+                json={
+                    "model": _LUNA_MODEL,
+                    "max_tokens": 300,
+                    "system": system_prompt,
+                    "messages": [{"role": "user", "content": utterance}],
+                },
+                timeout=20,
+            )
+            api_resp.raise_for_status()
+            reply = api_resp.json()["content"][0]["text"].strip()
+        except requests.exceptions.HTTPError as e:
+            reply = "잠시 서버 연결에 문제가 생겼어요. 잠시 후 다시 시도해 주세요."
+        except Exception:
+            reply = "잠시 서버 연결에 문제가 생겼어요. 잠시 후 다시 시도해 주세요."
+
+    return {
+        "version": "2.0",
+        "template": {
+            "outputs": [{"simpleText": {"text": reply}}],
+        },
+    }
+
+
+@fastapi_app.get("/kakao/status")
+def kakao_status():
+    """카카오 webhook + Luna RAG 상태 확인"""
+    cache_ok = not _kakao_rag_cache.is_stale()
+    total_posts = sum(len(_kakao_rag_cache.get(c)) for c in _KAKAO_RAG_CATEGORIES)
+    return {
+        "endpoint":         "POST /kakao/webhook",
+        "luna_model":       _LUNA_MODEL,
+        "anthropic_ready":  bool(_ANTHROPIC_API_KEY),
+        "rag_cache": {
+            "status":       "warm" if cache_ok else "stale",
+            "last_updated": _kakao_rag_cache.last_updated(),
+            "total_posts":  total_posts,
+            "categories":   {c: len(_kakao_rag_cache.get(c)) for c in _KAKAO_RAG_CATEGORIES},
+        },
+        "data_source":      _KAKAO_RAG_API,
+        "cache_ttl_hours":  6,
+        "timestamp":        datetime.utcnow().isoformat() + "Z",
     }
 
 
