@@ -179,3 +179,26 @@ Multi-Brand: 7 브랜드 | 도구공유 40.
  ---
 
                             **Last Updated**: 2026-06-02 | **Status**: Active 🌿
+
+---
+
+## 🎪 Current Events & Community Activities
+
+### 🌾 Event Hub
+
+**Mulberry Project는 식품사막화 제로를 위한 다양한 이벤트와 활동을 진행하고 있습니다.**
+
+🔗 **[→ 전체 이벤트 보기 (Events Page)](./events.html)** 
+
+#### 현재 진행 중인 이벤트
+
+| 📌 이벤트명 | 📍 지역 | ⏰ 상태 | 🎯 카테고리 |
+|----------|--------|--------|----------|
+| 🌾 강원도 신선한 배추 공동구매 | 강원도 인제군 | D-5 | Co-op Buy |
+| 📰 지역 먹거리 정보 공유 | 전국 | 진행중 | Local Info |
+| 🤝 Mulberry 커뮤니티 연결 | 온라인 | 상시 | Community |
+
+---
+
+**더 많은 이벤트 정보는 [Events Page](./events.html)에서 확인하세요!** 🌱
+
