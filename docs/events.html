@@ -1,1 +1,96 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta property="og:title" content="Mulberry 이벤트 — 지역 커뮤니티 활동">
+<meta property="og:description" content="공동구매, 식품사막화 맵, 지역 커뮤니티 참여">
+<title>Mulberry 이벤트 — 지역 커뮤니티 활동</title>
+<link rel="stylesheet" href="events-style.css">
+</head>
+<body>
 
+<!-- PAGE NAV -->
+<nav class="page-nav">
+  <a href="index.html">💬 Aria Portal</a>
+  <a href="briefing.html">🏛️ 브리핑 룸</a>
+  <a href="events.html" class="active">🌾 이벤트</a>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="agent-badge">Community · 지역 활동 · Luna 🌸</div>
+  <h1>Mulberry 이벤트</h1>
+  <p class="desc">지역 주민과 함께하는 공동구매, 정보 공유, 커뮤니티 활동</p>
+</div>
+
+<!-- EVENT CARDS -->
+<main class="events-main">
+
+  <!-- 공동구매 -->
+  <div class="event-card">
+    <div class="event-header">
+      <span class="event-icon">🛒</span>
+      <div>
+        <h2 class="event-title">지역 공동구매</h2>
+        <span class="event-badge badge-green">모집 중</span>
+      </div>
+    </div>
+    <p class="event-desc">인제군 지역 농산물 직거래 공동구매. 신선한 지역 먹거리를 합리적인 가격에 함께 구매합니다.</p>
+    <div class="event-footer">
+      <button class="btn-primary" onclick="participateEvent('공동구매')">참여 신청</button>
+      <button class="btn-outline" onclick="contactLuna()">Luna에게 문의 🌸</button>
+    </div>
+  </div>
+
+  <!-- 식품사막화 맵 -->
+  <div class="event-card">
+    <div class="event-header">
+      <span class="event-icon">📍</span>
+      <div>
+        <h2 class="event-title">식품사막화 맵</h2>
+        <span class="event-badge badge-blue">연구 중</span>
+      </div>
+    </div>
+    <p class="event-desc">인제군 식품 접근성 취약 지역 현황 조사 및 시각화. KOSIS 데이터 기반 지역 실태 파악 프로젝트입니다.</p>
+    <div class="event-footer">
+      <button class="btn-primary" onclick="viewDetails('식품사막화')">자세히 보기</button>
+      <button class="btn-outline" onclick="contactLuna()">Luna에게 문의 🌸</button>
+    </div>
+  </div>
+
+  <!-- 커뮤니티 -->
+  <div class="event-card">
+    <div class="event-header">
+      <span class="event-icon">🤝</span>
+      <div>
+        <h2 class="event-title">커뮤니티 참여</h2>
+        <span class="event-badge badge-purple">상시 모집</span>
+      </div>
+    </div>
+    <p class="event-desc">Mulberry 연구소 커뮤니티에 참여하여 지역 문제 해결에 함께합니다. 카카오톡 채널에서 소통하세요.</p>
+    <div class="event-footer">
+      <button class="btn-primary" onclick="joinCommunity()">커뮤니티 참여</button>
+      <button class="btn-outline" onclick="contactLuna()">Luna에게 문의 🌸</button>
+    </div>
+  </div>
+
+</main>
+
+<!-- 카카오 채널 구독 -->
+<div class="kakao-section">
+  <p class="kakao-title">카카오톡 채널에서 소식 받기</p>
+  <a href="http://pf.kakao.com/_xmVxmMC" target="_blank" rel="noopener" class="kakao-channel-btn">
+    채널 추가하기 💛
+  </a>
+</div>
+
+<!-- FOOTER -->
+<div class="ryuwon-footer">
+  <p class="signature">🌸 Luna · 지역 커뮤니티 연결</p>
+  <p>Mulberry Research Lab · 인제군 식품사막화 제로 프로젝트</p>
+</div>
+
+<script src="events-script.js"></script>
+</body>
+</html>
