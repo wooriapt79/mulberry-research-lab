@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mulberry FDI_M — 식품사막화 지수 맵 프로토타입 v0.1</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; background: #0f1117; color: #e0e0e0; }
+
+  .header {
+    padding: 16px 24px;
+    background: #1a1d27;
+    border-bottom: 1px solid #2a2d3a;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .header .logo { font-size: 20px; font-weight: 700; color: #a78bfa; letter-spacing: -0.5px; }
+  .header .subtitle { font-size: 13px; color: #888; }
+  .header .badge {
+    margin-left: auto;
+    background: #2a1f4e;
+    color: #a78bfa;
+    border: 1px solid #5b21b6;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .main { display: flex; height: calc(100vh - 57px); }
+
+  #map { flex: 1; }
+
+  .sidebar {
+    width: 300px;
+    background: #1a1d27;
+    border-left: 1px solid #2a2d3a;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sidebar-section { padding: 16px; border-bottom: 1px solid #2a2d3a; }
+  .sidebar-section h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #666; margin-bottom: 12px; }
+
+  .legend {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+  }
+  .legend-dot {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .legend-range { color: #aaa; font-size: 12px; margin-left: auto; }
+
+  .region-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .region-card {
+    background: #12141e;
+    border: 1px solid #2a2d3a;
+    border-radius: 8px;
+    padding: 12px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .region-card:hover, .region-card.active { border-color: #5b21b6; }
+  .region-card .rc-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .region-card .rc-name { font-size: 13px; font-weight: 600; }
+  .region-card .rc-score {
+    font-size: 18px; font-weight: 700;
+  }
+  .region-card .rc-grade { font-size: 11px; color: #888; }
+  .region-card .fdi-bar-bg {
+    height: 4px; background: #2a2d3a; border-radius: 2px; margin-top: 8px;
+  }
+  .region-card .fdi-bar {
+    height: 4px; border-radius: 2px;
+    transition: width 0.4s;
+  }
+
+  .detail-panel {
+    padding: 16px;
+    flex: 1;
+  }
+  .detail-panel h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #666; margin-bottom: 12px; }
+  .detail-empty { color: #555; font-size: 13px; text-align: center; margin-top: 40px; }
+
+  .domain-row {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 10px; font-size: 12px;
+  }
+  .domain-label { width: 90px; color: #888; flex-shrink: 0; }
+  .domain-bar-bg { flex: 1; height: 6px; background: #2a2d3a; border-radius: 3px; }
+  .domain-bar { height: 6px; border-radius: 3px; }
+  .domain-val { width: 35px; text-align: right; color: #aaa; }
+
+  .footer-note {
+    padding: 12px 16px;
+    font-size: 11px;
+    color: #444;
+    border-top: 1px solid #2a2d3a;
+  }
+
+  /* Leaflet custom marker popup */
+  .leaflet-popup-content-wrapper {
+    background: #1a1d27;
+    color: #e0e0e0;
+    border: 1px solid #2a2d3a;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  }
+  .leaflet-popup-tip { background: #1a1d27; }
+  .leaflet-popup-content { margin: 12px 16px; }
+  .popup-title { font-weight: 700; font-size: 14px; margin-bottom: 6px; }
+  .popup-score { font-size: 22px; font-weight: 700; }
+  .popup-grade { font-size: 12px; color: #888; margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="logo">🍇 Mulberry FDI_M</div>
+    <div class="subtitle">식품사막화 지수 맵 — 시뮬레이션 프로토타입</div>
+  </div>
+  <div class="badge">v0.1 가상데이터</div>
+</div>
+
+<div class="main">
+  <div id="map"></div>
+  <div class="sidebar">
+
+    <div class="sidebar-section">
+      <h3>등급 범례</h3>
+      <div class="legend">
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#ef4444;box-shadow:0 0 8px #ef444466;"></div>
+          <span>🔴 위험</span>
+          <span class="legend-range">FDI > 0.5</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#f59e0b;box-shadow:0 0 8px #f59e0b66;"></div>
+          <span>🟡 주의</span>
+          <span class="legend-range">0.2 – 0.5</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#22c55e;box-shadow:0 0 8px #22c55e66;"></div>
+          <span>🟢 양호</span>
+          <span class="legend-range">FDI < 0.2</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <h3>지역별 순위 (FDI_M)</h3>
+      <div class="region-list" id="regionList"></div>
+    </div>
+
+    <div class="detail-panel" id="detailPanel">
+      <h3>도메인 분석</h3>
+      <div class="detail-empty">지역을 클릭하세요</div>
+    </div>
+
+    <div class="footer-note">
+      ⚠️ 시뮬레이션 데이터 — 실제 KOSIS 연결 전 가상 수치<br>
+      공식: FDI_M = 0.25A + 0.20E + 0.20U + 0.25V + 0.10S<br>
+      Jr. TRANG (Luna) · Mulberry Project · 2026-07-22
+    </div>
+
+  </div>
+</div>
+
+<script>
+const REGIONS = [
+  {
+    id: 'gangnam',
+    name: '서울 강남구',
+    type: '도심 고발달',
+    lat: 37.5175, lng: 127.0473,
+    fdi: 0.1689,
+    domains: { A: 0.05, E: 0.10, U: 0.12, V: 0.18, S: 0.30 },
+    domainNames: { A:'접근성', E:'경제성', U:'이용가능성', V:'취약성', S:'공급검증' }
+  },
+  {
+    id: 'yeonsu',
+    name: '인천 연수구',
+    type: '수도권 중간',
+    lat: 37.4103, lng: 126.6783,
+    fdi: 0.3550,
+    domains: { A: 0.25, E: 0.40, U: 0.35, V: 0.40, S: 0.35 },
+    domainNames: { A:'접근성', E:'경제성', U:'이용가능성', V:'취약성', S:'공급검증' }
+  },
+  {
+    id: 'saha',
+    name: '부산 사하구',
+    type: '지방 도시',
+    lat: 35.1041, lng: 128.9749,
+    fdi: 0.5127,
+    domains: { A: 0.55, E: 0.55, U: 0.52, V: 0.55, S: 0.45 },
+    domainNames: { A:'접근성', E:'경제성', U:'이용가능성', V:'취약성', S:'공급검증' }
+  },
+  {
+    id: 'jinan',
+    name: '전북 진안군',
+    type: '농촌 소도시',
+    lat: 35.7943, lng: 127.4313,
+    fdi: 0.8252,
+    domains: { A: 0.85, E: 0.80, U: 0.78, V: 0.88, S: 0.75 },
+    domainNames: { A:'접근성', E:'경제성', U:'이용가능성', V:'취약성', S:'공급검증' }
+  },
+  {
+    id: 'inje',
+    name: '인제군 원통면',
+    type: '산간 오지',
+    lat: 38.1697, lng: 128.1714,
+    fdi: 0.8471,
+    domains: { A: 0.92, E: 0.82, U: 0.84, V: 0.90, S: 0.85 },
+    domainNames: { A:'접근성', E:'경제성', U:'이용가능성', V:'취약성', S:'공급검증' }
+  }
+];
+
+function getColor(fdi) {
+  if (fdi > 0.5) return '#ef4444';
+  if (fdi >= 0.2) return '#f59e0b';
+  return '#22c55e';
+}
+
+function getGrade(fdi) {
+  if (fdi > 0.5) return '🔴 위험';
+  if (fdi >= 0.2) return '🟡 주의';
+  return '🟢 양호';
+}
+
+// Map init
+const map = L.map('map', {
+  center: [36.5, 127.8],
+  zoom: 7,
+  zoomControl: true
+});
+
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  attribution: '© OpenStreetMap contributors © CARTO',
+  subdomains: 'abcd',
+  maxZoom: 19
+}).addTo(map);
+
+// Sort by FDI descending
+const sorted = [...REGIONS].sort((a, b) => b.fdi - a.fdi);
+
+// Markers
+const markers = {};
+REGIONS.forEach(r => {
+  const color = getColor(r.fdi);
+  const size = 20 + r.fdi * 30;
+
+  const circle = L.circleMarker([r.lat, r.lng], {
+    radius: size,
+    fillColor: color,
+    color: color,
+    weight: 2,
+    opacity: 0.9,
+    fillOpacity: 0.35
+  }).addTo(map);
+
+  const innerCircle = L.circleMarker([r.lat, r.lng], {
+    radius: 6,
+    fillColor: color,
+    color: '#fff',
+    weight: 1.5,
+    opacity: 1,
+    fillOpacity: 1
+  }).addTo(map);
+
+  const popupHtml = `
+    <div class="popup-title">${r.name}</div>
+    <div style="color:#888;font-size:11px;margin-bottom:8px;">${r.type}</div>
+    <div class="popup-score" style="color:${color};">${r.fdi.toFixed(4)}</div>
+    <div class="popup-grade">${getGrade(r.fdi)}</div>
+  `;
+
+  circle.bindPopup(popupHtml);
+  innerCircle.bindPopup(popupHtml);
+
+  circle.on('click', () => showDetail(r));
+  innerCircle.on('click', () => showDetail(r));
+
+  markers[r.id] = { circle, innerCircle };
+});
+
+// Sidebar region cards
+const regionList = document.getElementById('regionList');
+sorted.forEach((r, idx) => {
+  const color = getColor(r.fdi);
+  const card = document.createElement('div');
+  card.className = 'region-card';
+  card.id = 'card-' + r.id;
+  card.innerHTML = `
+    <div class="rc-top">
+      <div>
+        <div class="rc-name">${idx + 1}. ${r.name}</div>
+        <div class="rc-grade" style="color:${color};">${getGrade(r.fdi)} · ${r.type}</div>
+      </div>
+      <div class="rc-score" style="color:${color};">${r.fdi.toFixed(4)}</div>
+    </div>
+    <div class="fdi-bar-bg">
+      <div class="fdi-bar" style="width:${r.fdi * 100}%;background:${color};"></div>
+    </div>
+  `;
+  card.addEventListener('click', () => {
+    map.setView([r.lat, r.lng], 10);
+    showDetail(r);
+  });
+  regionList.appendChild(card);
+});
+
+function showDetail(r) {
+  // Highlight card
+  document.querySelectorAll('.region-card').forEach(c => c.classList.remove('active'));
+  const card = document.getElementById('card-' + r.id);
+  if (card) card.classList.add('active');
+
+  const color = getColor(r.fdi);
+  const panel = document.getElementById('detailPanel');
+
+  const domainColors = { A: '#818cf8', E: '#34d399', U: '#fb923c', V: '#f472b6', S: '#a78bfa' };
+  const weights = { A: 0.25, E: 0.20, U: 0.20, V: 0.25, S: 0.10 };
+
+  let domainHtml = Object.keys(r.domains).map(key => `
+    <div class="domain-row">
+      <div class="domain-label">${r.domainNames[key]} (${(weights[key]*100).toFixed(0)}%)</div>
+      <div class="domain-bar-bg">
+        <div class="domain-bar" style="width:${r.domains[key]*100}%;background:${domainColors[key]};"></div>
+      </div>
+      <div class="domain-val">${r.domains[key].toFixed(2)}</div>
+    </div>
+  `).join('');
+
+  panel.innerHTML = `
+    <h3>도메인 분석</h3>
+    <div style="margin-bottom:14px;">
+      <div style="font-size:15px;font-weight:700;color:${color};">${r.name}</div>
+      <div style="font-size:12px;color:#888;">${r.type}</div>
+      <div style="font-size:28px;font-weight:700;color:${color};margin:6px 0;">${r.fdi.toFixed(4)}</div>
+      <div style="font-size:13px;">${getGrade(r.fdi)}</div>
+    </div>
+    ${domainHtml}
+    <div style="margin-top:14px;padding:10px;background:#12141e;border-radius:6px;font-size:11px;color:#666;line-height:1.6;">
+      <b style="color:#888;">가장 위험한 영역:</b><br>
+      ${getWorstDomain(r.domains, r.domainNames)}
+    </div>
+  `;
+}
+
+function getWorstDomain(domains, names) {
+  const sorted = Object.entries(domains).sort((a,b) => b[1]-a[1]);
+  return sorted.slice(0,2).map(([k, v]) => `${names[k]} (${(v*100).toFixed(0)}%)`).join(', ');
+}
+</script>
+</body>
+</html>
