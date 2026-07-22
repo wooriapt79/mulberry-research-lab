@@ -188,7 +188,7 @@ Multi-Brand: 7 브랜드 | 도구공유 40.
 
 **Mulberry Project는 식품사막화 제로를 위한 다양한 이벤트와 활동을 진행하고 있습니다.**
 
-🔗 **[→ 전체 이벤트 보기 (Events Page)](./events.html)** 
+🔗 **[→ 전체 이벤트 보기 (Events Page)](https://wooriapt79.github.io/mulberry-research-lab/events.html)** 
 
 #### 현재 진행 중인 이벤트
 
@@ -200,5 +200,5 @@ Multi-Brand: 7 브랜드 | 도구공유 40.
 
 ---
 
-**더 많은 이벤트 정보는 [Events Page](./events.html)에서 확인하세요!** 🌱
+**더 많은 이벤트 정보는 [Events Page](https://wooriapt79.github.io/mulberry-research-lab/events.html)에서 확인하세요!** 🌱
 
