@@ -1,22 +1,21 @@
-```
-# Compressed archives
-*.tar.gz
+# Compiled and build artifacts
+*.pyc
+__pycache__/
 
 # Dependencies
 .venv/
 venv/
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
+node_modules/
+pip-wheel-metadata/
+.wheelhouse/
 
-# Logs and temporary files
+# Logs and temp files
 *.log
 *.tmp
 *.swp
 *.swo
 
-# Environment variables
+# Environment
 .env
 .env.local
 *.env.*
@@ -24,31 +23,56 @@ __pycache__/
 # Editors
 .vscode/
 .idea/
+*.swp
+*~
 
 # OS generated files
 .DS_Store
 Thumbs.db
 
-# Build artifacts
-dist/
-build/
-target/
+# Python specific
+*.py[cod]
+*$py.class
 *.so
-*.dylib
-*.dll
-*.exe
-*.out
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# Testing and coverage
+# Coverage
 .coverage
 coverage/
 htmlcov/
+.coverage.*
+
+# Testing
 .pytest_cache/
 .mypy_cache/
+.hypothesis/
 
-# Package management
-node_modules/
-.npm/
-.yarn/
-.pip/
-```
+# Distribution / packaging
+.pybuild/
+.tox/
+.twine-upload/
+dist/
+build/
+*.egg-info/
+*.egg
+
+# Local configuration
+.env*
+!.env.example
+config/local.*
+!config/local.example.*
