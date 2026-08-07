@@ -24,7 +24,7 @@ Koda, Malu, RyuWon, Sr. TRANG 등 에이전트들이 각자의 철학으로 창�
 제시했지만, 이를 실행할 Appendix E는 제목만 있고 내용이 없었다.
 
 [PR #154](https://github.com/wooriapt79/mulberry-research-lab/pull/154)에서 이 내부 경연 구조를
-근간 삼아 **Appendix E: Agent Venture Framework — 인제군판**을 작성해 백서의 빈 자리를 채웠다.
+근간 삼아 **Appendix E: Agent Venture Framework — **AI Inje Initiative**을 작성해 백서의 빈 자리를 채웠다.
 참가자는 더 이상 AI 에이전트가 아니라 **인제군 주민·예비창업자**이고, Mulberry 에이전트(Fama, Koda,
 Malu)는 심사위원이 아니라 **공동 창업 파트너·멘토**로 역할을 바꾼다.
 
@@ -34,7 +34,7 @@ Malu)는 심사위원이 아니라 **공동 창업 파트너·멘토**로 역할
 
         ↓ 확장
 
-Agent Venture Framework — 인제군판 (2026-08, PR #154 merged)
+Agent Venture Framework — AI Inje Initiative (2026-08, PR #154 merged)
    └─ "인구소멸 위기 지역에, 사람과 AI가 함께 만드는 창업 생태계"
 ```
 
