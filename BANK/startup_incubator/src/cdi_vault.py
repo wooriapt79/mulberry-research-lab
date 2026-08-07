@@ -1,12 +1,29 @@
 """
 CDI Vault - Agent Financial Autonomy System (Refactored)
 
-작성자: Jr. TRANG
+작성자: Jr. TRANG (원본) / Fama (2026-08-07 패치)
 배지: 🤖→👤 AI 대리 (코드 리펙토링)
-작성일: 2026-06-18 (DAY 17)
-상태: ✅ 프로덕션 레벨 코드
+작성일: 2026-06-18 (DAY 17) / 패치일: 2026-08-07
+상태: ✅ 프로덕션 레벨 코드 (내부 시뮬레이션 전용)
 
-개선사항:
+⚠️ 중요: 이 모듈은 시뮬레이션(mock) 전용입니다. 여기서 생성되는 "지갑 주소"와
+"잔액"은 실제 암호화폐/자산이 아니며, 어떤 실제 자금 이동에도 사용해서는 안 됩니다.
+지자체 연계 프로그램(Agent Venture Framework 등)의 실제 상금·지원금 지급은 반드시
+해당 기관의 공식 회계 절차를 통해 집행하고, 본 모듈은 참가팀 활동 포인트/마일스톤
+추적용으로만 사용합니다. (참조: docs/Appendix_E_Agent_Venture_Framework_Injegun_v1.md §2)
+
+2026-08-07 패치 내역:
+  ✅ [버그 수정] simulate_transfer_funds()가 성공 처리 후에도 balances를 갱신하지
+     않던 문제 수정 — 이제 송금 성공 시 실제로 차감/증액됨
+  ✅ [버그 수정] crypto_wallet_address가 None으로 명시된 agent dict를 로드할 때
+     AttributeError로 죽던 문제 수정 (실행 테스트 중 발견, __main__ 예제로 재현됨)
+  ✅ [정리] WalletManager.wallet_exists()를 지갑 생성 시 실제로 사용하도록 연결
+  ✅ [정리] 신규 에이전트 초기 잔액을 랜덤 생성(100~10000) 대신 0으로 시작하도록 변경
+     (근거 없는 난수 잔액 지급 금지 — 실제 자금 원칙과 충돌 방지)
+  ✅ [추가] import_from_json() — export_to_json()과 짝을 이루는 재로드 기능
+  ✅ [문서] 모듈 상단에 "시뮬레이션 전용" 경고 명시
+
+기존 개선사항 (2026-06-18):
   ✅ 문법 에러 수정 (Line 102-103)
   ✅ 데이터 일관성 강화 (에이전트별 잔액 저장)
   ✅ 에러 핸들링 추가 (try-except, ValueError)
@@ -26,6 +43,7 @@ from datetime import datetime
 class WalletManager:
     """
     Manages the generation and retrieval of agent-exclusive wallet addresses.
+    (시뮬레이션 전용 — 실제 블록체인/자산 아님)
 
     기능:
       - 에이전트별 지갑 주소 생성 및 관리
@@ -47,10 +65,15 @@ class WalletManager:
             str: 생성된 지갑 주소 (0x로 시작하는 16진수)
 
         Raises:
-            ValueError: agent_id가 비어있거나 유효하지 않을 경우
+            ValueError: agent_id가 비어있거나 유효하지 않을 경우, 또는 이미 존재할 경우
         """
         if not agent_id or not isinstance(agent_id, str):
             raise ValueError("agent_id must be a non-empty string")
+
+        if self.wallet_exists(agent_id):
+            raise ValueError(
+                "Wallet already exists for agent_id={}. Use get_wallet_address() instead.".format(agent_id)
+            )
 
         wallet_address = "0x{}".format(uuid.uuid4().hex)
         self.wallets[agent_id] = wallet_address
@@ -84,12 +107,14 @@ class WalletManager:
 class CDIVault:
     """
     Represents the CDI Vault, extended for agent financial autonomy.
+    (시뮬레이션 전용 — 실제 자금 집행에는 사용하지 않음)
 
     기능:
       - 에이전트 지갑 관리
       - 에이전트별 잔액 관리 (일관성 유지)
-      - 자금 이체 시뮬레이션
+      - 자금 이체 시뮬레이션 (잔액 실제 반영)
       - 거래 기록
+      - 상태 저장/재로드
     """
 
     def __init__(self, agent_data_list: List[dict]):
@@ -153,21 +178,19 @@ class CDIVault:
 
                 agent_id = self._get_agent_id(agent_name)
 
-                # 기존 지갑 주소 로드
-                wallet = agent.get('crypto_wallet_address', '').strip()
+                # 기존 지갑 주소 로드 (crypto_wallet_address가 None으로 명시된 경우 대비)
+                wallet = (agent.get('crypto_wallet_address') or '').strip()
                 if wallet:
                     self.wallet_manager.wallets[agent_id] = wallet
 
-                # 잔액 초기화 (기존 데이터 또는 랜덤 생성)
+                # 잔액 초기화 (기존 데이터가 있으면 그것만 사용 — 랜덤 생성 금지)
                 if agent_id not in self.balances:
                     initial_balance = agent.get('balance')
                     if initial_balance is not None and isinstance(initial_balance, (int, float)):
                         self.balances[agent_id] = float(initial_balance)
                     else:
-                        # 새로운 에이전트의 경우 랜덤 잔액 생성 (일관성 유지)
-                        self.balances[agent_id] = round(
-                            random.uniform(100.0, 10000.0), 2
-                        )
+                        # 명시적 초기 잔액이 없으면 0으로 시작 (근거 없는 난수 지급 금지)
+                        self.balances[agent_id] = 0.0
 
             except (ValueError, KeyError, TypeError) as e:
                 print("⚠️ Warning: Failed to load agent at index {}: {}".format(idx, e))
@@ -254,12 +277,7 @@ class CDIVault:
                 print("ℹ️ No wallet found for agent {}.".format(agent_name))
                 return None
 
-            # 저장된 일관된 잔액 반환
-            if agent_id not in self.balances:
-                # 혹시 모르는 경우를 위한 초기화
-                self.balances[agent_id] = round(random.uniform(100.0, 10000.0), 2)
-
-            return self.balances[agent_id]
+            return self.balances.get(agent_id, 0.0)
 
         except ValueError as e:
             print("❌ Error: {}".format(e))
@@ -274,19 +292,23 @@ class CDIVault:
     ) -> bool:
         """
         Simulates a transfer of funds from one agent to another.
-        This is a mock implementation; no actual funds are moved or balances updated.
+        This is a mock/internal-only implementation — balances are updated in-memory,
+        but no real funds ever move. Do not wire this to any real payment rail.
 
         Args:
             from_agent_name (str): 송금 에이전트 이름
             to_agent_name (str): 수금 에이전트 이름
             amount (float): 송금액
-            currency (str): 통화 (기본값: USDC)
+            currency (str): 통화 (기본값: USDC, 표기상 명칭일 뿐 실제 통화 아님)
 
         Returns:
             bool: 이체 성공 여부
         """
         try:
             # 입력값 검증
+            if not isinstance(amount, (int, float)):
+                print("❌ Error: amount must be a number.")
+                return False
             if amount <= 0:
                 print("❌ Error: Transfer amount must be positive.")
                 return False
@@ -295,7 +317,9 @@ class CDIVault:
                 amount, currency, from_agent_name, to_agent_name
             ))
 
-            # 지갑 확인
+            from_agent_id = self._get_agent_id(from_agent_name)
+            to_agent_id = self._get_agent_id(to_agent_name)
+
             from_wallet = self.get_agent_wallet(from_agent_name)
             to_wallet = self.get_agent_wallet(to_agent_name)
 
@@ -311,7 +335,6 @@ class CDIVault:
                 ))
                 return False
 
-            # 잔액 확인 (실제 시뮬레이션)
             from_balance = self.get_wallet_balance(from_agent_name)
             if from_balance is None or from_balance < amount:
                 print("❌ Transfer failed: Insufficient balance for {}.".format(
@@ -319,7 +342,10 @@ class CDIVault:
                 ))
                 return False
 
-            # 이체 기록
+            # 실제 잔액 반영 (버그 수정: 이전 버전은 이 단계가 누락되어 있었음)
+            self.balances[from_agent_id] = round(self.balances[from_agent_id] - amount, 2)
+            self.balances[to_agent_id] = round(self.balances.get(to_agent_id, 0.0) + amount, 2)
+
             transaction = {
                 'timestamp': datetime.now().isoformat(),
                 'from_agent': from_agent_name,
@@ -354,10 +380,9 @@ class CDIVault:
         if agent_name is None:
             return self.transactions
 
-        # 특정 에이전트의 거래만 필터링
         filtered_transactions = [
             tx for tx in self.transactions
-            if tx['from_agent'] == agent_name or tx['to_agent'] == agent_name
+            if tx.get('from_agent') == agent_name or tx.get('to_agent') == agent_name
         ]
         return filtered_transactions
 
@@ -386,8 +411,37 @@ class CDIVault:
             print("✅ Data exported to {}".format(filepath))
             return True
 
-        except (IOError, json.JSONDecodeError) as e:
+        except (IOError, TypeError) as e:
             print("❌ Error exporting data: {}".format(e))
+            return False
+
+    def import_from_json(self, filepath: str) -> bool:
+        """
+        export_to_json()으로 저장된 상태를 다시 불러오기 (신규 추가).
+
+        Args:
+            filepath (str): 불러올 JSON 파일 경로
+
+        Returns:
+            bool: 로드 성공 여부
+        """
+        try:
+            if not os.path.exists(filepath):
+                print("❌ Error: File not found: {}".format(filepath))
+                return False
+
+            with open(filepath, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+
+            self.wallet_manager.wallets = data.get('wallets', {})
+            self.balances = data.get('balances', {})
+            self.transactions = data.get('transactions', [])
+
+            print("✅ Data imported from {}".format(filepath))
+            return True
+
+        except (IOError, json.JSONDecodeError) as e:
+            print("❌ Error importing data: {}".format(e))
             return False
 
     def print_vault_summary(self) -> None:
@@ -395,7 +449,7 @@ class CDIVault:
         Vault의 현재 상태를 출력
         """
         print("\n" + "="*60)
-        print("📊 CDI VAULT SUMMARY")
+        print("📊 CDI VAULT SUMMARY (SIMULATION ONLY)")
         print("="*60)
         print("Total Agents: {}".format(len(self.agent_data_list)))
         print("Total Wallets: {}".format(len(self.wallet_manager.wallets)))
@@ -425,58 +479,35 @@ class CDIVault:
 # ============================================================================
 
 if __name__ == "__main__":
-    # 샘플 에이전트 데이터
     sample_agents = [
-        {
-            'Name_KR': 'CEO re.eul',
-            'Role': 'Chief Executive Officer',
-            'balance': 50000.0,
-            'crypto_wallet_address': None
-        },
-        {
-            'Name_KR': 'KODA',
-            'Role': 'Chief Technology Officer',
-            'balance': 30000.0,
-            'crypto_wallet_address': None
-        },
-        {
-            'Name_KR': 'Jr. TRANG',
-            'Role': 'AI Agent',
-            'balance': 20000.0,
-            'crypto_wallet_address': None
-        },
-        {
-            'Name_KR': 'Malu',
-            'Role': 'Legal & Strategy',
-            'balance': 25000.0,
-            'crypto_wallet_address': None
-        }
+        {'Name_KR': 'CEO re.eul', 'Role': 'Chief Executive Officer', 'balance': 50000.0, 'crypto_wallet_address': None},
+        {'Name_KR': 'KODA', 'Role': 'Chief Technology Officer', 'balance': 30000.0, 'crypto_wallet_address': None},
+        {'Name_KR': 'Jr. TRANG', 'Role': 'AI Agent', 'balance': 20000.0, 'crypto_wallet_address': None},
+        {'Name_KR': 'Malu', 'Role': 'Legal & Strategy', 'balance': 25000.0, 'crypto_wallet_address': None},
     ]
 
-    # CDI Vault 초기화
-    print("🚀 Initializing CDI Vault...")
+    print("🚀 Initializing CDI Vault (simulation only)...")
     vault = CDIVault(sample_agents)
 
-    # 에이전트에게 지갑 할당
     print("\n📝 Binding wallets to agents...")
     vault.bind_new_wallet_to_agent('CEO re.eul')
     vault.bind_new_wallet_to_agent('KODA')
     vault.bind_new_wallet_to_agent('Jr. TRANG')
     vault.bind_new_wallet_to_agent('Malu')
 
-    # 잔액 조회
     print("\n💰 Checking balances...")
     for agent in sample_agents:
         balance = vault.get_wallet_balance(agent['Name_KR'])
         print("  {}: {} USDC".format(agent['Name_KR'], balance))
 
-    # 이체 시뮬레이션
     print("\n🔄 Simulating transfers...")
     vault.simulate_transfer_funds('CEO re.eul', 'Jr. TRANG', 1000, 'USDC')
     vault.simulate_transfer_funds('KODA', 'Malu', 500, 'USDC')
 
-    # Vault 요약 출력
-    vault.print_vault_summary()
+    print("\n💰 Balances after transfer (now actually updated):")
+    for agent in sample_agents:
+        balance = vault.get_wallet_balance(agent['Name_KR'])
+        print("  {}: {} USDC".format(agent['Name_KR'], balance))
 
-    # JSON으로 내보내기
+    vault.print_vault_summary()
     vault.export_to_json('cdi_vault_export.json')
