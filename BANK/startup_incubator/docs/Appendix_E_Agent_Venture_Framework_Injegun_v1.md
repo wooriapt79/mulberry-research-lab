@@ -2,10 +2,10 @@
 문서 상태: 🟡 Draft v1 — 검토중 (Appendix E 최초 초안)
 작성일: 2026-08-07
 관련 문서:
-  - AI-Inje-Initiative-v1.3-Injegun-Submission.docx (Layer 5, Appendix E 자리표시자)
-  - BANK/startup_incubator/ (내부 프로토타입: "AI Trang — thông minh quá nhỉ" 경연)
-  - trang-startup-competition-program-20260617.md (원안)
-  - Regional_Profiles/Injegun/Injegun_Profile_2026.md (지역 데이터)
+  - "AI-Inje-Initiative-v1.3-Injegun-Submission.docx (Layer 5, Appendix E 자리표시자)"
+  - "BANK/startup_incubator/ (내부 프로토타입: 'AI Trang — thông minh quá nhỉ' 경연)"
+  - "trang-startup-competition-program-20260617.md (원안)"
+  - "Regional_Profiles/Injegun/Injegun_Profile_2026.md (지역 데이터)"
 대상 백서 위치: Appendix E. Agent Venture Framework
 ---
 
