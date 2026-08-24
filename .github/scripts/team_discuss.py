@@ -7,7 +7,7 @@ Kbin · RyuWon · Malu 3인이 자동으로 댓글을 답니다.
 
 처리 흐름:
   이슈 수신 → 에이전트별 LLM 호출 → GitHub 댓글 게시
-           → discussion_logs/issue-{번호}/ 아카이브 저장
+           → discussion_logs/issue-{번호}/ 아카이브 저장h
 
 환경변수:
   ANTHROPIC_API_KEY   — Kbin · RyuWon (Claude)
@@ -173,7 +173,7 @@ def call_claude(agent: dict, prompt: str) -> str:
     url = "https://api.anthropic.com/v1/messages"
     payload = json.dumps({
         "model": "claude-haiku-4-5-20251001",
-        "max_tokens": 400,
+        "max_tokens": 4096,
         "system": build_system_prompt(agent),
         "messages": [{"role": "user", "content": prompt}],
     }).encode("utf-8")
