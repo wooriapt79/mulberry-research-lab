@@ -1,0 +1,38 @@
+name: Fama Issue Triage Notify
+
+# Triggered automatically whenever anyone opens or reopens an issue.
+# Goal: make sure Fama never discovers team feedback (like Issue #156) late.
+
+on:
+  issues:
+    types: [opened, reopened]
+
+permissions:
+  issues: write
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Label as needs-fama-review + Fama
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: ['needs-fama-review', 'Fama']
+            });
+
+      - name: Auto-comment triage notice
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const author = context.payload.issue.user.login;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `#Fama Auto-triage - opened by @${author}.\n\nLabeled `needs-fama-review` / `Fama`. Fama will prioritize this in the next session's local worklog + issue review.`
+            });
