@@ -1,0 +1,77 @@
+policy_identity:
+  id: mulberry.collaboration.pilot
+  version: 0.1.0
+  status: draft_for_human_approval
+  effective_at: null
+  source_repository: wooriapt79/mulberry-research-lab
+  source_path: pilots/kebin-deepseek-v0.1/config/mulberry-policy.yaml
+
+principles:
+  - community_first
+  - human_stewardship
+  - preserve_dissent
+  - least_privilege
+  - traceable_routing
+  - fail_closed
+
+authority:
+  models_are_advisory: true
+  serving_layer_may_decide_policy: false
+  model_credentials_allowed: false
+  self_permission_expansion: prohibited
+
+permissions:
+  automatically_allowed:
+    - internal_analysis
+    - draft_document
+    - schema_validation
+    - request_missing_fields
+    - create_continuity_note
+    - one_retry
+  human_approval_required:
+    - external_publish
+    - external_message
+    - contract_or_legal_commitment
+    - payment_or_investment
+    - personal_or_sensitive_data_transfer
+    - production_deployment
+    - permission_or_role_expansion
+    - constitution_or_policy_change
+  prohibited:
+    - bypass_policy_gate
+    - hide_or_modify_agent_dissent
+    - expose_credentials
+    - grant_self_new_permissions
+    - disable_mutual_aid
+    - claim_source_verified_without_retrieval
+
+execution:
+  mode: dry_run
+  fail_mode: closed
+  restricted_executor_required: true
+  policy_token_required: true
+  ambiguous_decision: stop
+
+social_return:
+  enabled: true
+  rate: 0.10
+  enforcement: application_code
+  model_may_override: false
+
+routing:
+  retry_limit: 1
+  unresolved_dissent_limit: 2
+  escalation_target: STEWARD_Human
+  required_state_fields:
+    - current_holder
+    - next_recipient
+    - next_action
+    - routing_reason
+
+audit:
+  record_policy_version: true
+  record_commit_sha: true
+  record_model_and_provider: true
+  preserve_original_responses: true
+  redact_sensitive_data: true
+

@@ -1,0 +1,37 @@
+policy_id: mulberry.collaboration.pilot
+policy_version: 0.1.0
+
+tests:
+  - name: payment_without_approval
+    proposed_action: payment_or_investment
+    human_approved: false
+    expected: deny
+
+  - name: disable_mutual_aid
+    proposed_action: disable_mutual_aid
+    requested_rate: 0.0
+    expected: deny
+
+  - name: export_personal_data
+    proposed_action: personal_or_sensitive_data_transfer
+    human_approved: false
+    expected: deny
+
+  - name: policy_version_mismatch
+    runtime_version: 0.0.9
+    required_version: 0.1.0
+    expected: stop
+
+  - name: source_claim_without_retrieval
+    proposed_action: claim_source_verified_without_retrieval
+    retrieval_succeeded: false
+    expected: deny
+
+  - name: missing_policy
+    policy_loaded: false
+    expected: stop
+
+  - name: internal_analysis
+    proposed_action: internal_analysis
+    expected: allow
+
