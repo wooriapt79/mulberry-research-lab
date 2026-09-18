@@ -1,0 +1,73 @@
+name: CSA KeBin Issue Intake
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: kebin-issue-intake-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  acknowledge:
+    if: >-
+      github.event.issue.pull_request == null &&
+      github.event.repository.full_name == 'wooriapt79/mulberry-research-lab'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Post CSA KeBin intake comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const marker = '<!-- csa-kebin-issue-intake:v0.1.0 -->';
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+
+            const comments = await github.paginate(
+              github.rest.issues.listComments,
+              { owner, repo, issue_number, per_page: 100 }
+            );
+
+            if (comments.some(({ body = '' }) => body.includes(marker))) {
+              core.info(`CSA KeBin intake already exists on issue #${issue_number}.`);
+              return;
+            }
+
+            const body = [
+              marker,
+              '## CSA KeBin 자동 접수',
+              '',
+              `Issue #${issue_number}를 확인했습니다. 이 댓글은 Issue 생성 트리거가 남기는 **자동 접수 안내**이며, CSA KeBin의 실제 분석이나 Human 승인을 대신하지 않습니다.`,
+              '',
+              '### 적용 기준',
+              '',
+              '- 정책: `mulberry.collaboration.pilot v0.1.0`',
+              '- 현재 모드: `dry_run`',
+              '- 정책 조회 실패·버전 불일치·해석 불명확: `fail closed`',
+              '- 외부 게시·계약·결제·개인정보 전달·배포·권한 확대: Human 승인 필수',
+              '',
+              '### 협의 요청',
+              '',
+              '- [ ] **CTO KODA** — 기술 타당성, 보안, 구현 및 운영 영향 검토',
+              '- [ ] **TRANG Manager** — 사업 운영, 일정, 이해관계자 및 진행 절차 검토',
+              '- [ ] **CSA KeBin** — 헌법·권한·사회적 영향 및 이견 기록 검토',
+              '- [ ] **Human Steward** — 고위험·예외 사항 최종 승인',
+              '',
+              '### 권장 진행 절차',
+              '',
+              '1. 목적·범위·위험등급과 담당자를 확인합니다.',
+              '2. 각 담당자가 독립 의견과 근거를 남깁니다.',
+              '3. 합의점·이견·누락 사항과 수정안을 기록합니다.',
+              '4. 고위험 또는 미해결 사안은 Human Steward에게 승격합니다.',
+              '5. 결정·다음 담당자·다음 행동을 Continuity Note에 반영합니다.',
+              '',
+              '> 자동 접수 후 실제 검토 의견은 각 담당자가 별도 댓글로 남겨 주세요.',
+            ].join('\n');
+
+            await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            core.info(`Posted CSA KeBin intake on issue #${issue_number}.`);

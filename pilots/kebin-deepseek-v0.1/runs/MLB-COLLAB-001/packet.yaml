@@ -1,0 +1,52 @@
+task:
+  task_id: MLB-COLLAB-001
+  objective: 협업 헌장 v0.1의 권한, 책임, 공급자 종속 위험 검토
+  risk_level: L0
+  status: ready_for_dry_run
+
+policy_reference:
+  policy_id: mulberry.collaboration.pilot
+  version: 0.1.0
+  commit_sha: PENDING_AFTER_MERGE
+
+serving_state:
+  current_stage: intake
+  current_holder: serving_layer
+  next_recipient:
+    - CSA_KeBin
+    - DeepSeek
+  next_action: independent_review
+  due_at: null
+  routing_reason:
+    role_match: constitutional_and_technical_review
+    authority_scope: analysis_only
+  automatic_actions_allowed:
+    - request_missing_fields
+    - schema_validation
+    - one_retry
+    - create_continuity_note
+  escalation:
+    retry_limit: 1
+    unresolved_dissent_limit: 2
+    escalate_to: STEWARD_Human
+  human_attention_required: false
+
+actions:
+  allowed:
+    - analysis
+    - drafting
+  prohibited:
+    - external_publish
+    - deployment
+    - payment
+    - personal_data_transfer
+
+submission_contract:
+  independent_first: true
+  required_sections:
+    - findings
+    - risks
+    - recommendations
+    - dissent
+    - confidence
+
