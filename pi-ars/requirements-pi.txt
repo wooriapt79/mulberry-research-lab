@@ -1,0 +1,21 @@
+# Mulberry Pi ARS — Raspberry Pi 5 ARM64 (Python 3.11)
+# Issue: mulberry-research-lab#163
+# All packages verified for ARM64 wheel availability
+
+# ── Core audio ──────────────────────────────────────────
+numpy>=1.24
+scipy>=1.11
+librosa>=0.10
+soundfile>=0.12
+
+# ── Noise reduction (Koda Preprocessor) ─────────────────
+noisereduce>=3.0
+
+# ── ASR bridge (Whisper) ─────────────────────────────────
+# whisper.cpp is compiled separately on Pi 5
+# Python binding: whispercpp or ctypes wrapper (whisper_bridge.py)
+# openai-whisper is NOT listed — too heavy for Pi 5 real-time use
+
+# ── Optional: VAD upgrade (v2 roadmap) ───────────────────
+# webrtcvad>=2.0.10    # lightweight Google WebRTC VAD
+# onnxruntime>=1.16    # for silero-vad ONNX model
