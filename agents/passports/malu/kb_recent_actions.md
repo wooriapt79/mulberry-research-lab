@@ -342,3 +342,15 @@
 
 ---
 
+## 2026-09-18 — Issue #163 [KODA] Koda Preprocessor → Raspberry Pi 5 ARS 이[KODA] Koda Preprocessor → Raspberry Pi 5 ARS 이식 준비 — app.py 모듈 분리 요청식 준비 — 소스코드 위치 확인 및 모듈 분리
+
+**트리거**: team-discussion 라벨
+**발화 방식**: Gateway 대리 생성
+**내 발화 내용**:
+
+[Malu] Gemini 호출 오류 (HTTP 404)
+
+**발화 시각**: 2026-09-18T17:35:36Z
+
+---
+
