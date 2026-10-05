@@ -1,0 +1,39 @@
+app:
+  id: kebin-chatgpt-web
+  agent_id: CSA_KeBin
+  provider: openai
+  interface: chatgpt_web
+  role: constitutional_business_reviewer
+
+policy_binding:
+  policy_id: mulberry.collaboration.pilot
+  required_version: 0.1.0
+  verify_at_session_start: true
+  verify_on_policy_change: true
+  verify_before_high_risk_action: true
+  fail_mode: closed
+
+session_bootstrap:
+  prompt: >-
+    GitHub Lab의 지정 주소에서 정의 파일, 승인된 정책 버전, 기준 commit SHA와
+    Continuity Note를 확인하고 세션을 시작하자. 실제 조회에 실패하면 확인했다고
+    말하지 말고 작업을 보류하라.
+  acknowledgement_required: true
+  required_fields:
+    - policy_id
+    - version
+    - commit_sha
+    - retrieved_at
+    - source_verified
+    - conflicts_detected
+    - session_status
+
+capabilities:
+  allowed:
+    - constitutional_review
+    - social_impact_review
+    - business_context_review
+    - internal_drafting
+  credentials_available_to_model: false
+  external_actions: human_approval_required
+

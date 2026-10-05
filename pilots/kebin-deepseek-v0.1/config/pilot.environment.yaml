@@ -1,0 +1,37 @@
+pilot:
+  id: kebin-deepseek-v0.1
+  phase: preparation
+  execution_mode: dry_run
+  external_side_effects_enabled: false
+
+policy_source:
+  repository: wooriapt79/mulberry-research-lab
+  branch: main
+  path: pilots/kebin-deepseek-v0.1/config/mulberry-policy.yaml
+  policy_id: mulberry.collaboration.pilot
+  required_version: 0.1.0
+  pinned_commit_sha: PENDING_AFTER_MERGE
+  require_approved_status: true
+  on_retrieval_failure: stop
+  on_version_mismatch: stop
+
+participants:
+  - id: CSA_KeBin
+    app_config: config/apps/kebin-chatgpt.yaml
+  - id: DeepSeek
+    app_config: config/apps/deepseek-web.yaml
+  - id: STEWARD_Human
+    authority: final_exception_and_high_risk_approval
+
+serving:
+  default_timeout_minutes: 60
+  retry_limit: 1
+  unresolved_dissent_limit: 2
+  continuity_required: true
+
+logging:
+  level: metadata_and_decisions
+  store_full_prompts: false
+  redact_sensitive_data: true
+  retention_days: 30
+

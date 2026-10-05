@@ -1,0 +1,23 @@
+continuity_note:
+  task_id: MLB-COLLAB-001
+  policy_id: mulberry.collaboration.pilot
+  policy_version: 0.1.0
+  policy_commit_sha: PENDING_AFTER_MERGE
+  status: not_started
+  completed: []
+  agreements: []
+  unresolved_dissent: []
+  current_holder: serving_layer
+  next_recipient:
+    - CSA_KeBin
+    - DeepSeek
+  next_action: independent_review
+  prohibited_actions:
+    - external_publish
+    - deployment
+    - payment
+    - personal_data_transfer
+  relationship_temperature: neutral
+  human_attention_required: false
+  updated_at: null
+
